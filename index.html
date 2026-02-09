@@ -606,60 +606,12 @@
             </div>
         </section>
 
-        <!-- STATS SECTION - Summary averages (still hardcoded for now) -->
+        <!-- STATS SECTION - Summary averages loaded from Google Sheets -->
         <section id="stats">
             <h2 class="section-title">Stats</h2>
             
-            <div class="summary-stats">
-                <!-- Daniel's Summary Stats -->
-                <div class="summary-card">
-                    <h3>Daniel</h3>
-                    <div class="stat-row">
-                        <span class="stat-label">Avg. FIR</span>
-                        <span class="stat-value">36%</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Avg. GIR</span>
-                        <span class="stat-value">17%</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Putts/Hole</span>
-                        <span class="stat-value">2.4</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Avg. Drive</span>
-                        <span class="stat-value">195 yards</span>
-                    </div>
-                    <div class="favorite-club">
-                        <span class="stat-label">Favorite club:</span>
-                        <span class="stat-value">5 wood</span>
-                    </div>
-                </div>
-
-                <!-- Amelie's Summary Stats -->
-                <div class="summary-card">
-                    <h3>Amelie</h3>
-                    <div class="stat-row">
-                        <span class="stat-label">Avg. FIR</span>
-                        <span class="stat-value">tbd</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Avg. GIR</span>
-                        <span class="stat-value">tbd</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Putts/Hole</span>
-                        <span class="stat-value">tbd</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Avg. Drive</span>
-                        <span class="stat-value">175 yards</span>
-                    </div>
-                    <div class="favorite-club">
-                        <span class="stat-label">Favorite club:</span>
-                        <span class="stat-value">Putter</span>
-                    </div>
-                </div>
+            <div class="summary-stats" id="summary-stats">
+                <p class="loading">Loading stats...</p>
             </div>
         </section>
 
@@ -751,11 +703,12 @@
            File → Share → Publish to web → Select sheet → Publish
            ======================================== */
         
-        // spreadsheet ID
-        const SPREADSHEET_ID = '17QnUv3ufwoaupwfEqqjzJst9YFwuLQjiUdU2cFyZLzE';
+        // TODO: Replace with your actual spreadsheet ID
+        const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE';
         
         // Sheet names (tabs in your spreadsheet)
         const ROUNDS_SHEET = 'Rounds';
+        const STATS_SHEET = 'Stats';
         
         // Build the Google Sheets CSV export URL
         function getSheetUrl(sheetName) {
@@ -993,6 +946,52 @@
                 renderProgressCard('Amelie', amelieBest);
         }
 
+        // Render a single player's stats card
+        function renderStatsCard(stats) {
+            // Handle case where stats might show "—" for missing data
+            const avgFir = stats.avg_fir || '—';
+            const avgGir = stats.avg_gir || '—';
+            const puttsPerHole = stats.putts_per_hole || '—';
+            const avgDrive = stats.avg_drive || '—';
+            const favoriteClub = stats.favorite_club || '—';
+            
+            return `
+                <div class="summary-card">
+                    <h3>${stats.player}</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Avg. FIR</span>
+                        <span class="stat-value">${avgFir}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Avg. GIR</span>
+                        <span class="stat-value">${avgGir}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Putts/Hole</span>
+                        <span class="stat-value">${puttsPerHole}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Avg. Drive</span>
+                        <span class="stat-value">${avgDrive}</span>
+                    </div>
+                    <div class="favorite-club">
+                        <span class="stat-label">Favorite club:</span>
+                        <span class="stat-value">${favoriteClub}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render all stats cards
+        function renderStats(statsData) {
+            const container = document.getElementById('summary-stats');
+            if (!statsData || statsData.length === 0) {
+                container.innerHTML = '<p class="loading">No stats available</p>';
+                return;
+            }
+            container.innerHTML = statsData.map(s => renderStatsCard(s)).join('');
+        }
+
         // Toggle full history visibility
         function toggleHistory(player) {
             const historyEl = document.getElementById(player + '-history');
@@ -1013,26 +1012,37 @@
         
         async function loadData() {
             try {
-                // Fetch CSV from Google Sheets
-                const response = await fetch(getSheetUrl(ROUNDS_SHEET));
-                const csvText = await response.text();
+                // Fetch both sheets in parallel
+                const [roundsResponse, statsResponse] = await Promise.all([
+                    fetch(getSheetUrl(ROUNDS_SHEET)),
+                    fetch(getSheetUrl(STATS_SHEET))
+                ]);
                 
-                // Parse and process
-                const rawData = parseCSV(csvText);
-                const data = processRoundsData(rawData);
+                const roundsCsv = await roundsResponse.text();
+                const statsCsv = await statsResponse.text();
+                
+                // Parse and process rounds
+                const rawRoundsData = parseCSV(roundsCsv);
+                const roundsData = processRoundsData(rawRoundsData);
+                
+                // Parse stats (simple - just convert to objects)
+                const statsData = parseCSV(statsCsv);
                 
                 // Render everything
-                renderProgressCards(data);
-                renderPlayerRounds('daniel-rounds', data.daniel);
-                renderPlayerRounds('amelie-rounds', data.amelie);
-                renderAllRounds('daniel-all-rounds', data.daniel);
-                renderAllRounds('amelie-all-rounds', data.amelie);
-                renderPracticeRounds(data.practice);
+                renderProgressCards(roundsData);
+                renderStats(statsData);
+                renderPlayerRounds('daniel-rounds', roundsData.daniel);
+                renderPlayerRounds('amelie-rounds', roundsData.amelie);
+                renderAllRounds('daniel-all-rounds', roundsData.daniel);
+                renderAllRounds('amelie-all-rounds', roundsData.amelie);
+                renderPracticeRounds(roundsData.practice);
                 
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('progress-cards').innerHTML = 
                     '<p class="loading">Error loading data. Check console for details.</p>';
+                document.getElementById('summary-stats').innerHTML = 
+                    '<p class="loading">Error loading stats.</p>';
             }
         }
         
