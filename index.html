@@ -534,6 +534,15 @@
         }
 
         /* ========================================
+           LOADING STATE
+           ======================================== */
+        .loading {
+            color: var(--green-400);
+            font-style: italic;
+            padding: var(--space-sm);
+        }
+
+        /* ========================================
            FOOTER
            ======================================== */
         footer {
@@ -589,54 +598,15 @@
          MAIN CONTENT
          ======================================== -->
     <main>
-        <!-- PROGRESS SECTION -->
+        <!-- PROGRESS SECTION - Will be populated by JavaScript -->
         <section id="progress">
             <h2 class="section-title">The Chase</h2>
-            
-            <div class="progress-cards">
-                <!-- Player 1 Progress Card -->
-                <div class="progress-card">
-                    <h3 class="player-name">Daniel</h3>
-                    <div class="best-score">
-                        <span class="score-value">98</span>
-                        <span class="score-label">best score</span>
-                    </div>
-                    <p class="score-date">Set on August 21, 2025</p>
-                    
-                    <!-- Progress bar: 98 → 89 means 9 strokes away out of starting gap
-                         Started at 110, progress = (110-98)/(110-89) = 57% -->
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-fill" style="width: 57%;"></div>
-                    </div>
-                    <div class="progress-text">
-                        <span>Started at 110 · Goal: 89</span>
-                        <span class="strokes-away">9 strokes to go</span>
-                    </div>
-                </div>
-
-                <!-- Player 2 Progress Card -->
-                <div class="progress-card">
-                    <h3 class="player-name">Amelie</h3>
-                    <div class="best-score">
-                        <span class="score-value">101</span>
-                        <span class="score-label">best score</span>
-                    </div>
-                    <p class="score-date">Set on August 21, 2025</p>
-                    
-                    <!-- Progress bar: 101 → 89 means 12 strokes away
-                         Started at 110, progress = (110-101)/(110-89) = 43% -->
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-fill" style="width: 43%;"></div>
-                    </div>
-                    <div class="progress-text">
-                        <span>Started at 110 · Goal: 89</span>
-                        <span class="strokes-away">12 strokes to go</span>
-                    </div>
-                </div>
+            <div class="progress-cards" id="progress-cards">
+                <p class="loading">Loading progress...</p>
             </div>
         </section>
 
-        <!-- STATS SECTION - Summary averages -->
+        <!-- STATS SECTION - Summary averages (still hardcoded for now) -->
         <section id="stats">
             <h2 class="section-title">Stats</h2>
             
@@ -702,7 +672,7 @@
                 <div class="stats-card">
                     <h3>Daniel — Last 5 Rounds</h3>
                     <div class="rounds-list" id="daniel-rounds">
-                        <!-- Recent rounds rendered by JavaScript -->
+                        <p class="loading">Loading rounds...</p>
                     </div>
                     <a href="#" class="view-all-link" onclick="toggleHistory('daniel'); return false;">View all rounds ↓</a>
                     <div class="full-history" id="daniel-history">
@@ -717,7 +687,7 @@
                 <div class="stats-card">
                     <h3>Amelie — Last 5 Rounds</h3>
                     <div class="rounds-list" id="amelie-rounds">
-                        <!-- Recent rounds rendered by JavaScript -->
+                        <p class="loading">Loading rounds...</p>
                     </div>
                     <a href="#" class="view-all-link" onclick="toggleHistory('amelie'); return false;">View all rounds ↓</a>
                     <div class="full-history" id="amelie-history">
@@ -733,9 +703,9 @@
         <!-- PRACTICE ROUNDS SECTION (9-hole rounds) -->
         <section id="practice" class="practice-section">
             <h2 class="section-title">Practice Rounds</h2>
-            <p class="practice-note">9-hole rounds — not counted towards "Chasing 90"</p>
+            <p class="practice-note">9-hole rounds — not counted toward Chasing 90</p>
             <div class="rounds-list practice-list" id="practice-rounds">
-                <!-- Practice rounds rendered by JavaScript -->
+                <p class="loading">Loading practice rounds...</p>
             </div>
         </section>
 
@@ -772,192 +742,128 @@
 
     <script>
         /* ========================================
-           ROUND DATA
-           This is where you add new rounds.
-           The structure supports future expansion
-           to include hole-by-hole scorecards.
+           GOOGLE SHEETS CONFIGURATION
+           
+           Replace SPREADSHEET_ID with your actual
+           Google Sheets ID (from the URL).
+           
+           The sheet must be published to the web:
+           File → Share → Publish to web → Select sheet → Publish
            ======================================== */
-        const roundsData = {
-            // 18-hole rounds only (count toward Chasing 90)
-            daniel: [
-                // Most recent first
-                {
-                    date: "2025-08-21",
-                    course: "Beverly Golf & Tennis",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 72,
-                    score: 98,
-                },
-            ],
-            amelie: [
-                {
-                    date: "2025-08-21",
-                    course: "Beverly Golf & Tennis",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 72,
-                    score: 101,
-                },
-            ],
-            // 9-hole practice rounds (don't count toward Chasing 90)
-            practice: [
-                // Most recent first
-                {
-                    player: "Daniel",
-                    date: "2025-08-22",
-                    course: "Beverly Golf & Tennis (Back 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 48,
-                },
-                {
-                    player: "Amelie",
-                    date: "2025-08-22",
-                    course: "Beverly Golf & Tennis (Back 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 57,
-                },
-                {
-                    player: "Daniel",
-                    date: "2025-08-20",
-                    course: "Cape Ann Golf Course",
-                    teeColor: "⚪",
-                    teeLength: "2,808 yds",
-                    par: 36,
-                    score: 50,
-                },
-                {
-                    player: "Amelie",
-                    date: "2025-08-20",
-                    course: "Cape Ann Golf Course",
-                    teeColor: "⚪",
-                    teeLength: "2,808 yds",
-                    par: 36,
-                    score: 52,
-                },
-                {
-                    player: "Daniel",
-                    date: "2025-08-19",
-                    course: "Beverly Golf & Tennis (Front 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 50,
-                },
-                {
-                    player: "Amelie",
-                    date: "2025-08-19",
-                    course: "Beverly Golf & Tennis (Front 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 52,
-                },
-                {
-                    player: "Daniel",
-                    date: "2025-08-18",
-                    course: "Cape Ann Golf Course",
-                    teeColor: "⚪",
-                    teeLength: "2,808 yds",
-                    par: 36,
-                    score: 57,
-                },
-                {
-                    player: "Amelie",
-                    date: "2025-08-18",
-                    course: "Cape Ann Golf Course",
-                    teeColor: "⚪",
-                    teeLength: "2,808 yds",
-                    par: 36,
-                    score: 49,
-                },
-                {
-                    player: "Daniel",
-                    date: "2025-08-16",
-                    course: "Beverly Golf & Tennis (Front 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 52,
-                },
-                {
-                    player: "Amelie",
-                    date: "2025-08-16",
-                    course: "Beverly Golf & Tennis (Front 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 57,
-                },
-                {
-                    player: "Daniel",
-                    date: "2025-08-14",
-                    course: "King Rail Golf Course",
-                    teeColor: "⚪",
-                    teeLength: "4,804 yds",
-                    par: 36,
-                    score: 50,
-                },
-                {
-                    player: "Amelie",
-                    date: "2025-08-14",
-                    course: "King Rail Golf Course",
-                    teeColor: "⚪",
-                    teeLength: "4,804 yds",
-                    par: 36,
-                    score: 55,
-                },
-                {
-                    player: "Daniel",
-                    date: "2025-08-13",
-                    course: "Beverly Golf & Tennis (Back 9)",
-                    teeColor: "🔵",
-                    teeLength: "5,808 yds",
-                    par: 36,
-                    score: 52,
-                },
-                {
-                    player: "Amelie",
-                    date: "2025-08-13",
-                    course: "Beverly Golf & Tennis (Back 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 57,
-                },
-                {
-                    player: "Daniel",
-                    date: "2025-08-12",
-                    course: "Beverly Golf & Tennis (Back 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 55,
-                },
-                {
-                    player: "Amelie",
-                    date: "2025-08-12",
-                    course: "Beverly Golf & Tennis (Back 9)",
-                    teeColor: "⚪",
-                    teeLength: "5,175 yds",
-                    par: 36,
-                    score: 56,
-                },
-            ]
-        };
+        
+        // spreadsheet ID
+        const SPREADSHEET_ID = '17QnUv3ufwoaupwfEqqjzJst9YFwuLQjiUdU2cFyZLzE';
+        
+        // Sheet names (tabs in your spreadsheet)
+        const ROUNDS_SHEET = 'Rounds';
+        
+        // Build the Google Sheets CSV export URL
+        function getSheetUrl(sheetName) {
+            return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+        }
+
+        /* ========================================
+           CSV PARSING
+           ======================================== */
+        
+        // Parse CSV text into array of objects
+        // First row is headers, subsequent rows are data
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim());
+            if (lines.length < 2) return [];
+            
+            // Parse header row (handles quoted values)
+            const headers = parseCSVRow(lines[0]);
+            
+            // Parse data rows
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVRow(lines[i]);
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header.trim().toLowerCase()] = values[index] ? values[index].trim() : '';
+                });
+                data.push(row);
+            }
+            return data;
+        }
+        
+        // Parse a single CSV row, handling quoted values
+        function parseCSVRow(row) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+
+        /* ========================================
+           DATA PROCESSING
+           ======================================== */
+        
+        // Convert sheet row to round object
+        // Expected columns: player, date, course, tee_color, tee_length, par, score, holes, putts, fir, gir
+        function rowToRound(row) {
+            return {
+                player: row.player || '',
+                date: row.date || '',
+                course: row.course || '',
+                teeColor: row.tee_color || '⚪',
+                teeLength: row.tee_length || '',
+                par: parseInt(row.par) || 72,
+                score: parseInt(row.score) || 0,
+                holes: parseInt(row.holes) || 18,
+                putts: row.putts ? parseInt(row.putts) : null,
+                fir: row.fir || null,
+                gir: row.gir || null,
+            };
+        }
+        
+        // Process raw data into structured rounds
+        function processRoundsData(rawData) {
+            const rounds = rawData.map(rowToRound).filter(r => r.score > 0);
+            
+            // Sort by date descending (most recent first)
+            rounds.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Separate 18-hole and 9-hole rounds
+            const daniel18 = rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 18);
+            const amelie18 = rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 18);
+            const practice = rounds.filter(r => r.holes === 9);
+            
+            return {
+                daniel: daniel18,
+                amelie: amelie18,
+                practice: practice
+            };
+        }
 
         /* ========================================
            HELPER FUNCTIONS
            ======================================== */
         
-        // Format date from "2025-04-12" to "Apr 12"
+        // Format date from "2025-08-12" to "Aug 12"
         function formatDate(dateStr) {
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        // Format date for progress card "August 21, 2025"
+        function formatDateLong(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         }
 
         // Format score to par (e.g., +27 or -2 or E)
@@ -967,11 +873,21 @@
             return diff > 0 ? `+${diff}` : `${diff}`;
         }
 
-        // Find best score for a player (lowest)
+        // Find best (lowest) score round
         function getBestRound(rounds) {
+            if (!rounds || rounds.length === 0) return null;
             return rounds.reduce((best, round) => 
                 round.score < best.score ? round : best
             , rounds[0]);
+        }
+        
+        // Calculate progress percentage
+        // Started at 110, goal is 89
+        function calculateProgress(bestScore) {
+            const START = 110;
+            const GOAL = 89;
+            const progress = (START - bestScore) / (START - GOAL) * 100;
+            return Math.max(0, Math.min(100, progress)); // Clamp between 0-100
         }
 
         /* ========================================
@@ -996,60 +912,85 @@
                     <div class="round-stats">
                         ${round.fir ? `<span class="round-stat"><span class="round-stat-label">FIR</span> ${round.fir}</span>` : ''}
                         ${round.gir ? `<span class="round-stat"><span class="round-stat-label">GIR</span> ${round.gir}</span>` : ''}
-                        <span class="round-stat"><span class="round-stat-label">Putts</span> ${round.putts}</span>
+                        ${round.putts ? `<span class="round-stat"><span class="round-stat-label">Putts</span> ${round.putts}</span>` : ''}
                     </div>
                 </div>
             `;
         }
 
-        // Render all rounds for a player
+        // Render rounds list (last 5)
         function renderPlayerRounds(containerId, rounds) {
             const container = document.getElementById(containerId);
+            if (!rounds || rounds.length === 0) {
+                container.innerHTML = '<p class="loading">No rounds yet</p>';
+                return;
+            }
             container.innerHTML = rounds.slice(0, 5).map(r => renderRoundCard(r)).join('');
+        }
+        
+        // Render all rounds for full history
+        function renderAllRounds(containerId, rounds) {
+            const container = document.getElementById(containerId);
+            if (!rounds || rounds.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = rounds.map(r => renderRoundCard(r)).join('');
         }
 
         // Render practice rounds
-        function renderPracticeRounds() {
+        function renderPracticeRounds(rounds) {
             const container = document.getElementById('practice-rounds');
-            if (roundsData.practice.length === 0) {
-                container.innerHTML = '<p style="color: var(--green-400); font-size: 0.9rem;">No practice rounds yet</p>';
+            if (!rounds || rounds.length === 0) {
+                container.innerHTML = '<p class="loading">No practice rounds yet</p>';
                 return;
             }
-            container.innerHTML = roundsData.practice.map(r => renderRoundCard(r, true)).join('');
+            container.innerHTML = rounds.map(r => renderRoundCard(r, true)).join('');
         }
-
-        // Update progress cards based on best scores
-        function updateProgressCards() {
-            const danielBest = getBestRound(roundsData.daniel);
-            const amelieBest = getBestRound(roundsData.amelie);
+        
+        // Render progress card for a player
+        function renderProgressCard(name, bestRound) {
+            if (!bestRound) {
+                return `
+                    <div class="progress-card">
+                        <h3 class="player-name">${name}</h3>
+                        <p class="loading">No 18-hole rounds yet</p>
+                    </div>
+                `;
+            }
             
-            // These would update the progress cards dynamically
-            // For now the progress cards are static HTML, but this 
-            // function is ready for when you want full JS rendering
-            console.log('Daniel best:', danielBest.score, 'on', danielBest.date);
-            console.log('Amelie best:', amelieBest.score, 'on', amelieBest.date);
+            const progress = calculateProgress(bestRound.score);
+            const strokesToGo = bestRound.score - 89;
+            
+            return `
+                <div class="progress-card">
+                    <h3 class="player-name">${name}</h3>
+                    <div class="best-score">
+                        <span class="score-value">${bestRound.score}</span>
+                        <span class="score-label">best score</span>
+                    </div>
+                    <p class="score-date">Set on ${formatDateLong(bestRound.date)}</p>
+                    
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: ${progress}%;"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span>Started at 110 · Goal: 89</span>
+                        <span class="strokes-away">${strokesToGo} strokes to go</span>
+                    </div>
+                </div>
+            `;
         }
-
-        /* ========================================
-           INITIALIZE
-           ======================================== */
-        document.addEventListener('DOMContentLoaded', function() {
-            // Render recent rounds (last 5)
-            renderPlayerRounds('daniel-rounds', roundsData.daniel);
-            renderPlayerRounds('amelie-rounds', roundsData.amelie);
+        
+        // Render both progress cards
+        function renderProgressCards(data) {
+            const container = document.getElementById('progress-cards');
+            const danielBest = getBestRound(data.daniel);
+            const amelieBest = getBestRound(data.amelie);
             
-            // Render full history (all rounds, for "view all" section)
-            renderAllRounds('daniel-all-rounds', roundsData.daniel);
-            renderAllRounds('amelie-all-rounds', roundsData.amelie);
-            
-            renderPracticeRounds();
-            updateProgressCards();
-        });
-
-        // Render all rounds (for full history view)
-        function renderAllRounds(containerId, rounds) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = rounds.map(r => renderRoundCard(r)).join('');
+            container.innerHTML = 
+                renderProgressCard('Daniel', danielBest) +
+                renderProgressCard('Amelie', amelieBest);
         }
 
         // Toggle full history visibility
@@ -1065,6 +1006,38 @@
                 linkEl.textContent = 'Hide older rounds ↑';
             }
         }
+
+        /* ========================================
+           FETCH AND INITIALIZE
+           ======================================== */
+        
+        async function loadData() {
+            try {
+                // Fetch CSV from Google Sheets
+                const response = await fetch(getSheetUrl(ROUNDS_SHEET));
+                const csvText = await response.text();
+                
+                // Parse and process
+                const rawData = parseCSV(csvText);
+                const data = processRoundsData(rawData);
+                
+                // Render everything
+                renderProgressCards(data);
+                renderPlayerRounds('daniel-rounds', data.daniel);
+                renderPlayerRounds('amelie-rounds', data.amelie);
+                renderAllRounds('daniel-all-rounds', data.daniel);
+                renderAllRounds('amelie-all-rounds', data.amelie);
+                renderPracticeRounds(data.practice);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('progress-cards').innerHTML = 
+                    '<p class="loading">Error loading data. Check console for details.</p>';
+            }
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
 </html>
