@@ -435,12 +435,8 @@
         .practice-note {
             font-size: 0.85rem;
             color: var(--green-500);
-            margin-bottom: var(--space-sm);
+            margin-bottom: var(--space-md);
             font-style: italic;
-        }
-
-        .practice-list {
-            max-width: 500px;
         }
 
         .practice-list .round-card {
@@ -656,8 +652,37 @@
         <section id="practice" class="practice-section">
             <h2 class="section-title">Practice Rounds</h2>
             <p class="practice-note">9-hole rounds — not counted toward Chasing 90</p>
-            <div class="rounds-list practice-list" id="practice-rounds">
-                <p class="loading">Loading practice rounds...</p>
+            
+            <div class="stats-grid">
+                <!-- Daniel's Practice Rounds -->
+                <div class="stats-card">
+                    <h3>Daniel — Last 5 Practice Rounds</h3>
+                    <div class="rounds-list practice-list" id="daniel-practice-rounds">
+                        <p class="loading">Loading practice rounds...</p>
+                    </div>
+                    <a href="#" class="view-all-link" onclick="toggleHistory('daniel-practice'); return false;">View all practice rounds ↓</a>
+                    <div class="full-history" id="daniel-practice-history">
+                        <p class="full-history-title">Full Practice History</p>
+                        <div class="rounds-list practice-list" id="daniel-all-practice-rounds">
+                            <!-- All rounds rendered by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amelie's Practice Rounds -->
+                <div class="stats-card">
+                    <h3>Amelie — Last 5 Practice Rounds</h3>
+                    <div class="rounds-list practice-list" id="amelie-practice-rounds">
+                        <p class="loading">Loading practice rounds...</p>
+                    </div>
+                    <a href="#" class="view-all-link" onclick="toggleHistory('amelie-practice'); return false;">View all practice rounds ↓</a>
+                    <div class="full-history" id="amelie-practice-history">
+                        <p class="full-history-title">Full Practice History</p>
+                        <div class="rounds-list practice-list" id="amelie-all-practice-rounds">
+                            <!-- All rounds rendered by JavaScript -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -791,15 +816,17 @@
             // Sort by date descending (most recent first)
             rounds.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            // Separate 18-hole and 9-hole rounds
+            // Separate 18-hole and 9-hole rounds by player
             const daniel18 = rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 18);
             const amelie18 = rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 18);
-            const practice = rounds.filter(r => r.holes === 9);
+            const danielPractice = rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 9);
+            const ameliePractice = rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 9);
             
             return {
                 daniel: daniel18,
                 amelie: amelie18,
-                practice: practice
+                danielPractice: danielPractice,
+                ameliePractice: ameliePractice
             };
         }
 
@@ -889,16 +916,6 @@
                 return;
             }
             container.innerHTML = rounds.map(r => renderRoundCard(r)).join('');
-        }
-
-        // Render practice rounds
-        function renderPracticeRounds(rounds) {
-            const container = document.getElementById('practice-rounds');
-            if (!rounds || rounds.length === 0) {
-                container.innerHTML = '<p class="loading">No practice rounds yet</p>';
-                return;
-            }
-            container.innerHTML = rounds.map(r => renderRoundCard(r, true)).join('');
         }
         
         // Render progress card for a player
@@ -1035,7 +1052,12 @@
                 renderPlayerRounds('amelie-rounds', roundsData.amelie);
                 renderAllRounds('daniel-all-rounds', roundsData.daniel);
                 renderAllRounds('amelie-all-rounds', roundsData.amelie);
-                renderPracticeRounds(roundsData.practice);
+                
+                // Render practice rounds by player
+                renderPlayerRounds('daniel-practice-rounds', roundsData.danielPractice);
+                renderPlayerRounds('amelie-practice-rounds', roundsData.ameliePractice);
+                renderAllRounds('daniel-all-practice-rounds', roundsData.danielPractice);
+                renderAllRounds('amelie-all-practice-rounds', roundsData.ameliePractice);
                 
             } catch (error) {
                 console.error('Error loading data:', error);
