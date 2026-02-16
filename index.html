@@ -10,12 +10,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
     
+    <!-- marked.js - lightweight markdown parser for rendering blog post content -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
         /* ========================================
            CSS VARIABLES - Core design tokens
            ======================================== */
         :root {
-            /* Foresty green palette */
             --green-900: #1a2e1a;
             --green-800: #243524;
             --green-700: #2d4a2d;
@@ -27,16 +29,13 @@
             --green-100: #dceadc;
             --green-50: #f0f7f0;
             
-            /* Accent colors */
             --cream: #fdfbf7;
             --gold: #c9a227;
             --gold-light: #e8d48a;
             
-            /* Typography */
             --font-display: 'DM Serif Display', Georgia, serif;
             --font-body: 'DM Sans', -apple-system, sans-serif;
             
-            /* Spacing */
             --space-xs: 0.5rem;
             --space-sm: 1rem;
             --space-md: 1.5rem;
@@ -53,9 +52,7 @@
             padding: 0;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
+        html { scroll-behavior: smooth; }
 
         body {
             font-family: var(--font-body);
@@ -76,14 +73,10 @@
             overflow: hidden;
         }
 
-        /* Subtle texture overlay */
         header::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
             opacity: 0.03;
             pointer-events: none;
@@ -107,17 +100,19 @@
         }
 
         /* ========================================
-           NAVIGATION
+           NAVIGATION (with unit toggle)
            ======================================== */
         nav {
             background: var(--green-900);
             padding: var(--space-sm) var(--space-md);
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: var(--space-lg);
             position: sticky;
             top: 0;
             z-index: 100;
+            flex-wrap: wrap;
         }
 
         nav a {
@@ -130,8 +125,25 @@
             transition: color 0.2s ease;
         }
 
-        nav a:hover {
-            color: var(--gold-light);
+        nav a:hover { color: var(--gold-light); }
+
+        /* ---- Imperial/Metric toggle button ---- */
+        .unit-toggle {
+            background: var(--green-700);
+            border: 1px solid var(--green-500);
+            color: var(--green-200);
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+            letter-spacing: 0.03em;
+        }
+
+        .unit-toggle:hover {
+            background: var(--green-600);
+            color: var(--cream);
         }
 
         /* ========================================
@@ -143,9 +155,7 @@
             padding: var(--space-xl) var(--space-md);
         }
 
-        section {
-            margin-bottom: var(--space-xl);
-        }
+        section { margin-bottom: var(--space-xl); }
 
         .section-title {
             font-family: var(--font-display);
@@ -157,7 +167,7 @@
         }
 
         /* ========================================
-           PROGRESS SECTION
+           PROGRESS SECTION (18-hole chase)
            ======================================== */
         .progress-cards {
             display: grid;
@@ -205,7 +215,6 @@
             margin-bottom: var(--space-sm);
         }
 
-        /* Progress bar container */
         .progress-bar-container {
             background: var(--green-100);
             border-radius: 20px;
@@ -214,7 +223,6 @@
             position: relative;
         }
 
-        /* The filled portion of the progress bar */
         .progress-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--green-600) 0%, var(--green-500) 100%);
@@ -223,13 +231,10 @@
             position: relative;
         }
 
-        /* Subtle shine effect on progress bar */
         .progress-bar-fill::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 50%;
             background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
             border-radius: 20px 20px 0 0;
@@ -246,6 +251,41 @@
         .strokes-away {
             font-weight: 600;
             color: var(--green-700);
+        }
+
+        /* ========================================
+           PRACTICE GOAL SECTION (9-hole goal)
+           ======================================== */
+        .practice-goal-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .practice-goal-card {
+            background: white;
+            border-radius: 12px;
+            padding: var(--space-md);
+            box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
+            border: 1px solid var(--green-100);
+            border-left: 3px solid var(--green-400);
+        }
+
+        .practice-goal-card .player-name { font-size: 1.25rem; }
+
+        .practice-goal-stat {
+            display: flex;
+            align-items: baseline;
+            gap: var(--space-xs);
+            margin-bottom: 0.25rem;
+        }
+
+        .practice-goal-stat .score-value { font-size: 2.25rem; }
+
+        .practice-goal-detail {
+            font-size: 0.85rem;
+            color: var(--green-500);
+            margin-bottom: var(--space-sm);
         }
 
         /* ========================================
@@ -272,9 +312,6 @@
             margin-bottom: var(--space-sm);
         }
 
-        /* ========================================
-           SUMMARY STATS SECTION
-           ======================================== */
         .summary-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -305,21 +342,10 @@
             padding: 0.4rem 0;
             border-bottom: 1px solid var(--green-50);
         }
+        .stat-row:last-child { border-bottom: none; }
 
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-
-        .stat-label {
-            color: var(--green-500);
-            font-size: 0.9rem;
-        }
-
-        .stat-value {
-            color: var(--green-800);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
+        .stat-label { color: var(--green-500); font-size: 0.9rem; }
+        .stat-value { color: var(--green-800); font-weight: 600; font-size: 0.9rem; }
 
         .favorite-club {
             display: flex;
@@ -329,17 +355,11 @@
             padding-top: var(--space-xs);
             border-top: 1px dashed var(--green-200);
         }
-
-        .favorite-club .stat-label {
-            font-style: italic;
-        }
-
-        .favorite-club .stat-value {
-            color: var(--green-600);
-        }
+        .favorite-club .stat-label { font-style: italic; }
+        .favorite-club .stat-value { color: var(--green-600); }
 
         /* ========================================
-           ROUND CARDS (expandable in future)
+           ROUND CARDS (now clickable for scorecard)
            ======================================== */
         .rounds-list {
             display: flex;
@@ -361,7 +381,18 @@
             border-color: var(--green-200);
         }
 
-        /* Top row: date, course, tees */
+        /* Hint that appears on hover for rounds with scorecard data */
+        .round-card[data-has-scorecard="true"]::after {
+            content: 'View scorecard \2192';
+            display: block;
+            font-size: 0.75rem;
+            color: var(--green-400);
+            margin-top: 0.4rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .round-card[data-has-scorecard="true"]:hover::after { opacity: 1; }
+
         .round-header {
             display: flex;
             justify-content: space-between;
@@ -371,23 +402,10 @@
             gap: var(--space-xs);
         }
 
-        .round-date {
-            font-weight: 600;
-            color: var(--green-800);
-            font-size: 0.9rem;
-        }
+        .round-date { font-weight: 600; color: var(--green-800); font-size: 0.9rem; }
+        .round-course { color: var(--green-600); font-size: 0.85rem; }
+        .round-tees { font-size: 0.8rem; color: var(--green-500); }
 
-        .round-course {
-            color: var(--green-600);
-            font-size: 0.85rem;
-        }
-
-        .round-tees {
-            font-size: 0.8rem;
-            color: var(--green-500);
-        }
-
-        /* Main score display */
         .round-score-row {
             display: flex;
             align-items: baseline;
@@ -395,42 +413,17 @@
             margin-bottom: var(--space-xs);
         }
 
-        .round-score {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: var(--green-800);
-            line-height: 1;
-        }
+        .round-score { font-size: 1.75rem; font-weight: 600; color: var(--green-800); line-height: 1; }
+        .round-to-par { font-size: 1rem; color: var(--green-500); font-weight: 500; }
 
-        .round-to-par {
-            font-size: 1rem;
-            color: var(--green-500);
-            font-weight: 500;
-        }
-
-        /* Stats row */
-        .round-stats {
-            display: flex;
-            gap: var(--space-md);
-            font-size: 0.8rem;
-            color: var(--green-600);
-        }
-
-        .round-stat {
-            display: flex;
-            gap: 0.25rem;
-        }
-
-        .round-stat-label {
-            color: var(--green-400);
-        }
+        .round-stats { display: flex; gap: var(--space-md); font-size: 0.8rem; color: var(--green-600); }
+        .round-stat { display: flex; gap: 0.25rem; }
+        .round-stat-label { color: var(--green-400); }
 
         /* ========================================
            PRACTICE ROUNDS SECTION
            ======================================== */
-        .practice-section {
-            opacity: 0.85;
-        }
+        .practice-section { opacity: 0.85; }
 
         .practice-note {
             font-size: 0.85rem;
@@ -443,10 +436,7 @@
             background: white;
             border-left: 3px solid var(--green-300);
         }
-
-        .practice-list .round-card:hover {
-            background: var(--green-50);
-        }
+        .practice-list .round-card:hover { background: var(--green-50); }
 
         /* ========================================
            VIEW ALL / HISTORY
@@ -460,11 +450,7 @@
             font-weight: 500;
             transition: color 0.2s ease;
         }
-
-        .view-all-link:hover {
-            color: var(--green-800);
-            text-decoration: underline;
-        }
+        .view-all-link:hover { color: var(--green-800); text-decoration: underline; }
 
         .full-history {
             display: none;
@@ -472,10 +458,7 @@
             padding-top: var(--space-sm);
             border-top: 1px dashed var(--green-200);
         }
-
-        .full-history.expanded {
-            display: block;
-        }
+        .full-history.expanded { display: block; }
 
         .full-history-title {
             font-size: 0.85rem;
@@ -485,11 +468,114 @@
         }
 
         /* ========================================
-           BLOG SECTION
+           SCORECARD MODAL (hole-by-hole detail)
            ======================================== */
-        #blog {
-            scroll-margin-top: 60px;
+        .scorecard-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(26, 46, 26, 0.6);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-md);
         }
+        .scorecard-overlay.active { display: flex; }
+
+        .scorecard-modal {
+            background: var(--cream);
+            border-radius: 12px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 40px rgba(26, 46, 26, 0.3);
+            position: relative;
+        }
+
+        .scorecard-header {
+            background: var(--green-800);
+            color: var(--cream);
+            padding: var(--space-md);
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .scorecard-header-info h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .scorecard-header-info p { color: var(--green-300); font-size: 0.85rem; }
+
+        .scorecard-total { text-align: right; }
+        .scorecard-total .big-score { font-size: 2.5rem; font-weight: 600; line-height: 1; }
+        .scorecard-total .to-par { color: var(--green-300); font-size: 1rem; }
+
+        .scorecard-close {
+            position: absolute;
+            top: var(--space-sm);
+            right: var(--space-sm);
+            background: none;
+            border: none;
+            color: var(--green-300);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0.25rem;
+        }
+        .scorecard-close:hover { color: var(--cream); }
+
+        .scorecard-table-wrapper { padding: var(--space-md); overflow-x: auto; }
+
+        .scorecard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 500px;
+        }
+
+        .scorecard-table th,
+        .scorecard-table td {
+            padding: 0.4rem 0.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--green-100);
+        }
+
+        .scorecard-table th {
+            background: var(--green-50);
+            color: var(--green-600);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* Color-code scores relative to par on each hole */
+        .score-birdie { color: #b8860b; font-weight: 700; }
+        .score-par { color: var(--green-600); font-weight: 600; }
+        .score-bogey { color: var(--green-800); }
+        .score-double-plus { color: #8b4513; font-weight: 600; }
+
+        .scorecard-table .total-col {
+            background: var(--green-50);
+            font-weight: 700;
+            border-left: 2px solid var(--green-200);
+        }
+
+        .scorecard-empty {
+            padding: var(--space-lg);
+            text-align: center;
+            color: var(--green-400);
+            font-style: italic;
+        }
+
+        /* ========================================
+           BLOG SECTION (now dynamic from Sheets)
+           ======================================== */
+        #blog { scroll-margin-top: 60px; }
 
         .blog-post {
             background: white;
@@ -516,17 +602,16 @@
             margin-bottom: var(--space-sm);
         }
 
-        .post-content {
-            color: var(--green-700);
-            line-height: 1.7;
-        }
+        .post-content { color: var(--green-700); line-height: 1.7; }
+        .post-content p { margin-bottom: var(--space-sm); }
+        .post-content p:last-child { margin-bottom: 0; }
 
-        .post-content p {
-            margin-bottom: var(--space-sm);
-        }
-
-        .post-content p:last-child {
-            margin-bottom: 0;
+        /* Inline images in blog posts (from markdown ![alt](url)) */
+        .post-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: var(--space-sm) 0;
+            box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
         }
 
         /* ========================================
@@ -548,32 +633,24 @@
             padding: var(--space-lg) var(--space-md);
             font-size: 0.85rem;
         }
-
-        footer p {
-            opacity: 0.8;
-        }
+        footer p { opacity: 0.8; }
 
         /* ========================================
            RESPONSIVE ADJUSTMENTS
            ======================================== */
         @media (max-width: 600px) {
-            main {
-                padding: var(--space-lg) var(--space-sm);
-            }
-            
-            .blog-post {
-                padding: var(--space-md);
-            }
-            
-            nav {
-                gap: var(--space-md);
-            }
+            main { padding: var(--space-lg) var(--space-sm); }
+            .blog-post { padding: var(--space-md); }
+            nav { gap: var(--space-md); }
+            .scorecard-modal { max-height: 90vh; }
+            .scorecard-header { flex-direction: column; gap: var(--space-xs); }
+            .scorecard-total { text-align: left; }
         }
     </style>
 </head>
 <body>
     <!-- ========================================
-         HEADER - Site branding
+         HEADER
          ======================================== -->
     <header>
         <h1 class="site-title">Chasing 90</h1>
@@ -581,20 +658,22 @@
     </header>
 
     <!-- ========================================
-         NAVIGATION
+         NAVIGATION (now includes unit toggle)
          ======================================== -->
     <nav>
         <a href="#progress">Progress</a>
         <a href="#stats">Stats</a>
         <a href="#rounds">Rounds</a>
         <a href="#blog">Blog</a>
+        <!-- Imperial/Metric toggle button -->
+        <button class="unit-toggle" id="unit-toggle" onclick="toggleUnits()">Yards</button>
     </nav>
 
     <!-- ========================================
          MAIN CONTENT
          ======================================== -->
     <main>
-        <!-- PROGRESS SECTION - Will be populated by JavaScript -->
+        <!-- 18-HOLE PROGRESS SECTION -->
         <section id="progress">
             <h2 class="section-title">The Chase</h2>
             <div class="progress-cards" id="progress-cards">
@@ -602,21 +681,27 @@
             </div>
         </section>
 
-        <!-- STATS SECTION - Summary averages loaded from Google Sheets -->
+        <!-- NEW: 9-HOLE PRACTICE GOAL SECTION -->
+        <section id="practice-goals">
+            <h2 class="section-title">Practice Goals</h2>
+            <p class="practice-note">Best 9-hole score relative to par — Goal: +5 over par</p>
+            <div class="practice-goal-cards" id="practice-goal-cards">
+                <p class="loading">Loading practice goals...</p>
+            </div>
+        </section>
+
+        <!-- STATS SECTION -->
         <section id="stats">
             <h2 class="section-title">Stats</h2>
-            
             <div class="summary-stats" id="summary-stats">
                 <p class="loading">Loading stats...</p>
             </div>
         </section>
 
-        <!-- RECENT ROUNDS SECTION -->
+        <!-- RECENT ROUNDS SECTION (18-hole) -->
         <section id="rounds">
             <h2 class="section-title">Recent Rounds</h2>
-            
             <div class="stats-grid">
-                <!-- Daniel's Rounds -->
                 <div class="stats-card">
                     <h3>Daniel — Last 5 Rounds</h3>
                     <div class="rounds-list" id="daniel-rounds">
@@ -625,13 +710,9 @@
                     <a href="#" class="view-all-link" onclick="toggleHistory('daniel'); return false;">View all rounds ↓</a>
                     <div class="full-history" id="daniel-history">
                         <p class="full-history-title">Full Season History</p>
-                        <div class="rounds-list" id="daniel-all-rounds">
-                            <!-- All rounds rendered by JavaScript -->
-                        </div>
+                        <div class="rounds-list" id="daniel-all-rounds"></div>
                     </div>
                 </div>
-
-                <!-- Amelie's Rounds -->
                 <div class="stats-card">
                     <h3>Amelie — Last 5 Rounds</h3>
                     <div class="rounds-list" id="amelie-rounds">
@@ -640,21 +721,17 @@
                     <a href="#" class="view-all-link" onclick="toggleHistory('amelie'); return false;">View all rounds ↓</a>
                     <div class="full-history" id="amelie-history">
                         <p class="full-history-title">Full Season History</p>
-                        <div class="rounds-list" id="amelie-all-rounds">
-                            <!-- All rounds rendered by JavaScript -->
-                        </div>
+                        <div class="rounds-list" id="amelie-all-rounds"></div>
                     </div>
                 </div>
             </div>
         </section>
         
-        <!-- PRACTICE ROUNDS SECTION (9-hole rounds) -->
+        <!-- PRACTICE ROUNDS SECTION (9-hole) -->
         <section id="practice" class="practice-section">
             <h2 class="section-title">Practice Rounds</h2>
             <p class="practice-note">9-hole rounds — not counted toward Chasing 90</p>
-            
             <div class="stats-grid">
-                <!-- Daniel's Practice Rounds -->
                 <div class="stats-card">
                     <h3>Daniel — Last 5 Practice Rounds</h3>
                     <div class="rounds-list practice-list" id="daniel-practice-rounds">
@@ -663,13 +740,9 @@
                     <a href="#" class="view-all-link" onclick="toggleHistory('daniel-practice'); return false;">View all practice rounds ↓</a>
                     <div class="full-history" id="daniel-practice-history">
                         <p class="full-history-title">Full Practice History</p>
-                        <div class="rounds-list practice-list" id="daniel-all-practice-rounds">
-                            <!-- All rounds rendered by JavaScript -->
-                        </div>
+                        <div class="rounds-list practice-list" id="daniel-all-practice-rounds"></div>
                     </div>
                 </div>
-
-                <!-- Amelie's Practice Rounds -->
                 <div class="stats-card">
                     <h3>Amelie — Last 5 Practice Rounds</h3>
                     <div class="rounds-list practice-list" id="amelie-practice-rounds">
@@ -678,37 +751,32 @@
                     <a href="#" class="view-all-link" onclick="toggleHistory('amelie-practice'); return false;">View all practice rounds ↓</a>
                     <div class="full-history" id="amelie-practice-history">
                         <p class="full-history-title">Full Practice History</p>
-                        <div class="rounds-list practice-list" id="amelie-all-practice-rounds">
-                            <!-- All rounds rendered by JavaScript -->
-                        </div>
+                        <div class="rounds-list practice-list" id="amelie-all-practice-rounds"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- BLOG SECTION -->
+        <!-- BLOG SECTION (now loaded dynamically from Google Sheets) -->
         <section id="blog">
             <h2 class="section-title">Blog</h2>
-            
-            <!-- Blog Post 1 -->
-            <article class="blog-post">
-                <p class="post-date">August 2025</p>
-                <h3 class="post-title">Beverly Golf Trip</h3>
-                <div class="post-content">
-                    <p>August 2025 - not just a family holiday, but a whole golf holiday with nearly 10 rounds played around the north shore!</p>
-                </div>
-            </article>
-
-            <!-- Blog Post 2 -->
-            <article class="blog-post">
-                <p class="post-date">February 4th, 2026</p>
-                <h3 class="post-title">Why We Started This</h3>
-                <div class="post-content">
-                    <p>This site is just a fun little project to keep track of our progress.</p>
-                </div>
-            </article>
+            <div id="blog-posts">
+                <p class="loading">Loading blog posts...</p>
+            </div>
         </section>
     </main>
+
+    <!-- ========================================
+         SCORECARD MODAL (appears when a round is clicked)
+         ======================================== -->
+    <div class="scorecard-overlay" id="scorecard-overlay" onclick="closeScorecardIfBackground(event)">
+        <div class="scorecard-modal" id="scorecard-modal">
+            <button class="scorecard-close" onclick="closeScorecard()">&times;</button>
+            <div id="scorecard-content">
+                <!-- Populated dynamically when a round card is clicked -->
+            </div>
+        </div>
+    </div>
 
     <!-- ========================================
          FOOTER
@@ -721,39 +789,90 @@
         /* ========================================
            GOOGLE SHEETS CONFIGURATION
            
-           Replace SPREADSHEET_ID with your actual
-           Google Sheets ID (from the URL).
+           Your spreadsheet needs these tabs:
+           1. "Rounds"     - existing (add a round_id column)
+           2. "Stats"      - existing  
+           3. "Scorecards" - NEW: hole-by-hole detail data
+           4. "Blog"       - NEW: blog post content in markdown
            
-           The sheet must be published to the web:
-           File → Share → Publish to web → Select sheet → Publish
+           Publish each new tab to the web:
+           File > Share > Publish to web > select tab > Publish
            ======================================== */
         
-        // TODO: Replace with your actual spreadsheet ID
         const SPREADSHEET_ID = '17QnUv3ufwoaupwfEqqjzJst9YFwuLQjiUdU2cFyZLzE';
         
-        // Sheet names (tabs in your spreadsheet)
         const ROUNDS_SHEET = 'Rounds';
         const STATS_SHEET = 'Stats';
+        const SCORECARDS_SHEET = 'Scorecards';  // NEW
+        const BLOG_SHEET = 'Blog';              // NEW
         
-        // Build the Google Sheets CSV export URL
         function getSheetUrl(sheetName) {
             return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+        }
+
+        /* ========================================
+           GLOBAL STATE
+           ======================================== */
+        
+        // Scorecard data keyed by round_id for quick lookup
+        let scorecardData = {};
+        
+        // All rounds stored globally so scorecard modal can access round info
+        let allRoundsData = [];
+
+        // Practice goal: target strokes over par for 9 holes
+        const PRACTICE_GOAL_OVER_PAR = 5;
+
+        /* ========================================
+           UNIT TOGGLE (Imperial / Metric)
+           
+           All distances stored in yards in the sheet.
+           Toggle converts on display using the
+           .distance-value elements' data-yards attribute.
+           Preference saved in localStorage.
+           ======================================== */
+        
+        const YARDS_TO_METERS = 0.9144;
+        
+        // Read saved preference or default to imperial
+        let useMetric = localStorage.getItem('chasing90-units') === 'metric';
+        
+        function initUnitToggle() {
+            document.getElementById('unit-toggle').textContent = useMetric ? 'Meters' : 'Yards';
+        }
+        
+        // Called when the toggle button is clicked
+        function toggleUnits() {
+            useMetric = !useMetric;
+            localStorage.setItem('chasing90-units', useMetric ? 'metric' : 'imperial');
+            document.getElementById('unit-toggle').textContent = useMetric ? 'Meters' : 'Yards';
+            
+            // Re-render all distance values on the page
+            document.querySelectorAll('.distance-value').forEach(el => {
+                const yards = parseFloat(el.dataset.yards);
+                if (!isNaN(yards)) {
+                    el.textContent = formatDistance(yards);
+                }
+            });
+        }
+        
+        // Format a yard value into the currently selected unit
+        function formatDistance(yards) {
+            if (useMetric) {
+                return Math.round(yards * YARDS_TO_METERS) + 'm';
+            }
+            return Math.round(yards) + 'yds';
         }
 
         /* ========================================
            CSV PARSING
            ======================================== */
         
-        // Parse CSV text into array of objects
-        // First row is headers, subsequent rows are data
         function parseCSV(csvText) {
             const lines = csvText.split('\n').filter(line => line.trim());
             if (lines.length < 2) return [];
             
-            // Parse header row (handles quoted values)
             const headers = parseCSVRow(lines[0]);
-            
-            // Parse data rows
             const data = [];
             for (let i = 1; i < lines.length; i++) {
                 const values = parseCSVRow(lines[i]);
@@ -766,12 +885,10 @@
             return data;
         }
         
-        // Parse a single CSV row, handling quoted values
         function parseCSVRow(row) {
             const result = [];
             let current = '';
             let inQuotes = false;
-            
             for (let i = 0; i < row.length; i++) {
                 const char = row[i];
                 if (char === '"') {
@@ -791,14 +908,15 @@
            DATA PROCESSING
            ======================================== */
         
-        // Convert sheet row to round object
-        // Expected columns: player, date, course, tee_color, tee_length, par, score, holes, putts, fir, gir
+        // Convert a sheet row to a round object
+        // NEW: includes round_id to link to Scorecards sheet
         function rowToRound(row) {
             return {
+                roundId: row.round_id || '',
                 player: row.player || '',
                 date: row.date || '',
                 course: row.course || '',
-                teeColor: row.tee_color || '⚪',
+                teeColor: row.tee_color || '',
                 teeLength: row.tee_length || '',
                 par: parseInt(row.par) || 72,
                 score: parseInt(row.score) || 0,
@@ -809,51 +927,60 @@
             };
         }
         
-        // Process raw data into structured rounds
+        // Separate rounds by player and hole count (9 vs 18)
         function processRoundsData(rawData) {
             const rounds = rawData.map(rowToRound).filter(r => r.score > 0);
-            
-            // Sort by date descending (most recent first)
             rounds.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            // Separate 18-hole and 9-hole rounds by player
-            const daniel18 = rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 18);
-            const amelie18 = rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 18);
-            const danielPractice = rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 9);
-            const ameliePractice = rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 9);
+            allRoundsData = rounds;  // store globally for scorecard lookups
             
             return {
-                daniel: daniel18,
-                amelie: amelie18,
-                danielPractice: danielPractice,
-                ameliePractice: ameliePractice
+                daniel: rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 18),
+                amelie: rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 18),
+                danielPractice: rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 9),
+                ameliePractice: rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 9),
             };
+        }
+
+        // Build a lookup object: { round_id: [{hole, par, score, putts}, ...] }
+        function processScorecardData(rawData) {
+            const lookup = {};
+            rawData.forEach(row => {
+                const id = (row.round_id || '').trim();
+                if (!id) return;
+                if (!lookup[id]) lookup[id] = [];
+                lookup[id].push({
+                    hole: parseInt(row.hole) || 0,
+                    par: parseInt(row.par) || 0,
+                    score: parseInt(row.score) || 0,
+                    putts: row.putts ? parseInt(row.putts) : null,
+                });
+            });
+            // Sort holes within each round
+            Object.values(lookup).forEach(holes => holes.sort((a, b) => a.hole - b.hole));
+            return lookup;
         }
 
         /* ========================================
            HELPER FUNCTIONS
            ======================================== */
         
-        // Format date from "2025-08-12" to "Aug 12"
         function formatDate(dateStr) {
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
         
-        // Format date for progress card "August 21, 2025"
         function formatDateLong(dateStr) {
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         }
 
-        // Format score to par (e.g., +27 or -2 or E)
         function formatToPar(score, par) {
             const diff = score - par;
             if (diff === 0) return "E";
             return diff > 0 ? `+${diff}` : `${diff}`;
         }
 
-        // Find best (lowest) score round
+        // Find the round with the lowest raw score
         function getBestRound(rounds) {
             if (!rounds || rounds.length === 0) return null;
             return rounds.reduce((best, round) => 
@@ -861,13 +988,30 @@
             , rounds[0]);
         }
         
-        // Calculate progress percentage
-        // Started at 110, goal is 89
+        // Find the round with the best (lowest) score relative to par
+        function getBestOverPar(rounds) {
+            if (!rounds || rounds.length === 0) return null;
+            return rounds.reduce((best, round) => {
+                const diff = round.score - round.par;
+                const bestDiff = best.score - best.par;
+                return diff < bestDiff ? round : best;
+            }, rounds[0]);
+        }
+        
+        // 18-hole progress: started at 110, goal is 89
         function calculateProgress(bestScore) {
             const START = 110;
             const GOAL = 89;
             const progress = (START - bestScore) / (START - GOAL) * 100;
-            return Math.max(0, Math.min(100, progress)); // Clamp between 0-100
+            return Math.max(0, Math.min(100, progress));
+        }
+
+        // 9-hole practice progress: assumed start +20 over par, goal is +5
+        function calculatePracticeProgress(bestOverPar) {
+            const START = 20;
+            const GOAL = PRACTICE_GOAL_OVER_PAR;
+            const progress = (START - bestOverPar) / (START - GOAL) * 100;
+            return Math.max(0, Math.min(100, progress));
         }
 
         /* ========================================
@@ -875,15 +1019,27 @@
            ======================================== */
         
         // Render a single round card
+        // Includes round_id so clicking opens the scorecard modal
         function renderRoundCard(round, isPractice = false) {
             const toPar = formatToPar(round.score, round.par);
+            const hasScorecard = scorecardData[round.roundId] ? 'true' : 'false';
+            const teeLengthYards = parseFloat(round.teeLength);
+            
+            // Build tee display with convertible distance
+            let teeDisplay = round.teeColor;
+            if (!isNaN(teeLengthYards) && teeLengthYards > 0) {
+                teeDisplay += ` <span class="distance-value" data-yards="${teeLengthYards}">${formatDistance(teeLengthYards)}</span>`;
+            }
             
             return `
-                <div class="round-card" data-date="${round.date}">
+                <div class="round-card" 
+                     data-round-id="${round.roundId}" 
+                     data-has-scorecard="${hasScorecard}"
+                     onclick="openScorecard('${round.roundId}')">
                     <div class="round-header">
-                        <span class="round-date">${formatDate(round.date)}${isPractice ? ` · ${round.player}` : ''}</span>
+                        <span class="round-date">${formatDate(round.date)}</span>
                         <span class="round-course">${round.course}</span>
-                        <span class="round-tees">${round.teeColor} ${round.teeLength}</span>
+                        <span class="round-tees">${teeDisplay}</span>
                     </div>
                     <div class="round-score-row">
                         <span class="round-score">${round.score}</span>
@@ -898,7 +1054,7 @@
             `;
         }
 
-        // Render rounds list (last 5)
+        // Render the most recent 5 rounds into a container
         function renderPlayerRounds(containerId, rounds) {
             const container = document.getElementById(containerId);
             if (!rounds || rounds.length === 0) {
@@ -908,17 +1064,14 @@
             container.innerHTML = rounds.slice(0, 5).map(r => renderRoundCard(r)).join('');
         }
         
-        // Render all rounds for full history
+        // Render ALL rounds for the "view all" expanded history
         function renderAllRounds(containerId, rounds) {
             const container = document.getElementById(containerId);
-            if (!rounds || rounds.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
+            if (!rounds || rounds.length === 0) { container.innerHTML = ''; return; }
             container.innerHTML = rounds.map(r => renderRoundCard(r)).join('');
         }
         
-        // Render progress card for a player
+        // 18-hole progress card (the main "Chasing 90" tracker)
         function renderProgressCard(name, bestRound) {
             if (!bestRound) {
                 return `
@@ -928,10 +1081,8 @@
                     </div>
                 `;
             }
-            
             const progress = calculateProgress(bestRound.score);
             const strokesToGo = bestRound.score - 89;
-            
             return `
                 <div class="progress-card">
                     <h3 class="player-name">${name}</h3>
@@ -940,7 +1091,6 @@
                         <span class="score-label">best score</span>
                     </div>
                     <p class="score-date">Set on ${formatDateLong(bestRound.date)}</p>
-                    
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill" style="width: ${progress}%;"></div>
                     </div>
@@ -952,25 +1102,70 @@
             `;
         }
         
-        // Render both progress cards
         function renderProgressCards(data) {
-            const container = document.getElementById('progress-cards');
-            const danielBest = getBestRound(data.daniel);
-            const amelieBest = getBestRound(data.amelie);
-            
-            container.innerHTML = 
-                renderProgressCard('Daniel', danielBest) +
-                renderProgressCard('Amelie', amelieBest);
+            document.getElementById('progress-cards').innerHTML = 
+                renderProgressCard('Daniel', getBestRound(data.daniel)) +
+                renderProgressCard('Amelie', getBestRound(data.amelie));
         }
 
-        // Render a single player's stats card
+        // NEW: 9-hole practice goal cards (par-relative progress)
+        function renderPracticeGoalCard(name, practiceRounds) {
+            const bestRound = getBestOverPar(practiceRounds);
+            if (!bestRound) {
+                return `
+                    <div class="practice-goal-card">
+                        <h3 class="player-name">${name}</h3>
+                        <p class="loading">No 9-hole rounds yet</p>
+                    </div>
+                `;
+            }
+            const bestOverPar = bestRound.score - bestRound.par;
+            const progress = calculatePracticeProgress(bestOverPar);
+            const strokesToGo = bestOverPar - PRACTICE_GOAL_OVER_PAR;
+            const toParStr = formatToPar(bestRound.score, bestRound.par);
+            return `
+                <div class="practice-goal-card">
+                    <h3 class="player-name">${name}</h3>
+                    <div class="practice-goal-stat">
+                        <span class="score-value">${toParStr}</span>
+                        <span class="score-label">best over par (9 holes)</span>
+                    </div>
+                    <p class="practice-goal-detail">
+                        ${bestRound.score} at ${bestRound.course} · ${formatDate(bestRound.date)}
+                    </p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: ${progress}%;"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span>Goal: +${PRACTICE_GOAL_OVER_PAR} over par</span>
+                        <span class="strokes-away">${strokesToGo > 0 ? strokesToGo + ' strokes to go' : 'Goal reached!'}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderPracticeGoalCards(data) {
+            document.getElementById('practice-goal-cards').innerHTML = 
+                renderPracticeGoalCard('Daniel', data.danielPractice) +
+                renderPracticeGoalCard('Amelie', data.ameliePractice);
+        }
+
+        // Stats cards — avg drive now uses .distance-value for unit toggling
         function renderStatsCard(stats) {
-            // Handle case where stats might show "—" for missing data
             const avgFir = stats.avg_fir || '—';
             const avgGir = stats.avg_gir || '—';
             const puttsPerHole = stats.putts_per_hole || '—';
-            const avgDrive = stats.avg_drive || '—';
+            const avgDriveRaw = stats.avg_drive || '';
             const favoriteClub = stats.favorite_club || '—';
+            
+            // Parse avg drive so we can apply yard/meter conversion
+            const driveYards = parseFloat(avgDriveRaw);
+            let driveDisplay;
+            if (!isNaN(driveYards) && driveYards > 0) {
+                driveDisplay = `<span class="distance-value" data-yards="${driveYards}">${formatDistance(driveYards)}</span>`;
+            } else {
+                driveDisplay = avgDriveRaw || '—';
+            }
             
             return `
                 <div class="summary-card">
@@ -989,7 +1184,7 @@
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Avg. Drive</span>
-                        <span class="stat-value">${avgDrive}</span>
+                        <span class="stat-value">${driveDisplay}</span>
                     </div>
                     <div class="favorite-club">
                         <span class="stat-label">Favorite club:</span>
@@ -999,7 +1194,6 @@
             `;
         }
         
-        // Render all stats cards
         function renderStats(statsData) {
             const container = document.getElementById('summary-stats');
             if (!statsData || statsData.length === 0) {
@@ -1009,11 +1203,171 @@
             container.innerHTML = statsData.map(s => renderStatsCard(s)).join('');
         }
 
-        // Toggle full history visibility
+        /* ========================================
+           SCORECARD MODAL
+           
+           Opens when any round card is clicked.
+           Shows hole-by-hole data from Scorecards sheet.
+           If no data exists for that round, shows
+           a friendly "no data yet" message.
+           ======================================== */
+        
+        function openScorecard(roundId) {
+            if (!roundId) return;
+            
+            const round = allRoundsData.find(r => r.roundId === roundId);
+            if (!round) return;
+            
+            const holes = scorecardData[roundId];
+            const overlay = document.getElementById('scorecard-overlay');
+            const content = document.getElementById('scorecard-content');
+            
+            const toPar = formatToPar(round.score, round.par);
+            
+            // Modal header: course name, date, player, total score
+            let html = `
+                <div class="scorecard-header">
+                    <div class="scorecard-header-info">
+                        <h3>${round.course}</h3>
+                        <p>${formatDateLong(round.date)} · ${round.player} · ${round.teeColor}</p>
+                    </div>
+                    <div class="scorecard-total">
+                        <span class="big-score">${round.score}</span>
+                        <span class="to-par">(${toPar})</span>
+                    </div>
+                </div>
+            `;
+            
+            if (holes && holes.length > 0) {
+                // Build the hole-by-hole scorecard table
+                html += '<div class="scorecard-table-wrapper"><table class="scorecard-table">';
+                
+                // Header row: hole numbers
+                html += '<tr><th>Hole</th>';
+                holes.forEach(h => { html += '<th>' + h.hole + '</th>'; });
+                html += '<th class="total-col">Total</th></tr>';
+                
+                // Par row
+                const totalPar = holes.reduce((sum, h) => sum + h.par, 0);
+                html += '<tr><td class="stat-label">Par</td>';
+                holes.forEach(h => { html += '<td>' + h.par + '</td>'; });
+                html += '<td class="total-col">' + totalPar + '</td></tr>';
+                
+                // Score row — color-coded per hole relative to par
+                const totalScore = holes.reduce((sum, h) => sum + h.score, 0);
+                html += '<tr><td class="stat-label">Score</td>';
+                holes.forEach(h => {
+                    const diff = h.score - h.par;
+                    let cls = '';
+                    if (diff < 0)       cls = 'score-birdie';
+                    else if (diff === 0) cls = 'score-par';
+                    else if (diff === 1) cls = 'score-bogey';
+                    else                 cls = 'score-double-plus';
+                    html += '<td class="' + cls + '">' + h.score + '</td>';
+                });
+                html += '<td class="total-col">' + totalScore + '</td></tr>';
+                
+                // Putts row (only if any hole has putt data)
+                const hasPutts = holes.some(h => h.putts !== null);
+                if (hasPutts) {
+                    const totalPutts = holes.reduce((sum, h) => sum + (h.putts || 0), 0);
+                    html += '<tr><td class="stat-label">Putts</td>';
+                    holes.forEach(h => {
+                        html += '<td>' + (h.putts !== null ? h.putts : '—') + '</td>';
+                    });
+                    html += '<td class="total-col">' + totalPutts + '</td></tr>';
+                }
+                
+                html += '</table></div>';
+            } else {
+                html += '<div class="scorecard-empty">No hole-by-hole data for this round yet.<br>Add it to the Scorecards sheet to see it here.</div>';
+            }
+            
+            content.innerHTML = html;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';  // prevent background scroll
+        }
+        
+        function closeScorecard() {
+            document.getElementById('scorecard-overlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Close when clicking the dark overlay background
+        function closeScorecardIfBackground(event) {
+            if (event.target === document.getElementById('scorecard-overlay')) {
+                closeScorecard();
+            }
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeScorecard();
+        });
+
+        /* ========================================
+           BLOG RENDERING (from Google Sheets)
+           
+           Blog sheet columns:
+             date    | title              | content
+             --------|--------------------|------------------
+             Feb 2026| Why We Started This| Markdown text...
+           
+           The "content" column supports markdown:
+           - **bold**, *italic*
+           - ![alt](image-url) for inline photos
+           - [link text](url) for links
+           - Paragraphs separated by blank lines
+           
+           For photos: upload to Cloudinary (free),
+           copy the URL, use ![](url) in content.
+           ======================================== */
+        
+        function renderBlogPosts(blogData) {
+            const container = document.getElementById('blog-posts');
+            
+            if (!blogData || blogData.length === 0) {
+                container.innerHTML = '<p class="loading">No blog posts yet</p>';
+                return;
+            }
+            
+            // Sort newest first (tries to parse dates; keeps original order if unparseable)
+            blogData.sort((a, b) => {
+                const dateA = new Date(a.date || '');
+                const dateB = new Date(b.date || '');
+                if (!isNaN(dateA) && !isNaN(dateB)) return dateB - dateA;
+                return 0;
+            });
+            
+            container.innerHTML = blogData.map(post => {
+                const title = post.title || 'Untitled';
+                const date = post.date || '';
+                const rawContent = post.content || '';
+                
+                // Convert markdown to HTML (handles images, bold, links, etc.)
+                let htmlContent = '';
+                try {
+                    htmlContent = marked.parse(rawContent);
+                } catch (e) {
+                    htmlContent = '<p>' + rawContent + '</p>';
+                }
+                
+                return `
+                    <article class="blog-post">
+                        <p class="post-date">${date}</p>
+                        <h3 class="post-title">${title}</h3>
+                        <div class="post-content">${htmlContent}</div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        /* ========================================
+           TOGGLE FULL HISTORY
+           ======================================== */
         function toggleHistory(player) {
             const historyEl = document.getElementById(player + '-history');
             const linkEl = historyEl.previousElementSibling;
-            
             if (historyEl.classList.contains('expanded')) {
                 historyEl.classList.remove('expanded');
                 linkEl.textContent = 'View all rounds ↓';
@@ -1025,39 +1379,57 @@
 
         /* ========================================
            FETCH AND INITIALIZE
+           
+           Loads all 4 sheets in parallel.
+           Scorecards and Blog sheets fail gracefully
+           if they don't exist yet.
            ======================================== */
         
         async function loadData() {
             try {
-                // Fetch both sheets in parallel
-                const [roundsResponse, statsResponse] = await Promise.all([
+                const [roundsResponse, statsResponse, scorecardsResponse, blogResponse] = await Promise.all([
                     fetch(getSheetUrl(ROUNDS_SHEET)),
-                    fetch(getSheetUrl(STATS_SHEET))
+                    fetch(getSheetUrl(STATS_SHEET)),
+                    fetch(getSheetUrl(SCORECARDS_SHEET)).catch(() => null),
+                    fetch(getSheetUrl(BLOG_SHEET)).catch(() => null),
                 ]);
                 
+                // Parse the core sheets (Rounds + Stats always exist)
                 const roundsCsv = await roundsResponse.text();
                 const statsCsv = await statsResponse.text();
-                
-                // Parse and process rounds
                 const rawRoundsData = parseCSV(roundsCsv);
-                const roundsData = processRoundsData(rawRoundsData);
-                
-                // Parse stats (simple - just convert to objects)
                 const statsData = parseCSV(statsCsv);
                 
-                // Render everything
+                // Parse scorecards if the sheet exists
+                if (scorecardsResponse && scorecardsResponse.ok) {
+                    const scorecardsCsv = await scorecardsResponse.text();
+                    scorecardData = processScorecardData(parseCSV(scorecardsCsv));
+                }
+                
+                // Process rounds after scorecards (so we know which have detailed data)
+                const roundsData = processRoundsData(rawRoundsData);
+                
+                // Render all sections
                 renderProgressCards(roundsData);
+                renderPracticeGoalCards(roundsData);
                 renderStats(statsData);
                 renderPlayerRounds('daniel-rounds', roundsData.daniel);
                 renderPlayerRounds('amelie-rounds', roundsData.amelie);
                 renderAllRounds('daniel-all-rounds', roundsData.daniel);
                 renderAllRounds('amelie-all-rounds', roundsData.amelie);
-                
-                // Render practice rounds by player
                 renderPlayerRounds('daniel-practice-rounds', roundsData.danielPractice);
                 renderPlayerRounds('amelie-practice-rounds', roundsData.ameliePractice);
                 renderAllRounds('daniel-all-practice-rounds', roundsData.danielPractice);
                 renderAllRounds('amelie-all-practice-rounds', roundsData.ameliePractice);
+                
+                // Parse and render blog posts if the sheet exists
+                if (blogResponse && blogResponse.ok) {
+                    const blogCsv = await blogResponse.text();
+                    renderBlogPosts(parseCSV(blogCsv));
+                } else {
+                    document.getElementById('blog-posts').innerHTML = 
+                        '<p class="loading">Add a "Blog" sheet to your spreadsheet to start posting.</p>';
+                }
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -1068,8 +1440,11 @@
             }
         }
         
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', loadData);
+        // Kick everything off when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initUnitToggle();
+            loadData();
+        });
     </script>
 </body>
 </html>
