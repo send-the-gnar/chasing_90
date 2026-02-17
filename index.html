@@ -534,7 +534,6 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
-            min-width: 500px;
         }
 
         .scorecard-table th,
@@ -554,12 +553,10 @@
         }
 
         /* ---- Golf scorecard shapes ----
-           Traditional scoring notation:
-           Eagle or better = double circle
-           Birdie          = single circle
-           Par             = no shape
-           Bogey           = single square
-           Double bogey+   = double square
+           Under par = circle
+           Par       = no shape
+           Over par  = square
+           All black for clean look
         */
         .score-shape {
             display: inline-flex;
@@ -569,37 +566,16 @@
             height: 28px;
             font-weight: 600;
             font-size: 0.85rem;
+            color: var(--green-900);
         }
 
-        .score-eagle {
-            color: #b8860b;
-            border: 2px solid #b8860b;
-            border-radius: 50%;
-            outline: 2px solid #b8860b;
-            outline-offset: 2px;
+        .score-under-par {
+            border: 2px solid var(--green-900);
             border-radius: 50%;
         }
 
-        .score-birdie {
-            color: #b8860b;
-            border: 2px solid #b8860b;
-            border-radius: 50%;
-        }
-
-        .score-par {
-            color: var(--green-600);
-        }
-
-        .score-bogey {
-            color: var(--green-800);
-            border: 2px solid var(--green-800);
-        }
-
-        .score-double-plus {
-            color: #8b4513;
-            border: 2px solid #8b4513;
-            outline: 2px solid #8b4513;
-            outline-offset: 2px;
+        .score-over-par {
+            border: 2px solid var(--green-900);
         }
 
         .scorecard-table .total-col {
@@ -1282,47 +1258,62 @@
             `;
             
             if (holes && holes.length > 0) {
-                // Build the hole-by-hole scorecard table
-                html += '<div class="scorecard-table-wrapper"><table class="scorecard-table">';
-                
-                // Header row: hole numbers
-                html += '<tr><th>Hole</th>';
-                holes.forEach(h => { html += '<th>' + h.hole + '</th>'; });
-                html += '<th class="total-col">Total</th></tr>';
-                
-                // Par row
-                const totalPar = holes.reduce((sum, h) => sum + h.par, 0);
-                html += '<tr><td class="stat-label">Par</td>';
-                holes.forEach(h => { html += '<td>' + h.par + '</td>'; });
-                html += '<td class="total-col">' + totalPar + '</td></tr>';
-                
-                // Score row — wrapped in shapes per golf tradition
-                const totalScore = holes.reduce((sum, h) => sum + h.score, 0);
-                html += '<tr><td class="stat-label">Score</td>';
-                holes.forEach(h => {
-                    const diff = h.score - h.par;
-                    let cls = 'score-par';
-                    if (diff <= -2)     cls = 'score-eagle';       // eagle or better
-                    else if (diff < 0)  cls = 'score-birdie';      // birdie
-                    else if (diff === 0) cls = 'score-par';
-                    else if (diff === 1) cls = 'score-bogey';      // bogey
-                    else                 cls = 'score-double-plus'; // double bogey+
-                    html += '<td><span class="score-shape ' + cls + '">' + h.score + '</span></td>';
-                });
-                html += '<td class="total-col">' + totalScore + '</td></tr>';
-                
-                // Putts row (only if any hole has putt data)
+                // Split into front 9 and back 9 for compact layout
+                const front = holes.filter(h => h.hole <= 9);
+                const back = holes.filter(h => h.hole > 9);
                 const hasPutts = holes.some(h => h.putts !== null);
-                if (hasPutts) {
-                    const totalPutts = holes.reduce((sum, h) => sum + (h.putts || 0), 0);
-                    html += '<tr><td class="stat-label">Putts</td>';
-                    holes.forEach(h => {
-                        html += '<td>' + (h.putts !== null ? h.putts : '—') + '</td>';
+                
+                // Helper: render one half (front or back) as a table
+                function renderNineTable(label, nineHoles) {
+                    if (nineHoles.length === 0) return '';
+                    
+                    const ninePar = nineHoles.reduce((s, h) => s + h.par, 0);
+                    const nineScore = nineHoles.reduce((s, h) => s + h.score, 0);
+                    
+                    let t = '<table class="scorecard-table">';
+                    
+                    // Header: hole numbers + subtotal
+                    t += '<tr><th>' + label + '</th>';
+                    nineHoles.forEach(h => { t += '<th>' + h.hole + '</th>'; });
+                    t += '<th class="total-col">Out</th></tr>';
+                    
+                    // Par row
+                    t += '<tr><td class="stat-label">Par</td>';
+                    nineHoles.forEach(h => { t += '<td>' + h.par + '</td>'; });
+                    t += '<td class="total-col">' + ninePar + '</td></tr>';
+                    
+                    // Score row with shapes
+                    t += '<tr><td class="stat-label">Score</td>';
+                    nineHoles.forEach(h => {
+                        const diff = h.score - h.par;
+                        let cls = '';
+                        if (diff < 0)      cls = 'score-under-par';
+                        else if (diff > 0) cls = 'score-over-par';
+                        t += '<td><span class="score-shape ' + cls + '">' + h.score + '</span></td>';
                     });
-                    html += '<td class="total-col">' + totalPutts + '</td></tr>';
+                    t += '<td class="total-col">' + nineScore + '</td></tr>';
+                    
+                    // Putts row
+                    if (hasPutts) {
+                        const ninePutts = nineHoles.reduce((s, h) => s + (h.putts || 0), 0);
+                        t += '<tr><td class="stat-label">Putts</td>';
+                        nineHoles.forEach(h => {
+                            t += '<td>' + (h.putts !== null ? h.putts : '\u2014') + '</td>';
+                        });
+                        t += '<td class="total-col">' + ninePutts + '</td></tr>';
+                    }
+                    
+                    t += '</table>';
+                    return t;
                 }
                 
-                html += '</table></div>';
+                html += '<div class="scorecard-table-wrapper">';
+                html += renderNineTable('Hole', front);
+                if (back.length > 0) {
+                    html += '<div style="height: 0.75rem;"></div>';  // spacer between halves
+                    html += renderNineTable('Hole', back);
+                }
+                html += '</div>';
             } else {
                 html += '<div class="scorecard-empty">No hole-by-hole data for this round yet.<br>Add it to the Scorecards sheet to see it here.</div>';
             }
