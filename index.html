@@ -553,11 +553,54 @@
             letter-spacing: 0.03em;
         }
 
-        /* Color-code scores relative to par on each hole */
-        .score-birdie { color: #b8860b; font-weight: 700; }
-        .score-par { color: var(--green-600); font-weight: 600; }
-        .score-bogey { color: var(--green-800); }
-        .score-double-plus { color: #8b4513; font-weight: 600; }
+        /* ---- Golf scorecard shapes ----
+           Traditional scoring notation:
+           Eagle or better = double circle
+           Birdie          = single circle
+           Par             = no shape
+           Bogey           = single square
+           Double bogey+   = double square
+        */
+        .score-shape {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .score-eagle {
+            color: #b8860b;
+            border: 2px solid #b8860b;
+            border-radius: 50%;
+            outline: 2px solid #b8860b;
+            outline-offset: 2px;
+            border-radius: 50%;
+        }
+
+        .score-birdie {
+            color: #b8860b;
+            border: 2px solid #b8860b;
+            border-radius: 50%;
+        }
+
+        .score-par {
+            color: var(--green-600);
+        }
+
+        .score-bogey {
+            color: var(--green-800);
+            border: 2px solid var(--green-800);
+        }
+
+        .score-double-plus {
+            color: #8b4513;
+            border: 2px solid #8b4513;
+            outline: 2px solid #8b4513;
+            outline-offset: 2px;
+        }
 
         .scorecard-table .total-col {
             background: var(--green-50);
@@ -1253,17 +1296,18 @@
                 holes.forEach(h => { html += '<td>' + h.par + '</td>'; });
                 html += '<td class="total-col">' + totalPar + '</td></tr>';
                 
-                // Score row — color-coded per hole relative to par
+                // Score row — wrapped in shapes per golf tradition
                 const totalScore = holes.reduce((sum, h) => sum + h.score, 0);
                 html += '<tr><td class="stat-label">Score</td>';
                 holes.forEach(h => {
                     const diff = h.score - h.par;
-                    let cls = '';
-                    if (diff < 0)       cls = 'score-birdie';
+                    let cls = 'score-par';
+                    if (diff <= -2)     cls = 'score-eagle';       // eagle or better
+                    else if (diff < 0)  cls = 'score-birdie';      // birdie
                     else if (diff === 0) cls = 'score-par';
-                    else if (diff === 1) cls = 'score-bogey';
-                    else                 cls = 'score-double-plus';
-                    html += '<td class="' + cls + '">' + h.score + '</td>';
+                    else if (diff === 1) cls = 'score-bogey';      // bogey
+                    else                 cls = 'score-double-plus'; // double bogey+
+                    html += '<td><span class="score-shape ' + cls + '">' + h.score + '</span></td>';
                 });
                 html += '<td class="total-col">' + totalScore + '</td></tr>';
                 
