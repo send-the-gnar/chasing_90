@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Chasing 90</title>
     
     <!-- Fonts: DM Serif Display for headings, DM Sans for body -->
@@ -286,6 +287,14 @@
             font-size: 0.85rem;
             color: var(--green-500);
             margin-bottom: var(--space-sm);
+        }
+
+        .practice-goal-link {
+            transition: color 0.2s ease;
+        }
+        .practice-goal-link:hover {
+            color: var(--green-700);
+            text-decoration: underline;
         }
 
         /* ========================================
@@ -702,7 +711,7 @@
 
         <!-- NEW: 9-HOLE PRACTICE GOAL SECTION -->
         <section id="practice-goals">
-            <h2 class="section-title">Practice Goals</h2>
+            <h2 class="section-title">Best 9 Hole Round</h2>
             <p class="practice-note">Best 9-hole score relative to par — Goal: +5 over par</p>
             <div class="practice-goal-cards" id="practice-goal-cards">
                 <p class="loading">Loading practice goals...</p>
@@ -719,7 +728,7 @@
 
         <!-- RECENT ROUNDS SECTION (18-hole) -->
         <section id="rounds">
-            <h2 class="section-title">Recent Rounds</h2>
+            <h2 class="section-title">Recent 18 Hole Rounds</h2>
             <div class="stats-grid">
                 <div class="stats-card">
                     <h3>Daniel — Last 5 Rounds</h3>
@@ -748,11 +757,11 @@
         
         <!-- PRACTICE ROUNDS SECTION (9-hole) -->
         <section id="practice" class="practice-section">
-            <h2 class="section-title">Practice Rounds</h2>
+            <h2 class="section-title">9 Hole Rounds</h2>
             <p class="practice-note">9-hole rounds — not counted toward Chasing 90</p>
             <div class="stats-grid">
                 <div class="stats-card">
-                    <h3>Daniel — Last 5 Practice Rounds</h3>
+                    <h3>Daniel — Last 5 9-Hole Rounds</h3>
                     <div class="rounds-list practice-list" id="daniel-practice-rounds">
                         <p class="loading">Loading practice rounds...</p>
                     </div>
@@ -763,7 +772,7 @@
                     </div>
                 </div>
                 <div class="stats-card">
-                    <h3>Amelie — Last 5 Practice Rounds</h3>
+                    <h3>Amelie — Last 5 9-Hole Rounds</h3>
                     <div class="rounds-list practice-list" id="amelie-practice-rounds">
                         <p class="loading">Loading practice rounds...</p>
                     </div>
@@ -888,13 +897,38 @@
            ======================================== */
         
         function parseCSV(csvText) {
-            const lines = csvText.split('\n').filter(line => line.trim());
-            if (lines.length < 2) return [];
-            
-            const headers = parseCSVRow(lines[0]);
+            // Parse the entire CSV respecting quoted fields that may contain newlines
+            const rows = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+                const char = csvText[i];
+                if (char === '"') {
+                    // Handle escaped quotes ("") inside quoted fields
+                    if (inQuotes && i + 1 < csvText.length && csvText[i + 1] === '"') {
+                        current += '"';
+                        i++; // skip the second quote
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === '\n' && !inQuotes) {
+                    if (current.trim()) rows.push(current);
+                    current = '';
+                } else if (char === '\r' && !inQuotes) {
+                    // skip carriage returns outside quotes
+                } else {
+                    current += char;
+                }
+            }
+            if (current.trim()) rows.push(current);
+
+            if (rows.length < 2) return [];
+
+            const headers = parseCSVRow(rows[0]);
             const data = [];
-            for (let i = 1; i < lines.length; i++) {
-                const values = parseCSVRow(lines[i]);
+            for (let i = 1; i < rows.length; i++) {
+                const values = parseCSVRow(rows[i]);
                 const row = {};
                 headers.forEach((header, index) => {
                     row[header.trim().toLowerCase()] = values[index] ? values[index].trim() : '';
@@ -903,7 +937,7 @@
             }
             return data;
         }
-        
+
         function parseCSVRow(row) {
             const result = [];
             let current = '';
@@ -911,7 +945,12 @@
             for (let i = 0; i < row.length; i++) {
                 const char = row[i];
                 if (char === '"') {
-                    inQuotes = !inQuotes;
+                    if (inQuotes && i + 1 < row.length && row[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
                 } else if (char === ',' && !inQuotes) {
                     result.push(current);
                     current = '';
@@ -1149,8 +1188,10 @@
                         <span class="score-value">${toParStr}</span>
                         <span class="score-label">best over par (9 holes)</span>
                     </div>
-                    <p class="practice-goal-detail">
+                    <p class="practice-goal-detail ${bestRound.roundId ? 'practice-goal-link' : ''}"
+                       ${bestRound.roundId ? `onclick="openScorecard('${bestRound.roundId}')" style="cursor:pointer;"` : ''}>
                         ${bestRound.score} at ${bestRound.course} · ${formatDate(bestRound.date)}
+                        ${bestRound.roundId ? ' <span style="font-size:0.8em;">→ View scorecard</span>' : ''}
                     </p>
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill" style="width: ${progress}%;"></div>
