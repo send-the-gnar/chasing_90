@@ -703,7 +703,7 @@
     <main>
         <!-- 18-HOLE PROGRESS SECTION -->
         <section id="progress">
-            <h2 class="section-title">The Chase</h2>
+            <h2 class="section-title">Best 18 Hole Round</h2>
             <div class="progress-cards" id="progress-cards">
                 <p class="loading">Loading progress...</p>
             </div>
@@ -1148,7 +1148,11 @@
                         <span class="score-value">${bestRound.score}</span>
                         <span class="score-label">best score</span>
                     </div>
-                    <p class="score-date">Set on ${formatDateLong(bestRound.date)}</p>
+                    <p class="practice-goal-detail ${bestRound.roundId ? 'practice-goal-link' : ''}"
+                       ${bestRound.roundId ? `onclick="openScorecard('${bestRound.roundId}')" style="cursor:pointer;"` : ''}>
+                        ${bestRound.score} at ${bestRound.course} · ${formatDateLong(bestRound.date)}
+                        ${bestRound.roundId ? ' <span style="font-size:0.8em;">→ View scorecard</span>' : ''}
+                    </p>
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill" style="width: ${progress}%;"></div>
                     </div>
