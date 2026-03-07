@@ -905,9 +905,9 @@
             for (let i = 0; i < csvText.length; i++) {
                 const char = csvText[i];
                 if (char === '"') {
-                    // Handle escaped quotes ("") inside quoted fields
+                    current += char; // preserve quotes for parseCSVRow
                     if (inQuotes && i + 1 < csvText.length && csvText[i + 1] === '"') {
-                        current += '"';
+                        current += csvText[i + 1];
                         i++; // skip the second quote
                     } else {
                         inQuotes = !inQuotes;
