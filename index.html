@@ -11,9 +11,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
     
-    <!-- marked.js - lightweight markdown parser for rendering blog post content -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
     <style>
         /* ========================================
            CSS VARIABLES - Core design tokens
@@ -664,48 +661,6 @@
         }
 
         /* ========================================
-           BLOG SECTION (now dynamic from Sheets)
-           ======================================== */
-        #blog { scroll-margin-top: 60px; }
-
-        .blog-post {
-            background: white;
-            border-radius: 12px;
-            padding: var(--space-md) var(--space-lg);
-            margin-bottom: var(--space-md);
-            box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
-            border: 1px solid var(--green-100);
-            border-left: 4px solid var(--green-500);
-        }
-
-        .post-date {
-            font-size: 0.8rem;
-            color: var(--green-400);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: var(--space-xs);
-        }
-
-        .post-title {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            color: var(--green-800);
-            margin-bottom: var(--space-sm);
-        }
-
-        .post-content { color: var(--green-700); line-height: 1.7; }
-        .post-content p { margin-bottom: var(--space-sm); }
-        .post-content p:last-child { margin-bottom: 0; }
-
-        /* Inline images in blog posts (from markdown ![alt](url)) */
-        .post-content img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin: var(--space-sm) 0;
-            box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
-        }
-
-        /* ========================================
            SEASON TIMELINE
            ======================================== */
         #timeline { scroll-margin-top: 60px; }
@@ -848,7 +803,6 @@
            ======================================== */
         @media (max-width: 600px) {
             main { padding: var(--space-lg) var(--space-sm); }
-            .blog-post { padding: var(--space-md); }
             nav { gap: var(--space-md); }
             .scorecard-modal { max-height: 90vh; }
             .scorecard-header { flex-direction: column; gap: var(--space-xs); }
@@ -882,7 +836,7 @@
         <a href="#timeline">Timeline</a>
         <a href="#stats">Stats</a>
         <a href="#rounds">Rounds</a>
-        <a href="#blog">Blog</a>
+        <a href="blog.html">Blog</a>
         <!-- Imperial/Metric toggle button -->
         <button class="unit-toggle" id="unit-toggle" onclick="toggleUnits()">Yards</button>
     </nav>
@@ -988,13 +942,6 @@
             </div>
         </section>
 
-        <!-- BLOG SECTION (now loaded dynamically from Google Sheets) -->
-        <section id="blog">
-            <h2 class="section-title">Blog</h2>
-            <div id="blog-posts">
-                <p class="loading">Loading blog posts...</p>
-            </div>
-        </section>
     </main>
 
     <!-- ========================================
@@ -1024,8 +971,6 @@
            1. "Rounds"     - existing (add a round_id column)
            2. "Stats"      - existing  
            3. "Scorecards" - NEW: hole-by-hole detail data
-           4. "Blog"       - NEW: blog post content in markdown
-           
            Publish each new tab to the web:
            File > Share > Publish to web > select tab > Publish
            ======================================== */
@@ -1035,7 +980,6 @@
         const ROUNDS_SHEET = 'Rounds';
         const STATS_SHEET = 'Stats';
         const SCORECARDS_SHEET = 'Scorecards';  // NEW
-        const BLOG_SHEET = 'Blog';              // NEW
         const MILESTONES_SHEET = 'Milestones';    // NEW: season timeline
         
         function getSheetUrl(sheetName) {
@@ -1645,63 +1589,6 @@
         });
 
         /* ========================================
-           BLOG RENDERING (from Google Sheets)
-           
-           Blog sheet columns:
-             date    | title              | content
-             --------|--------------------|------------------
-             Feb 2026| Why We Started This| Markdown text...
-           
-           The "content" column supports markdown:
-           - **bold**, *italic*
-           - ![alt](image-url) for inline photos
-           - [link text](url) for links
-           - Paragraphs separated by blank lines
-           
-           For photos: upload to Cloudinary (free),
-           copy the URL, use ![](url) in content.
-           ======================================== */
-        
-        function renderBlogPosts(blogData) {
-            const container = document.getElementById('blog-posts');
-            
-            if (!blogData || blogData.length === 0) {
-                container.innerHTML = '<p class="loading">No blog posts yet</p>';
-                return;
-            }
-            
-            // Sort newest first (tries to parse dates; keeps original order if unparseable)
-            blogData.sort((a, b) => {
-                const dateA = new Date(a.date || '');
-                const dateB = new Date(b.date || '');
-                if (!isNaN(dateA) && !isNaN(dateB)) return dateB - dateA;
-                return 0;
-            });
-            
-            container.innerHTML = blogData.map(post => {
-                const title = post.title || 'Untitled';
-                const date = post.date || '';
-                const rawContent = post.content || '';
-                
-                // Convert markdown to HTML (handles images, bold, links, etc.)
-                let htmlContent = '';
-                try {
-                    htmlContent = marked.parse(rawContent);
-                } catch (e) {
-                    htmlContent = '<p>' + rawContent + '</p>';
-                }
-                
-                return `
-                    <article class="blog-post">
-                        <p class="post-date">${date}</p>
-                        <h3 class="post-title">${title}</h3>
-                        <div class="post-content">${htmlContent}</div>
-                    </article>
-                `;
-            }).join('');
-        }
-
-        /* ========================================
            SEASON TIMELINE
 
            Expects a "Milestones" sheet with columns:
@@ -1784,11 +1671,10 @@
         
         async function loadData() {
             try {
-                const [roundsResponse, statsResponse, scorecardsResponse, blogResponse, milestonesResponse] = await Promise.all([
+                const [roundsResponse, statsResponse, scorecardsResponse, milestonesResponse] = await Promise.all([
                     fetch(getSheetUrl(ROUNDS_SHEET)),
                     fetch(getSheetUrl(STATS_SHEET)),
                     fetch(getSheetUrl(SCORECARDS_SHEET)).catch(() => null),
-                    fetch(getSheetUrl(BLOG_SHEET)).catch(() => null),
                     fetch(getSheetUrl(MILESTONES_SHEET)).catch(() => null),
                 ]);
                 
@@ -1821,15 +1707,6 @@
                 renderAllRounds('daniel-all-practice-rounds', roundsData.danielPractice);
                 renderAllRounds('amelie-all-practice-rounds', roundsData.ameliePractice);
                 
-                // Parse and render blog posts if the sheet exists
-                if (blogResponse && blogResponse.ok) {
-                    const blogCsv = await blogResponse.text();
-                    renderBlogPosts(parseCSV(blogCsv));
-                } else {
-                    document.getElementById('blog-posts').innerHTML =
-                        '<p class="loading">Add a "Blog" sheet to your spreadsheet to start posting.</p>';
-                }
-
                 // Parse and render season timeline if the sheet exists
                 if (milestonesResponse && milestonesResponse.ok) {
                     const milestonesCsv = await milestonesResponse.text();

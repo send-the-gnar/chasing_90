@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Blog — Chasing 90</title>
+
+    <!-- Fonts: DM Serif Display for headings, DM Sans for body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+    <!-- marked.js - lightweight markdown parser for rendering blog post content -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* ========================================
+           CSS VARIABLES - Core design tokens
+           ======================================== */
+        :root {
+            --green-900: #1a2e1a;
+            --green-800: #243524;
+            --green-700: #2d4a2d;
+            --green-600: #3d5c3d;
+            --green-500: #4a7c4a;
+            --green-400: #6b9b6b;
+            --green-300: #8fb88f;
+            --green-200: #b8d4b8;
+            --green-100: #dceadc;
+            --green-50: #f0f7f0;
+
+            --cream: #fdfbf7;
+            --gold: #c9a227;
+            --gold-light: #e8d48a;
+
+            --font-display: 'DM Serif Display', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2.5rem;
+            --space-xl: 4rem;
+        }
+
+        /* ========================================
+           RESET & BASE STYLES
+           ======================================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--cream);
+            color: var(--green-900);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ========================================
+           HEADER
+           ======================================== */
+        header {
+            background: linear-gradient(135deg, var(--green-800) 0%, var(--green-700) 100%);
+            padding: var(--space-lg) var(--space-md);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        .site-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            color: var(--cream);
+            letter-spacing: 0.02em;
+            position: relative;
+        }
+
+        .site-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .site-subtitle {
+            color: var(--green-300);
+            font-size: 1rem;
+            margin-top: var(--space-xs);
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* ========================================
+           NAVIGATION
+           ======================================== */
+        nav {
+            background: var(--green-900);
+            padding: var(--space-sm) var(--space-md);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-lg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--green-200);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: color 0.2s ease;
+        }
+
+        nav a:hover { color: var(--gold-light); }
+        nav a.active { color: var(--gold-light); }
+
+        /* ========================================
+           MAIN CONTENT CONTAINER
+           ======================================== */
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--space-xl) var(--space-md);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            color: var(--green-800);
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-xs);
+            border-bottom: 2px solid var(--green-200);
+        }
+
+        /* ========================================
+           BLOG POSTS
+           ======================================== */
+        .blog-post {
+            background: white;
+            border-radius: 12px;
+            padding: var(--space-md) var(--space-lg);
+            margin-bottom: var(--space-md);
+            box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
+            border: 1px solid var(--green-100);
+            border-left: 4px solid var(--green-500);
+        }
+
+        .post-date {
+            font-size: 0.8rem;
+            color: var(--green-400);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-xs);
+        }
+
+        .post-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--green-800);
+            margin-bottom: var(--space-sm);
+        }
+
+        .post-content { color: var(--green-700); line-height: 1.7; }
+        .post-content p { margin-bottom: var(--space-sm); }
+        .post-content p:last-child { margin-bottom: 0; }
+
+        .post-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: var(--space-sm) 0;
+            box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
+        }
+
+        /* ========================================
+           COMMENTS
+           ======================================== */
+        .comments-section {
+            margin-top: var(--space-md);
+            padding-top: var(--space-md);
+            border-top: 1px dashed var(--green-200);
+        }
+
+        .comments-heading {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--green-700);
+            margin-bottom: var(--space-sm);
+        }
+
+        .comment {
+            background: var(--green-50);
+            border-radius: 8px;
+            padding: var(--space-sm);
+            margin-bottom: var(--space-xs);
+            border: 1px solid var(--green-100);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .comment-name {
+            font-weight: 600;
+            color: var(--green-800);
+            font-size: 0.9rem;
+        }
+
+        .comment-date {
+            font-size: 0.75rem;
+            color: var(--green-400);
+        }
+
+        .comment-text {
+            color: var(--green-700);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .no-comments {
+            color: var(--green-400);
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        .leave-comment-btn {
+            display: inline-block;
+            margin-top: var(--space-sm);
+            background: var(--green-600);
+            color: var(--cream);
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .leave-comment-btn:hover {
+            background: var(--green-700);
+        }
+
+        /* ========================================
+           LOADING STATE
+           ======================================== */
+        .loading {
+            color: var(--green-400);
+            font-style: italic;
+            padding: var(--space-sm);
+        }
+
+        /* ========================================
+           FOOTER
+           ======================================== */
+        footer {
+            background: var(--green-900);
+            color: var(--green-300);
+            text-align: center;
+            padding: var(--space-lg) var(--space-md);
+            font-size: 0.85rem;
+        }
+        footer p { opacity: 0.8; }
+
+        /* ========================================
+           RESPONSIVE ADJUSTMENTS
+           ======================================== */
+        @media (max-width: 600px) {
+            main { padding: var(--space-lg) var(--space-sm); }
+            .blog-post { padding: var(--space-md); }
+            nav { gap: var(--space-md); }
+        }
+    </style>
+</head>
+<body>
+    <!-- ========================================
+         HEADER
+         ======================================== -->
+    <header>
+        <h1 class="site-title"><a href="index.html">Chasing 90</a></h1>
+        <p class="site-subtitle">A golf journal</p>
+    </header>
+
+    <!-- ========================================
+         NAVIGATION
+         ======================================== -->
+    <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="blog.html" class="active">Blog</a>
+    </nav>
+
+    <!-- ========================================
+         MAIN CONTENT
+         ======================================== -->
+    <main>
+        <h2 class="section-title">Blog</h2>
+        <div id="blog-posts">
+            <p class="loading">Loading blog posts...</p>
+        </div>
+    </main>
+
+    <!-- ========================================
+         FOOTER
+         ======================================== -->
+    <footer>
+        <p>Chasing 90 — Daniel & Amelie's golf journal</p>
+    </footer>
+
+    <script>
+        /* ========================================
+           CONFIGURATION
+           ======================================== */
+
+        const SPREADSHEET_ID = '17QnUv3ufwoaupwfEqqjzJst9YFwuLQjiUdU2cFyZLzE';
+        const BLOG_SHEET = 'Blog';
+
+        // Comments — replace these once the Google Form & Comments sheet are set up
+        const COMMENTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTEbgE8yZmqzR_zl8f4EwWaf_oLUYYVwSOcW1GXLqodpSWM-c7H8AmzDkykKXnPQUHk4afeNK1K2ixv/pub?gid=1057741360&single=true&output=csv';
+        const COMMENT_FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScDWk_zOf3UmQqEhPHNJJSHp5DETGfFJXr8GL1y7YDxZrgF2g/viewform?usp=pp_url&entry.856642048=';
+
+        function getSheetUrl(sheetName) {
+            return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+        }
+
+        /* ========================================
+           CSV PARSING (shared with index.html)
+           ======================================== */
+
+        function parseCSV(csvText) {
+            const rows = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+                const char = csvText[i];
+                if (char === '"') {
+                    current += char;
+                    if (inQuotes && i + 1 < csvText.length && csvText[i + 1] === '"') {
+                        current += csvText[i + 1];
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === '\n' && !inQuotes) {
+                    if (current.trim()) rows.push(current);
+                    current = '';
+                } else if (char === '\r' && !inQuotes) {
+                    // skip carriage returns outside quotes
+                } else {
+                    current += char;
+                }
+            }
+            if (current.trim()) rows.push(current);
+
+            if (rows.length < 2) return [];
+
+            const headers = parseCSVRow(rows[0]);
+            const data = [];
+            for (let i = 1; i < rows.length; i++) {
+                const values = parseCSVRow(rows[i]);
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header.trim().toLowerCase()] = values[index] ? values[index].trim() : '';
+                });
+                data.push(row);
+            }
+            return data;
+        }
+
+        function parseCSVRow(row) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+                if (char === '"') {
+                    if (inQuotes && i + 1 < row.length && row[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+
+        /* ========================================
+           COMMENT RENDERING
+           ======================================== */
+
+        // All comments keyed by post_id
+        let commentsData = {};
+
+        function processComments(rawData) {
+            const lookup = {};
+            rawData.forEach(row => {
+                const postId = (row.post_id || '').trim();
+                if (!postId) return;
+                if (!lookup[postId]) lookup[postId] = [];
+                lookup[postId].push({
+                    name: row.name || 'Anonymous',
+                    comment: row.comment || '',
+                    timestamp: row.timestamp || '',
+                });
+            });
+            // Sort comments oldest-first within each post
+            Object.values(lookup).forEach(comments => {
+                comments.sort((a, b) => {
+                    const dateA = new Date(a.timestamp);
+                    const dateB = new Date(b.timestamp);
+                    if (!isNaN(dateA) && !isNaN(dateB)) return dateA - dateB;
+                    return 0;
+                });
+            });
+            return lookup;
+        }
+
+        function formatCommentDate(timestamp) {
+            const date = new Date(timestamp);
+            if (isNaN(date)) return timestamp;
+            return date.toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric',
+                hour: 'numeric', minute: '2-digit',
+            });
+        }
+
+        function renderComments(postId) {
+            const comments = commentsData[postId] || [];
+
+            let html = '<div class="comments-section">';
+            html += '<h4 class="comments-heading">Comments</h4>';
+
+            if (comments.length === 0) {
+                html += '<p class="no-comments">No comments yet — be the first!</p>';
+            } else {
+                html += comments.map(c => `
+                    <div class="comment">
+                        <div class="comment-header">
+                            <span class="comment-name">${escapeHtml(c.name)}</span>
+                            <span class="comment-date">${formatCommentDate(c.timestamp)}</span>
+                        </div>
+                        <p class="comment-text">${escapeHtml(c.comment)}</p>
+                    </div>
+                `).join('');
+            }
+
+            // "Leave a comment" button — opens Google Form with pre-filled post_id
+            const formUrl = COMMENT_FORM_BASE_URL + encodeURIComponent(postId);
+            html += `<a href="${formUrl}" target="_blank" class="leave-comment-btn">Leave a comment</a>`;
+
+            html += '</div>';
+            return html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /* ========================================
+           BLOG RENDERING
+           ======================================== */
+
+        function renderBlogPosts(blogData) {
+            const container = document.getElementById('blog-posts');
+
+            if (!blogData || blogData.length === 0) {
+                container.innerHTML = '<p class="loading">No blog posts yet</p>';
+                return;
+            }
+
+            // Sort newest first
+            blogData.sort((a, b) => {
+                const dateA = new Date(a.date || '');
+                const dateB = new Date(b.date || '');
+                if (!isNaN(dateA) && !isNaN(dateB)) return dateB - dateA;
+                return 0;
+            });
+
+            container.innerHTML = blogData.map(post => {
+                const title = post.title || 'Untitled';
+                const date = post.date || '';
+                const rawContent = post.content || '';
+                const postId = post.post_id || post.title || '';
+
+                // Convert markdown to HTML
+                let htmlContent = '';
+                try {
+                    htmlContent = marked.parse(rawContent);
+                } catch (e) {
+                    htmlContent = '<p>' + rawContent + '</p>';
+                }
+
+                return `
+                    <article class="blog-post" id="post-${encodeURIComponent(postId)}">
+                        <p class="post-date">${date}</p>
+                        <h3 class="post-title">${title}</h3>
+                        <div class="post-content">${htmlContent}</div>
+                        ${renderComments(postId)}
+                    </article>
+                `;
+            }).join('');
+        }
+
+        /* ========================================
+           FETCH AND INITIALIZE
+           ======================================== */
+
+        async function loadData() {
+            try {
+                // Fetch blog posts (required) and comments (optional — may not exist yet)
+                const [blogResponse, commentsResponse] = await Promise.all([
+                    fetch(getSheetUrl(BLOG_SHEET)).catch(() => null),
+                    fetch(COMMENTS_CSV_URL).catch(() => null),
+                ]);
+
+                // Parse comments first so they're available when rendering posts
+                if (commentsResponse && commentsResponse.ok) {
+                    const commentsCsv = await commentsResponse.text();
+                    commentsData = processComments(parseCSV(commentsCsv));
+                }
+
+                // Parse and render blog posts
+                if (blogResponse && blogResponse.ok) {
+                    const blogCsv = await blogResponse.text();
+                    renderBlogPosts(parseCSV(blogCsv));
+                } else {
+                    document.getElementById('blog-posts').innerHTML =
+                        '<p class="loading">Add a "Blog" sheet to your spreadsheet to start posting.</p>';
+                }
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('blog-posts').innerHTML =
+                    '<p class="loading">Error loading blog posts. Check console for details.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
