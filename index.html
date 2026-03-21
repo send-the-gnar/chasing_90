@@ -148,6 +148,69 @@
         }
 
         /* ========================================
+           HERO STATS BANNER
+           ======================================== */
+        .hero-stats {
+            background: linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 100%);
+            padding: var(--space-md) var(--space-md);
+        }
+
+        .hero-stats-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+        }
+
+        .hero-player {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .hero-player-name {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--cream);
+            white-space: nowrap;
+        }
+
+        .hero-player-stats {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--cream);
+            line-height: 1.1;
+        }
+
+        .hero-stat-label {
+            font-size: 0.65rem;
+            color: var(--green-300);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 600px) {
+            .hero-stats-inner {
+                grid-template-columns: 1fr;
+                gap: var(--space-sm);
+            }
+            .hero-player {
+                gap: var(--space-sm);
+            }
+        }
+
+        /* ========================================
            MAIN CONTENT CONTAINER
            ======================================== */
         main {
@@ -643,6 +706,123 @@
         }
 
         /* ========================================
+           SEASON TIMELINE
+           ======================================== */
+        #timeline { scroll-margin-top: 60px; }
+
+        .timeline {
+            position: relative;
+            padding: var(--space-md) 0;
+        }
+
+        /* The vertical centre line */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--green-200);
+            transform: translateX(-50%);
+        }
+
+        .timeline-entry {
+            display: flex;
+            align-items: flex-start;
+            position: relative;
+            margin-bottom: var(--space-lg);
+            width: 100%;
+        }
+
+        .timeline-entry:last-child { margin-bottom: 0; }
+
+        /* Alternating sides */
+        .timeline-entry.left .timeline-card {
+            margin-right: calc(50% + 24px);
+        }
+
+        .timeline-entry.right .timeline-card {
+            margin-left: calc(50% + 24px);
+        }
+
+        /* Centre dot on the line */
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 8px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--green-500);
+            border: 3px solid var(--cream);
+            box-shadow: 0 0 0 2px var(--green-300);
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+
+        /* Dot colour by milestone type */
+        .timeline-dot.type-personal-best { background: var(--gold); box-shadow: 0 0 0 2px var(--gold-light); }
+        .timeline-dot.type-first         { background: #e06c4a; box-shadow: 0 0 0 2px #f0a890; }
+        .timeline-dot.type-season        { background: var(--green-700); box-shadow: 0 0 0 2px var(--green-400); }
+        .timeline-dot.type-equipment     { background: #5b8fb9; box-shadow: 0 0 0 2px #a3c8e0; }
+
+        /* The card itself */
+        .timeline-card {
+            background: white;
+            border-radius: 12px;
+            padding: var(--space-md);
+            box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
+            border: 1px solid var(--green-100);
+            position: relative;
+        }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: var(--green-400);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .timeline-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+        }
+
+        .timeline-badge.type-personal-best { background: var(--gold-light); color: #7a6210; }
+        .timeline-badge.type-first         { background: #fde0d6; color: #8b3a20; }
+        .timeline-badge.type-season        { background: var(--green-100); color: var(--green-700); }
+        .timeline-badge.type-equipment     { background: #d6eaf8; color: #2e6d8e; }
+        .timeline-badge.type-milestone     { background: var(--green-50); color: var(--green-600); }
+
+        .timeline-title {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            color: var(--green-800);
+            margin-bottom: 4px;
+        }
+
+        .timeline-desc {
+            font-size: 0.9rem;
+            color: var(--green-600);
+            line-height: 1.5;
+        }
+
+        .timeline-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-top: var(--space-sm);
+            box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
+        }
+
+        /* ========================================
            LOADING STATE
            ======================================== */
         .loading {
@@ -673,6 +853,15 @@
             .scorecard-modal { max-height: 90vh; }
             .scorecard-header { flex-direction: column; gap: var(--space-xs); }
             .scorecard-total { text-align: left; }
+
+            /* Timeline collapses to single column on mobile */
+            .timeline::before { left: 16px; }
+            .timeline-dot { left: 16px; }
+            .timeline-entry.left .timeline-card,
+            .timeline-entry.right .timeline-card {
+                margin-left: 40px;
+                margin-right: 0;
+            }
         }
     </style>
 </head>
@@ -690,12 +879,18 @@
          ======================================== -->
     <nav>
         <a href="#progress">Progress</a>
+        <a href="#timeline">Timeline</a>
         <a href="#stats">Stats</a>
         <a href="#rounds">Rounds</a>
         <a href="#blog">Blog</a>
         <!-- Imperial/Metric toggle button -->
         <button class="unit-toggle" id="unit-toggle" onclick="toggleUnits()">Yards</button>
     </nav>
+
+    <!-- ========================================
+         HERO STATS BANNER
+         ======================================== -->
+    <div class="hero-stats" id="hero-stats" style="display:none;"></div>
 
     <!-- ========================================
          MAIN CONTENT
@@ -715,6 +910,14 @@
             <p class="practice-note">Best 9-hole score relative to par — Goal: +5 over par</p>
             <div class="practice-goal-cards" id="practice-goal-cards">
                 <p class="loading">Loading practice goals...</p>
+            </div>
+        </section>
+
+        <!-- SEASON TIMELINE -->
+        <section id="timeline">
+            <h2 class="section-title">Season Timeline</h2>
+            <div class="timeline" id="timeline-entries">
+                <p class="loading">Loading timeline...</p>
             </div>
         </section>
 
@@ -833,6 +1036,7 @@
         const STATS_SHEET = 'Stats';
         const SCORECARDS_SHEET = 'Scorecards';  // NEW
         const BLOG_SHEET = 'Blog';              // NEW
+        const MILESTONES_SHEET = 'Milestones';    // NEW: season timeline
         
         function getSheetUrl(sheetName) {
             return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
@@ -1214,6 +1418,61 @@
                 renderPracticeGoalCard('Amelie', data.ameliePractice);
         }
 
+        // Hero stats banner — computed from rounds data
+        function renderHeroStats(roundsData) {
+            const container = document.getElementById('hero-stats');
+            const players = [
+                { name: 'Daniel', nine: roundsData.danielPractice, eighteen: roundsData.daniel },
+                { name: 'Amelie', nine: roundsData.ameliePractice, eighteen: roundsData.amelie },
+            ];
+
+            const html = players.map(p => {
+                const allRounds = [...p.nine, ...p.eighteen];
+                const totalHoles = allRounds.reduce((sum, r) => sum + r.holes, 0);
+
+                // Average 9-hole score over par (use 9-hole rounds only)
+                let avgOverPar = '—';
+                if (p.nine.length > 0) {
+                    const total = p.nine.reduce((sum, r) => sum + (r.score - r.par), 0);
+                    const avg = total / p.nine.length;
+                    avgOverPar = (avg >= 0 ? '+' : '') + avg.toFixed(1);
+                }
+
+                // Best 9-hole score over par
+                let bestOverPar = '—';
+                if (p.nine.length > 0) {
+                    const best = p.nine.reduce((min, r) => {
+                        const diff = r.score - r.par;
+                        return diff < min ? diff : min;
+                    }, Infinity);
+                    bestOverPar = (best >= 0 ? '+' : '') + best;
+                }
+
+                return `
+                    <div class="hero-player">
+                        <span class="hero-player-name">${p.name}</span>
+                        <div class="hero-player-stats">
+                            <div class="hero-stat">
+                                <div class="hero-stat-value">${totalHoles}</div>
+                                <div class="hero-stat-label">Holes Played</div>
+                            </div>
+                            <div class="hero-stat">
+                                <div class="hero-stat-value">${avgOverPar}</div>
+                                <div class="hero-stat-label">Avg 9-Hole</div>
+                            </div>
+                            <div class="hero-stat">
+                                <div class="hero-stat-value">${bestOverPar}</div>
+                                <div class="hero-stat-label">Best 9-Hole</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `<div class="hero-stats-inner">${html}</div>`;
+            container.style.display = '';
+        }
+
         // Stats cards — avg drive now uses .distance-value for unit toggling
         function renderStatsCard(stats) {
             const avgFir = stats.avg_fir || '—';
@@ -1443,6 +1702,64 @@
         }
 
         /* ========================================
+           SEASON TIMELINE
+
+           Expects a "Milestones" sheet with columns:
+           date, type, title, description, image_url
+
+           Types: personal_best, first, season, equipment, milestone
+           ======================================== */
+        function renderTimeline(milestonesData) {
+            const container = document.getElementById('timeline-entries');
+
+            if (!milestonesData || milestonesData.length === 0) {
+                container.innerHTML = '<p class="loading">No milestones yet</p>';
+                return;
+            }
+
+            // Sort chronologically (oldest first — reading top to bottom)
+            milestonesData.sort((a, b) => {
+                const dateA = new Date(a.date || '');
+                const dateB = new Date(b.date || '');
+                if (!isNaN(dateA) && !isNaN(dateB)) return dateA - dateB;
+                return 0;
+            });
+
+            // Map type values to display labels
+            const typeLabels = {
+                personal_best: 'Personal Best',
+                first: 'First!',
+                season: 'Season',
+                equipment: 'Equipment',
+                milestone: 'Milestone',
+            };
+
+            container.innerHTML = milestonesData.map((m, i) => {
+                const side = i % 2 === 0 ? 'left' : 'right';
+                const type = (m.type || 'milestone').trim().toLowerCase().replace(/\s+/g, '_');
+                const typeClass = 'type-' + type.replace(/_/g, '-');
+                const label = typeLabels[type] || type.replace(/_/g, ' ');
+                const date = m.date || '';
+                const title = m.title || '';
+                const desc = m.description || '';
+                const imageUrl = (m.image_url || '').trim();
+
+                return `
+                    <div class="timeline-entry ${side}">
+                        <div class="timeline-dot ${typeClass}"></div>
+                        <div class="timeline-card">
+                            <p class="timeline-date">${date}</p>
+                            <span class="timeline-badge ${typeClass}">${label}</span>
+                            <h3 class="timeline-title">${title}</h3>
+                            ${desc ? '<p class="timeline-desc">' + desc + '</p>' : ''}
+                            ${imageUrl ? '<img class="timeline-image" src="' + imageUrl + '" alt="' + title + '" loading="lazy">' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* ========================================
            TOGGLE FULL HISTORY
            ======================================== */
         function toggleHistory(player) {
@@ -1467,11 +1784,12 @@
         
         async function loadData() {
             try {
-                const [roundsResponse, statsResponse, scorecardsResponse, blogResponse] = await Promise.all([
+                const [roundsResponse, statsResponse, scorecardsResponse, blogResponse, milestonesResponse] = await Promise.all([
                     fetch(getSheetUrl(ROUNDS_SHEET)),
                     fetch(getSheetUrl(STATS_SHEET)),
                     fetch(getSheetUrl(SCORECARDS_SHEET)).catch(() => null),
                     fetch(getSheetUrl(BLOG_SHEET)).catch(() => null),
+                    fetch(getSheetUrl(MILESTONES_SHEET)).catch(() => null),
                 ]);
                 
                 // Parse the core sheets (Rounds + Stats always exist)
@@ -1490,6 +1808,7 @@
                 const roundsData = processRoundsData(rawRoundsData);
                 
                 // Render all sections
+                renderHeroStats(roundsData);
                 renderProgressCards(roundsData);
                 renderPracticeGoalCards(roundsData);
                 renderStats(statsData);
@@ -1507,8 +1826,17 @@
                     const blogCsv = await blogResponse.text();
                     renderBlogPosts(parseCSV(blogCsv));
                 } else {
-                    document.getElementById('blog-posts').innerHTML = 
+                    document.getElementById('blog-posts').innerHTML =
                         '<p class="loading">Add a "Blog" sheet to your spreadsheet to start posting.</p>';
+                }
+
+                // Parse and render season timeline if the sheet exists
+                if (milestonesResponse && milestonesResponse.ok) {
+                    const milestonesCsv = await milestonesResponse.text();
+                    renderTimeline(parseCSV(milestonesCsv));
+                } else {
+                    document.getElementById('timeline-entries').innerHTML =
+                        '<p class="loading">Add a "Milestones" sheet to your spreadsheet to start your timeline.</p>';
                 }
                 
             } catch (error) {
