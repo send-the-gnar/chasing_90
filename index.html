@@ -228,131 +228,106 @@
         }
 
         /* ========================================
-           PROGRESS SECTION (18-hole chase)
+           GOALS SECTION (compact par-relative)
            ======================================== */
-        .progress-cards {
+        .goals-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: var(--space-md);
         }
 
-        .progress-card {
+        .goal-card {
             background: white;
             border-radius: 12px;
-            padding: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
             box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
             border: 1px solid var(--green-100);
         }
 
-        .player-name {
+        .goal-card-name {
             font-family: var(--font-display);
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             color: var(--green-700);
             margin-bottom: var(--space-xs);
         }
 
-        .best-score {
+        .goal-row {
             display: flex;
-            align-items: baseline;
-            gap: var(--space-xs);
-            margin-bottom: var(--space-sm);
+            align-items: center;
+            gap: var(--space-sm);
+            padding: 0.4rem 0;
         }
 
-        .score-value {
-            font-size: 3rem;
+        .goal-row + .goal-row {
+            border-top: 1px solid var(--green-50);
+        }
+
+        .goal-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--green-500);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            min-width: 52px;
+            flex-shrink: 0;
+        }
+
+        .goal-score {
+            font-size: 1.5rem;
             font-weight: 600;
             color: var(--green-800);
             line-height: 1;
+            min-width: 44px;
         }
 
-        .score-label {
-            color: var(--green-500);
-            font-size: 0.85rem;
+        .goal-bar-wrap {
+            flex: 1;
+            min-width: 0;
         }
 
-        .score-date {
-            font-size: 0.8rem;
-            color: var(--green-400);
-            margin-bottom: var(--space-sm);
-        }
-
-        .progress-bar-container {
+        .goal-bar {
             background: var(--green-100);
-            border-radius: 20px;
-            height: 24px;
+            border-radius: 10px;
+            height: 14px;
             overflow: hidden;
             position: relative;
         }
 
-        .progress-bar-fill {
+        .goal-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--green-600) 0%, var(--green-500) 100%);
-            border-radius: 20px;
+            border-radius: 10px;
             transition: width 0.8s ease-out;
-            position: relative;
         }
 
-        .progress-bar-fill::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 50%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-            border-radius: 20px 20px 0 0;
+        .goal-bar-labels {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 0.65rem;
+            color: var(--green-400);
+            margin-top: 1px;
         }
 
-        .progress-text {
+        .goal-meta {
             display: flex;
             justify-content: space-between;
-            margin-top: var(--space-xs);
-            font-size: 0.85rem;
-            color: var(--green-600);
+            font-size: 0.75rem;
+            color: var(--green-500);
+            margin-top: 2px;
         }
 
-        .strokes-away {
-            font-weight: 600;
+        .goal-meta strong {
             color: var(--green-700);
         }
 
-        /* ========================================
-           PRACTICE GOAL SECTION (9-hole goal)
-           ======================================== */
-        .practice-goal-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: var(--space-md);
-        }
-
-        .practice-goal-card {
-            background: white;
-            border-radius: 12px;
-            padding: var(--space-md);
-            box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
-            border: 1px solid var(--green-100);
-            border-left: 3px solid var(--green-400);
-        }
-
-        .practice-goal-card .player-name { font-size: 1.25rem; }
-
-        .practice-goal-stat {
-            display: flex;
-            align-items: baseline;
-            gap: var(--space-xs);
-            margin-bottom: 0.25rem;
-        }
-
-        .practice-goal-stat .score-value { font-size: 2.25rem; }
-
-        .practice-goal-detail {
-            font-size: 0.85rem;
-            color: var(--green-500);
-            margin-bottom: var(--space-sm);
-        }
-
-        .practice-goal-link {
+        .goal-detail {
+            font-size: 0.75rem;
+            color: var(--green-400);
+            cursor: pointer;
             transition: color 0.2s ease;
         }
-        .practice-goal-link:hover {
+
+        .goal-detail:hover {
             color: var(--green-700);
             text-decoration: underline;
         }
@@ -686,11 +661,13 @@
             display: flex;
             align-items: flex-start;
             position: relative;
-            margin-bottom: var(--space-lg);
+            margin-bottom: var(--space-md);
             width: 100%;
         }
 
         .timeline-entry:last-child { margin-bottom: 0; }
+
+        .timeline-entry.hidden { display: none; }
 
         /* Alternating sides */
         .timeline-entry.left .timeline-card {
@@ -725,8 +702,8 @@
         /* The card itself */
         .timeline-card {
             background: white;
-            border-radius: 12px;
-            padding: var(--space-md);
+            border-radius: 10px;
+            padding: var(--space-sm);
             box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
             border: 1px solid var(--green-100);
             position: relative;
@@ -759,22 +736,43 @@
 
         .timeline-title {
             font-family: var(--font-display);
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             color: var(--green-800);
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .timeline-desc {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--green-600);
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
         .timeline-image {
             width: 100%;
             border-radius: 8px;
-            margin-top: var(--space-sm);
+            margin-top: var(--space-xs);
             box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
+        }
+
+        .timeline-expand {
+            display: block;
+            margin: var(--space-md) auto 0;
+            background: none;
+            border: 1px solid var(--green-200);
+            color: var(--green-600);
+            padding: 0.4rem 1.25rem;
+            border-radius: 20px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+            position: relative;
+            z-index: 3;
+        }
+
+        .timeline-expand:hover {
+            background: var(--green-50);
+            color: var(--green-800);
         }
 
         /* ========================================
@@ -832,7 +830,7 @@
          NAVIGATION (now includes unit toggle)
          ======================================== -->
     <nav>
-        <a href="#progress">Progress</a>
+        <a href="#goals">Goals</a>
         <a href="#timeline">Timeline</a>
         <a href="#stats">Stats</a>
         <a href="#rounds">Rounds</a>
@@ -850,20 +848,11 @@
          MAIN CONTENT
          ======================================== -->
     <main>
-        <!-- 18-HOLE PROGRESS SECTION -->
-        <section id="progress">
-            <h2 class="section-title">Best 18 Hole Round</h2>
-            <div class="progress-cards" id="progress-cards">
-                <p class="loading">Loading progress...</p>
-            </div>
-        </section>
-
-        <!-- NEW: 9-HOLE PRACTICE GOAL SECTION -->
-        <section id="practice-goals">
-            <h2 class="section-title">Best 9 Hole Round</h2>
-            <p class="practice-note">Best 9-hole score relative to par — Goal: +5 over par</p>
-            <div class="practice-goal-cards" id="practice-goal-cards">
-                <p class="loading">Loading practice goals...</p>
+        <!-- GOALS SECTION -->
+        <section id="goals">
+            <h2 class="section-title">Goals</h2>
+            <div class="goals-grid" id="goals-grid">
+                <p class="loading">Loading goals...</p>
             </div>
         </section>
 
@@ -996,8 +985,9 @@
         // All rounds stored globally so scorecard modal can access round info
         let allRoundsData = [];
 
-        // Practice goal: target strokes over par for 9 holes
-        const PRACTICE_GOAL_OVER_PAR = 5;
+        // Goal: target strokes over par
+        const GOAL_18_OVER_PAR = 20;
+        const GOAL_9_OVER_PAR = 7;
 
         /* ========================================
            UNIT TOGGLE (Imperial / Metric)
@@ -1186,14 +1176,6 @@
             return diff > 0 ? `+${diff}` : `${diff}`;
         }
 
-        // Find the round with the lowest raw score
-        function getBestRound(rounds) {
-            if (!rounds || rounds.length === 0) return null;
-            return rounds.reduce((best, round) => 
-                round.score < best.score ? round : best
-            , rounds[0]);
-        }
-        
         // Find the round with the best (lowest) score relative to par
         function getBestOverPar(rounds) {
             if (!rounds || rounds.length === 0) return null;
@@ -1204,19 +1186,9 @@
             }, rounds[0]);
         }
         
-        // 18-hole progress: started at 110, goal is 89
-        function calculateProgress(bestScore) {
-            const START = 110;
-            const GOAL = 89;
-            const progress = (START - bestScore) / (START - GOAL) * 100;
-            return Math.max(0, Math.min(100, progress));
-        }
-
-        // 9-hole practice progress: assumed start +20 over par, goal is +5
-        function calculatePracticeProgress(bestOverPar) {
-            const START = 20;
-            const GOAL = PRACTICE_GOAL_OVER_PAR;
-            const progress = (START - bestOverPar) / (START - GOAL) * 100;
+        // Progress as percentage: from a high starting over-par down to goal
+        function calculateGoalProgress(bestOverPar, goal, start) {
+            const progress = (start - bestOverPar) / (start - goal) * 100;
             return Math.max(0, Math.min(100, progress));
         }
 
@@ -1277,89 +1249,57 @@
             container.innerHTML = rounds.map(r => renderRoundCard(r)).join('');
         }
         
-        // 18-hole progress card (the main "Chasing 90" tracker)
-        function renderProgressCard(name, bestRound) {
+        // Render a single goal row (18 or 9 hole)
+        function renderGoalRow(label, rounds, goal, startOverPar) {
+            const bestRound = getBestOverPar(rounds);
             if (!bestRound) {
                 return `
-                    <div class="progress-card">
-                        <h3 class="player-name">${name}</h3>
-                        <p class="loading">No 18-hole rounds yet</p>
-                    </div>
-                `;
-            }
-            const progress = calculateProgress(bestRound.score);
-            const strokesToGo = bestRound.score - 89;
-            return `
-                <div class="progress-card">
-                    <h3 class="player-name">${name}</h3>
-                    <div class="best-score">
-                        <span class="score-value">${bestRound.score}</span>
-                        <span class="score-label">best score</span>
-                    </div>
-                    <p class="practice-goal-detail ${bestRound.roundId ? 'practice-goal-link' : ''}"
-                       ${bestRound.roundId ? `onclick="openScorecard('${bestRound.roundId}')" style="cursor:pointer;"` : ''}>
-                        ${bestRound.score} at ${bestRound.course} · ${formatDateLong(bestRound.date)}
-                        ${bestRound.roundId ? ' <span style="font-size:0.8em;">→ View scorecard</span>' : ''}
-                    </p>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-fill" style="width: ${progress}%;"></div>
-                    </div>
-                    <div class="progress-text">
-                        <span>Started at 110 · Goal: 89</span>
-                        <span class="strokes-away">${strokesToGo} strokes to go</span>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function renderProgressCards(data) {
-            document.getElementById('progress-cards').innerHTML = 
-                renderProgressCard('Daniel', getBestRound(data.daniel)) +
-                renderProgressCard('Amelie', getBestRound(data.amelie));
-        }
-
-        // NEW: 9-hole practice goal cards (par-relative progress)
-        function renderPracticeGoalCard(name, practiceRounds) {
-            const bestRound = getBestOverPar(practiceRounds);
-            if (!bestRound) {
-                return `
-                    <div class="practice-goal-card">
-                        <h3 class="player-name">${name}</h3>
-                        <p class="loading">No 9-hole rounds yet</p>
+                    <div class="goal-row">
+                        <span class="goal-label">${label}</span>
+                        <span style="font-size:0.85rem; color:var(--green-400); font-style:italic;">No rounds yet</span>
                     </div>
                 `;
             }
             const bestOverPar = bestRound.score - bestRound.par;
-            const progress = calculatePracticeProgress(bestOverPar);
-            const strokesToGo = bestOverPar - PRACTICE_GOAL_OVER_PAR;
+            const progress = calculateGoalProgress(bestOverPar, goal, startOverPar);
+            const strokesToGo = bestOverPar - goal;
             const toParStr = formatToPar(bestRound.score, bestRound.par);
+            const clickable = bestRound.roundId ? `onclick="openScorecard('${bestRound.roundId}')"` : '';
             return `
-                <div class="practice-goal-card">
-                    <h3 class="player-name">${name}</h3>
-                    <div class="practice-goal-stat">
-                        <span class="score-value">${toParStr}</span>
-                        <span class="score-label">best over par (9 holes)</span>
-                    </div>
-                    <p class="practice-goal-detail ${bestRound.roundId ? 'practice-goal-link' : ''}"
-                       ${bestRound.roundId ? `onclick="openScorecard('${bestRound.roundId}')" style="cursor:pointer;"` : ''}>
-                        ${bestRound.score} at ${bestRound.course} · ${formatDate(bestRound.date)}
-                        ${bestRound.roundId ? ' <span style="font-size:0.8em;">→ View scorecard</span>' : ''}
-                    </p>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-fill" style="width: ${progress}%;"></div>
-                    </div>
-                    <div class="progress-text">
-                        <span>Goal: +${PRACTICE_GOAL_OVER_PAR} over par</span>
-                        <span class="strokes-away">${strokesToGo > 0 ? strokesToGo + ' strokes to go' : 'Goal reached!'}</span>
+                <div class="goal-row">
+                    <span class="goal-label">${label}</span>
+                    <span class="goal-score">${toParStr}</span>
+                    <div class="goal-bar-wrap">
+                        <div class="goal-bar">
+                            <div class="goal-bar-fill" style="width: ${progress}%;"></div>
+                        </div>
+                        <div class="goal-bar-labels">
+                            <strong>Goal: +${goal}</strong>
+                        </div>
+                        <div class="goal-meta">
+                            <span>${bestRound.score} at ${bestRound.course} · ${formatDate(bestRound.date)}${bestRound.roundId ? ' <span class="goal-detail" ' + clickable + '>→ scorecard</span>' : ''}</span>
+                            <strong>${strokesToGo > 0 ? strokesToGo + ' to go' : 'Goal reached!'}</strong>
+                        </div>
                     </div>
                 </div>
             `;
         }
-        
-        function renderPracticeGoalCards(data) {
-            document.getElementById('practice-goal-cards').innerHTML = 
-                renderPracticeGoalCard('Daniel', data.danielPractice) +
-                renderPracticeGoalCard('Amelie', data.ameliePractice);
+
+        // Render combined goal card for a player
+        function renderGoalCard(name, eighteenRounds, nineRounds) {
+            return `
+                <div class="goal-card">
+                    <h3 class="goal-card-name">${name}</h3>
+                    ${renderGoalRow('18 Hole', eighteenRounds, GOAL_18_OVER_PAR, 40)}
+                    ${renderGoalRow('9 Hole', nineRounds, GOAL_9_OVER_PAR, 20)}
+                </div>
+            `;
+        }
+
+        function renderGoals(data) {
+            document.getElementById('goals-grid').innerHTML =
+                renderGoalCard('Daniel', data.daniel, data.danielPractice) +
+                renderGoalCard('Amelie', data.amelie, data.ameliePractice);
         }
 
         // Hero stats banner — computed from rounds data
@@ -1604,11 +1544,13 @@
                 return;
             }
 
-            // Sort chronologically (oldest first — reading top to bottom)
+            const TIMELINE_INITIAL = 5;
+
+            // Sort newest first
             milestonesData.sort((a, b) => {
                 const dateA = new Date(a.date || '');
                 const dateB = new Date(b.date || '');
-                if (!isNaN(dateA) && !isNaN(dateB)) return dateA - dateB;
+                if (!isNaN(dateA) && !isNaN(dateB)) return dateB - dateA;
                 return 0;
             });
 
@@ -1621,8 +1563,9 @@
                 milestone: 'Milestone',
             };
 
-            container.innerHTML = milestonesData.map((m, i) => {
+            let html = milestonesData.map((m, i) => {
                 const side = i % 2 === 0 ? 'left' : 'right';
+                const hiddenClass = i >= TIMELINE_INITIAL ? ' hidden' : '';
                 const type = (m.type || 'milestone').trim().toLowerCase().replace(/\s+/g, '_');
                 const typeClass = 'type-' + type.replace(/_/g, '-');
                 const label = typeLabels[type] || type.replace(/_/g, ' ');
@@ -1632,7 +1575,7 @@
                 const imageUrl = (m.image_url || '').trim();
 
                 return `
-                    <div class="timeline-entry ${side}">
+                    <div class="timeline-entry ${side}${hiddenClass}">
                         <div class="timeline-dot ${typeClass}"></div>
                         <div class="timeline-card">
                             <p class="timeline-date">${date}</p>
@@ -1644,6 +1587,25 @@
                     </div>
                 `;
             }).join('');
+
+            if (milestonesData.length > TIMELINE_INITIAL) {
+                html += `<button class="timeline-expand" onclick="toggleTimeline(this)">Show all milestones ↓</button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTimeline(btn) {
+            const entries = document.querySelectorAll('.timeline-entry.hidden');
+            if (entries.length > 0) {
+                entries.forEach(el => el.classList.remove('hidden'));
+                btn.textContent = 'Show less ↑';
+            } else {
+                const all = document.querySelectorAll('.timeline-entry');
+                all.forEach((el, i) => { if (i >= 5) el.classList.add('hidden'); });
+                btn.textContent = 'Show all milestones ↓';
+                document.getElementById('timeline').scrollIntoView({ behavior: 'smooth' });
+            }
         }
 
         /* ========================================
@@ -1695,8 +1657,7 @@
                 
                 // Render all sections
                 renderHeroStats(roundsData);
-                renderProgressCards(roundsData);
-                renderPracticeGoalCards(roundsData);
+                renderGoals(roundsData);
                 renderStats(statsData);
                 renderPlayerRounds('daniel-rounds', roundsData.daniel);
                 renderPlayerRounds('amelie-rounds', roundsData.amelie);
@@ -1718,7 +1679,7 @@
                 
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.getElementById('progress-cards').innerHTML = 
+                document.getElementById('goals-grid').innerHTML =
                     '<p class="loading">Error loading data. Check console for details.</p>';
                 document.getElementById('summary-stats').innerHTML = 
                     '<p class="loading">Error loading stats.</p>';
