@@ -836,7 +836,7 @@
         <a href="#rounds">Rounds</a>
         <a href="blog.html">Blog</a>
         <!-- Imperial/Metric toggle button -->
-        <button class="unit-toggle" id="unit-toggle" onclick="toggleUnits()">Yards</button>
+        <button class="unit-toggle" id="unit-toggle" onclick="toggleUnits()">Meters</button>
     </nav>
 
     <!-- ========================================
@@ -992,42 +992,42 @@
         /* ========================================
            UNIT TOGGLE (Imperial / Metric)
            
-           All distances stored in yards in the sheet.
+           All distances stored in meters in the sheet.
            Toggle converts on display using the
-           .distance-value elements' data-yards attribute.
+           .distance-value elements' data-meters attribute.
            Preference saved in localStorage.
            ======================================== */
-        
-        const YARDS_TO_METERS = 0.9144;
-        
-        // Read saved preference or default to imperial
-        let useMetric = localStorage.getItem('chasing90-units') === 'metric';
-        
+
+        const METERS_TO_YARDS = 1.09361;
+
+        // Read saved preference or default to metric
+        let useMetric = localStorage.getItem('chasing90-units') !== 'imperial';
+
         function initUnitToggle() {
             document.getElementById('unit-toggle').textContent = useMetric ? 'Meters' : 'Yards';
         }
-        
+
         // Called when the toggle button is clicked
         function toggleUnits() {
             useMetric = !useMetric;
             localStorage.setItem('chasing90-units', useMetric ? 'metric' : 'imperial');
             document.getElementById('unit-toggle').textContent = useMetric ? 'Meters' : 'Yards';
-            
+
             // Re-render all distance values on the page
             document.querySelectorAll('.distance-value').forEach(el => {
-                const yards = parseFloat(el.dataset.yards);
-                if (!isNaN(yards)) {
-                    el.textContent = formatDistance(yards);
+                const meters = parseFloat(el.dataset.meters);
+                if (!isNaN(meters)) {
+                    el.textContent = formatDistance(meters);
                 }
             });
         }
-        
-        // Format a yard value into the currently selected unit
-        function formatDistance(yards) {
+
+        // Format a meter value into the currently selected unit
+        function formatDistance(meters) {
             if (useMetric) {
-                return Math.round(yards * YARDS_TO_METERS) + 'm';
+                return Math.round(meters) + 'm';
             }
-            return Math.round(yards) + 'yds';
+            return Math.round(meters * METERS_TO_YARDS) + 'yds';
         }
 
         /* ========================================
@@ -1203,12 +1203,12 @@
         function renderRoundCard(round, isPractice = false) {
             const toPar = formatToPar(round.score, round.par);
             const hasScorecard = scorecardData[round.roundId] ? 'true' : 'false';
-            const teeLengthYards = parseFloat(round.teeLength);
-            
+            const teeLengthMeters = parseFloat(round.teeLength);
+
             // Build tee display with convertible distance
             let teeDisplay = round.teeColor;
-            if (!isNaN(teeLengthYards) && teeLengthYards > 0) {
-                teeDisplay += ` <span class="distance-value" data-yards="${teeLengthYards}">${formatDistance(teeLengthYards)}</span>`;
+            if (!isNaN(teeLengthMeters) && teeLengthMeters > 0) {
+                teeDisplay += ` <span class="distance-value" data-meters="${teeLengthMeters}">${formatDistance(teeLengthMeters)}</span>`;
             }
             
             return `
@@ -1366,11 +1366,11 @@
             const avgDriveRaw = stats.avg_drive || '';
             const favoriteClub = stats.favorite_club || '—';
             
-            // Parse avg drive so we can apply yard/meter conversion
-            const driveYards = parseFloat(avgDriveRaw);
+            // Parse avg drive so we can apply meter/yard conversion
+            const driveMeters = parseFloat(avgDriveRaw);
             let driveDisplay;
-            if (!isNaN(driveYards) && driveYards > 0) {
-                driveDisplay = `<span class="distance-value" data-yards="${driveYards}">${formatDistance(driveYards)}</span>`;
+            if (!isNaN(driveMeters) && driveMeters > 0) {
+                driveDisplay = `<span class="distance-value" data-meters="${driveMeters}">${formatDistance(driveMeters)}</span>`;
             } else {
                 driveDisplay = avgDriveRaw || '—';
             }
