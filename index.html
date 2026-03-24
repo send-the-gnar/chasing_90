@@ -1134,6 +1134,8 @@
                 amelie: rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 18),
                 danielPractice: rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 9),
                 ameliePractice: rounds.filter(r => r.player.toLowerCase() === 'amelie' && r.holes === 9),
+                danielAll: rounds.filter(r => r.player.toLowerCase() === 'daniel'),
+                amelieAll: rounds.filter(r => r.player.toLowerCase() === 'amelie'),
             };
         }
 
@@ -1306,13 +1308,12 @@
         function renderHeroStats(roundsData) {
             const container = document.getElementById('hero-stats');
             const players = [
-                { name: 'Daniel', nine: roundsData.danielPractice, eighteen: roundsData.daniel },
-                { name: 'Amelie', nine: roundsData.ameliePractice, eighteen: roundsData.amelie },
+                { name: 'Daniel', nine: roundsData.danielPractice, eighteen: roundsData.daniel, all: roundsData.danielAll },
+                { name: 'Amelie', nine: roundsData.ameliePractice, eighteen: roundsData.amelie, all: roundsData.amelieAll },
             ];
 
             const html = players.map(p => {
-                const allRounds = [...p.nine, ...p.eighteen];
-                const totalHoles = allRounds.reduce((sum, r) => sum + r.holes, 0);
+                const totalHoles = p.all.reduce((sum, r) => sum + r.holes, 0);
 
                 // Average 9-hole score over par (use 9-hole rounds only)
                 let avgOverPar = '—';
