@@ -1937,8 +1937,15 @@
 
             if (handicapChart) { handicapChart.destroy(); handicapChart = null; }
 
-            const labels = progression.map(p => formatDate(p.date));
-            const data = progression.map(p => p.whi);
+            const startingWhi = { 'Daniel': 33, 'Amelie': 36 };
+            const startVal = startingWhi[playerName];
+
+            const labels = startVal != null
+                ? ['Start', ...progression.map(p => formatDate(p.date))]
+                : progression.map(p => formatDate(p.date));
+            const data = startVal != null
+                ? [startVal, ...progression.map(p => p.whi)]
+                : progression.map(p => p.whi);
 
             handicapChart = new Chart(ctx, {
                 type: 'line',
@@ -1960,7 +1967,6 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            reverse: true,
                             title: { display: true, text: 'Handicap Index', font: { size: 11 } },
                             ticks: { font: { size: 11 } },
                         },
