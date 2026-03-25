@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <style>
         /* ========================================
            CSS VARIABLES - Core design tokens
@@ -797,12 +798,115 @@
         footer p { opacity: 0.8; }
 
         /* ========================================
+           HANDICAP MODAL
+           ======================================== */
+        .handicap-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(26, 46, 26, 0.6);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-md);
+        }
+        .handicap-overlay.active { display: flex; }
+
+        .handicap-modal {
+            background: var(--cream);
+            border-radius: 12px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 40px rgba(26, 46, 26, 0.3);
+            position: relative;
+        }
+
+        .handicap-header {
+            background: var(--green-800);
+            color: var(--cream);
+            padding: var(--space-md);
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .handicap-header h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+        }
+
+        .handicap-whi {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .handicap-whi-label {
+            font-size: 0.8rem;
+            color: var(--green-300);
+        }
+
+        .handicap-body { padding: var(--space-md); }
+
+        .handicap-chart-wrap {
+            height: 220px;
+            margin-bottom: var(--space-md);
+        }
+
+        .handicap-detail-toggle {
+            background: none;
+            border: none;
+            color: var(--green-500);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: var(--space-sm);
+            display: block;
+        }
+        .handicap-detail-toggle:hover { color: var(--green-700); }
+
+        .handicap-detail { display: none; }
+        .handicap-detail.open { display: block; }
+
+        .handicap-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .handicap-table th,
+        .handicap-table td {
+            padding: 0.35rem 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--green-100);
+        }
+
+        .handicap-table th {
+            background: var(--green-50);
+            color: var(--green-600);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .handicap-table .diff-used { font-weight: 600; color: var(--green-700); }
+        .handicap-table .diff-pair { color: var(--green-400); font-size: 0.75rem; }
+
+        .hero-stat-clickable { cursor: pointer; }
+        .hero-stat-clickable:hover .hero-stat-value { text-decoration: underline; }
+
+        /* ========================================
            RESPONSIVE ADJUSTMENTS
            ======================================== */
         @media (max-width: 600px) {
             main { padding: var(--space-lg) var(--space-sm); }
             nav { gap: var(--space-md); }
             .scorecard-modal { max-height: 90vh; }
+            .handicap-modal { max-height: 90vh; }
             .scorecard-header { flex-direction: column; gap: var(--space-xs); }
             .scorecard-total { text-align: left; }
 
@@ -946,6 +1050,16 @@
     </div>
 
     <!-- ========================================
+         HANDICAP MODAL (appears when handicap stat is clicked)
+         ======================================== -->
+    <div class="handicap-overlay" id="handicap-overlay" onclick="closeHandicapIfBackground(event)">
+        <div class="handicap-modal" id="handicap-modal">
+            <button class="scorecard-close" onclick="closeHandicap()">&times;</button>
+            <div id="handicap-content"></div>
+        </div>
+    </div>
+
+    <!-- ========================================
          FOOTER
          ======================================== -->
     <footer>
@@ -984,6 +1098,9 @@
         
         // All rounds stored globally so scorecard modal can access round info
         let allRoundsData = [];
+
+        // Handicap data keyed by player name for modal access
+        let handicapData = {};
 
         // Goal: target strokes over par
         const GOAL_18_OVER_PAR = 20;
@@ -1304,6 +1421,157 @@
                 renderGoalCard('Amelie', data.amelie, data.ameliePractice);
         }
 
+        /* ========================================
+           ESTIMATED WHS HANDICAP CALCULATOR
+           ======================================== */
+
+        const COURSE_DATA = {
+            'daniel_park':        { cr18: 57.0,  slope: 94,  par18: 58 },
+            'amelie_park':        { cr18: 58.8,  slope: 97,  par18: 58 },
+            'daniel_champ_gams':  { cr18: 74.4,  slope: 133, par18: 73 },
+            'daniel_champ_fuchs': { cr18: 72.48, slope: 132, par18: 73 },
+            'daniel_champ_igel':  { cr18: 70.1,  slope: 129, par18: 73 },
+            'amelie_champ_igel':  { cr18: 75.3,  slope: 134, par18: 73 },
+        };
+
+        function getCourseKey(player, course, teeColor) {
+            const p = player.toLowerCase();
+            const c = course.toLowerCase();
+            const t = teeColor.toLowerCase();
+            const isMieming = c.includes('mieming') || c.includes('park course') || c.includes('champion');
+            if (!isMieming) return null;
+
+            const isPark = c.includes('park');
+            if (isPark) return p === 'daniel' ? 'daniel_park' : 'amelie_park';
+
+            // Champion course
+            if (p === 'amelie') return 'amelie_champ_igel';
+            if (t.includes('blue') || t.includes('gams')) return 'daniel_champ_gams';
+            if (t.includes('yellow') || t.includes('back') || t.includes('fuchs')) return 'daniel_champ_fuchs';
+            if (t.includes('red') || t.includes('igel')) return 'daniel_champ_igel';
+            return 'daniel_champ_gams'; // fallback for Daniel on Champion
+        }
+
+        function calcScoreDifferential(score, courseData, holes) {
+            if (holes === 9) {
+                return (113 / courseData.slope) * (score - courseData.cr18 / 2);
+            }
+            return (113 / courseData.slope) * (score - courseData.cr18);
+        }
+
+        const WHS_TABLE = [
+            // [minDiffs, maxDiffs, useLowest, adjustment]
+            [3,  3,  1, -2.0],
+            [4,  4,  1, -1.0],
+            [5,  5,  1,  0],
+            [6,  6,  2, -1.0],
+            [7,  8,  2,  0],
+            [9,  11, 3,  0],
+            [12, 14, 4,  0],
+            [15, 16, 5,  0],
+            [17, 18, 6,  0],
+            [19, 19, 7,  0],
+            [20, Infinity, 8, 0],
+        ];
+
+        function whsFromDiffs(diffs) {
+            const n = diffs.length;
+            if (n < 3) return null;
+            const row = WHS_TABLE.find(r => n >= r[0] && n <= r[1]);
+            if (!row) return null;
+            const sorted = [...diffs].sort((a, b) => a - b);
+            const used = sorted.slice(0, row[2]);
+            const avg = used.reduce((s, v) => s + v, 0) / used.length;
+            return Math.round(((avg + row[3]) * 0.96) * 10) / 10;
+        }
+
+        function calculateHandicap(allRounds) {
+            // Deduplicate by roundId
+            const seen = new Set();
+            const unique = allRounds.filter(r => {
+                if (!r.roundId || seen.has(r.roundId)) return false;
+                seen.add(r.roundId);
+                return true;
+            });
+
+            // Filter to Mieming rounds with valid hole counts
+            const eligible = unique.filter(r => {
+                const key = getCourseKey(r.player, r.course, r.teeColor);
+                return key && (r.holes === 9 || r.holes === 18);
+            }).sort((a, b) => {
+                const d = new Date(a.date) - new Date(b.date);
+                return d !== 0 ? d : a.roundId.localeCompare(b.roundId);
+            });
+
+            // Compute individual differentials with detail
+            const diffs = [];       // combined differentials (paired or 18h)
+            const nineRounds = [];  // 9-hole rounds awaiting pairing
+            const roundDetails = []; // all individual rounds with their diffs
+
+            for (const r of eligible) {
+                const key = getCourseKey(r.player, r.course, r.teeColor);
+                const cd = COURSE_DATA[key];
+                const d = calcScoreDifferential(r.score, cd, r.holes);
+                const detail = {
+                    roundId: r.roundId, date: r.date, course: r.course,
+                    teeColor: r.teeColor, score: r.score, par: r.par,
+                    holes: r.holes, diff: d, cr: cd.cr18, slope: cd.slope,
+                };
+                roundDetails.push(detail);
+
+                if (r.holes === 18) {
+                    diffs.push({ diff: d, date: r.date, type: '18h', rounds: [detail] });
+                } else {
+                    nineRounds.push(detail);
+                }
+            }
+
+            // Pair 9-hole rounds chronologically
+            const unpaired = [];
+            for (let i = 0; i < nineRounds.length; i += 2) {
+                if (i + 1 < nineRounds.length) {
+                    const r1 = nineRounds[i], r2 = nineRounds[i + 1];
+                    diffs.push({
+                        diff: r1.diff + r2.diff,
+                        date: r2.date,
+                        type: 'paired',
+                        rounds: [r1, r2],
+                    });
+                } else {
+                    unpaired.push(nineRounds[i]);
+                }
+            }
+
+            // Sort by date for progression
+            diffs.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Determine which diffs are "used" (lowest N per WHS table)
+            const diffValues = diffs.map(d => d.diff);
+            const n = diffValues.length;
+            const usedIndices = new Set();
+            if (n >= 3) {
+                const row = WHS_TABLE.find(r => n >= r[0] && n <= r[1]);
+                if (row) {
+                    const sorted = diffValues.map((v, i) => ({ v, i })).sort((a, b) => a.v - b.v);
+                    sorted.slice(0, row[2]).forEach(s => usedIndices.add(s.i));
+                }
+            }
+            diffs.forEach((d, i) => { d.used = usedIndices.has(i); });
+
+            // Rolling WHI progression
+            const progression = [];
+            for (let i = 0; i < diffs.length; i++) {
+                const slice = diffs.slice(0, i + 1).map(d => d.diff);
+                const whi = whsFromDiffs(slice);
+                if (whi !== null) {
+                    progression.push({ date: diffs[i].date, whi });
+                }
+            }
+
+            const whi = whsFromDiffs(diffValues);
+            return { whi, numDiffs: diffs.length, diffs, unpaired, progression };
+        }
+
         // Hero stats banner — computed from rounds data
         function renderHeroStats(roundsData) {
             const container = document.getElementById('hero-stats');
@@ -1316,11 +1584,26 @@
                 const totalHoles = p.all.reduce((sum, r) => sum + r.holes, 0);
 
                 // Average 9-hole score over par (use 9-hole rounds only)
-                let avgOverPar = '—';
-                if (p.nine.length > 0) {
-                    const total = p.nine.reduce((sum, r) => sum + (r.score - r.par), 0);
-                    const avg = total / p.nine.length;
-                    avgOverPar = (avg >= 0 ? '+' : '') + avg.toFixed(1);
+                // let avgOverPar = '—';
+                // if (p.nine.length > 0) {
+                //     const total = p.nine.reduce((sum, r) => sum + (r.score - r.par), 0);
+                //     const avg = total / p.nine.length;
+                //     avgOverPar = (avg >= 0 ? '+' : '') + avg.toFixed(1);
+                // }
+
+                // Estimated WHS handicap index
+                const hcp = calculateHandicap(p.all);
+                handicapData[p.name] = hcp;
+                let whiDisplay = '—';
+                let whiLabel = 'Est. Handicap';
+                let whiClickable = false;
+                if (hcp.whi !== null) {
+                    whiDisplay = hcp.whi.toFixed(1);
+                    whiClickable = true;
+                } else if (hcp.numDiffs > 0) {
+                    const needed = 3 - hcp.numDiffs;
+                    whiLabel = `Need ${needed} more`;
+                    whiClickable = true;
                 }
 
                 // Best 9-hole score over par
@@ -1341,9 +1624,9 @@
                                 <div class="hero-stat-value">${totalHoles}</div>
                                 <div class="hero-stat-label">Holes Played</div>
                             </div>
-                            <div class="hero-stat">
-                                <div class="hero-stat-value">${avgOverPar}</div>
-                                <div class="hero-stat-label">Avg 9-Hole</div>
+                            <div class="hero-stat${whiClickable ? ' hero-stat-clickable' : ''}"${whiClickable ? ` onclick="openHandicap('${p.name}')"` : ''}>
+                                <div class="hero-stat-value">${whiDisplay}</div>
+                                <div class="hero-stat-label">${whiLabel}</div>
                             </div>
                             <div class="hero-stat">
                                 <div class="hero-stat-value">${bestOverPar}</div>
@@ -1526,8 +1809,189 @@
         
         // Close on Escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeScorecard();
+            if (e.key === 'Escape') { closeScorecard(); closeHandicap(); }
         });
+
+        /* ========================================
+           HANDICAP MODAL
+           ======================================== */
+
+        let handicapChart = null;
+
+        function openHandicap(playerName) {
+            const hcp = handicapData[playerName];
+            if (!hcp) return;
+
+            const overlay = document.getElementById('handicap-overlay');
+            const content = document.getElementById('handicap-content');
+
+            const whiStr = hcp.whi !== null ? hcp.whi.toFixed(1) : '—';
+            const n = hcp.numDiffs;
+
+            // Determine WHS table info for subtitle
+            let subtitle = '';
+            if (n >= 3) {
+                const row = WHS_TABLE.find(r => n >= r[0] && n <= r[1]);
+                const adj = row[3] !== 0 ? ` · ${row[3] > 0 ? '+' : ''}${row[3]} adj` : '';
+                subtitle = `${n} diff${n !== 1 ? 's' : ''} · best ${row[2]}${adj} · ×0.96`;
+            } else {
+                const needed = 3 - n;
+                subtitle = `${n} diff${n !== 1 ? 's' : ''} · need ${needed} more for estimate`;
+            }
+
+            let html = `
+                <div class="handicap-header">
+                    <div>
+                        <h3>${playerName}</h3>
+                        <span class="handicap-whi-label">${subtitle}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="handicap-whi">${whiStr}</div>
+                        <div class="handicap-whi-label">Est. WHI</div>
+                    </div>
+                </div>
+                <div class="handicap-body">
+            `;
+
+            // Progression chart
+            if (hcp.progression.length > 1) {
+                html += `
+                    <div class="handicap-chart-wrap">
+                        <canvas id="handicap-chart"></canvas>
+                    </div>
+                `;
+            }
+
+            // Detail toggle + table
+            if (hcp.diffs.length > 0) {
+                html += `
+                    <button class="handicap-detail-toggle" onclick="this.nextElementSibling.classList.toggle('open'); this.textContent = this.nextElementSibling.classList.contains('open') ? '▾ Hide differential breakdown' : '▸ Show differential breakdown'">▸ Show differential breakdown</button>
+                    <div class="handicap-detail">
+                        <table class="handicap-table">
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Round(s)</th>
+                                <th>Score</th>
+                                <th>Diff</th>
+                            </tr>
+                `;
+
+                hcp.diffs.forEach((d, i) => {
+                    const usedCls = d.used ? ' class="diff-used"' : '';
+                    const usedMark = d.used ? ' ✓' : '';
+
+                    if (d.type === 'paired') {
+                        const r1 = d.rounds[0], r2 = d.rounds[1];
+                        const shortCourse = (r) => r.course.replace(/GC Mieming\s*/i, '');
+                        html += `
+                            <tr>
+                                <td${usedCls}>${i + 1}${usedMark}</td>
+                                <td>${formatDate(r1.date)}<br><span class="diff-pair">${formatDate(r2.date)}</span></td>
+                                <td>${shortCourse(r1)} (9h)<br><span class="diff-pair">${shortCourse(r2)} (9h)</span></td>
+                                <td>${r1.score} (${formatToPar(r1.score, r1.par)})<br><span class="diff-pair">${r2.score} (${formatToPar(r2.score, r2.par)})</span></td>
+                                <td${usedCls}>${d.diff.toFixed(1)}<br><span class="diff-pair">${r1.diff.toFixed(1)} + ${r2.diff.toFixed(1)}</span></td>
+                            </tr>
+                        `;
+                    } else {
+                        const r = d.rounds[0];
+                        const shortCourse = r.course.replace(/GC Mieming\s*/i, '');
+                        html += `
+                            <tr>
+                                <td${usedCls}>${i + 1}${usedMark}</td>
+                                <td>${formatDate(r.date)}</td>
+                                <td>${shortCourse} (18h)</td>
+                                <td>${r.score} (${formatToPar(r.score, r.par)})</td>
+                                <td${usedCls}>${d.diff.toFixed(1)}</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                html += '</table>';
+
+                // Show unpaired 9-hole round if any
+                if (hcp.unpaired.length > 0) {
+                    const u = hcp.unpaired[0];
+                    const shortCourse = u.course.replace(/GC Mieming\s*/i, '');
+                    html += `<p style="margin-top:var(--space-sm);font-size:0.8rem;color:var(--green-400);font-style:italic;">Unpaired 9-hole: ${shortCourse} ${formatDate(u.date)} — ${u.score} (${formatToPar(u.score, u.par)}) · diff ${u.diff.toFixed(1)} — waiting for next 9h round</p>`;
+                }
+
+                html += '</div>';
+            }
+
+            html += '</div>';
+            content.innerHTML = html;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Render Chart.js progression after DOM is ready
+            if (hcp.progression.length > 1) {
+                renderHandicapChart(playerName, hcp.progression);
+            }
+        }
+
+        function renderHandicapChart(playerName, progression) {
+            const ctx = document.getElementById('handicap-chart');
+            if (!ctx) return;
+
+            if (handicapChart) { handicapChart.destroy(); handicapChart = null; }
+
+            const labels = progression.map(p => formatDate(p.date));
+            const data = progression.map(p => p.whi);
+
+            handicapChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Est. WHI',
+                        data,
+                        borderColor: '#4a7c4a',
+                        backgroundColor: 'rgba(74, 124, 74, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#4a7c4a',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            reverse: true,
+                            title: { display: true, text: 'Handicap Index', font: { size: 11 } },
+                            ticks: { font: { size: 11 } },
+                        },
+                        x: {
+                            ticks: { font: { size: 10 } },
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `WHI: ${ctx.parsed.y.toFixed(1)}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function closeHandicap() {
+            const overlay = document.getElementById('handicap-overlay');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            if (handicapChart) { handicapChart.destroy(); handicapChart = null; }
+        }
+
+        function closeHandicapIfBackground(event) {
+            if (event.target === document.getElementById('handicap-overlay')) {
+                closeHandicap();
+            }
+        }
 
         /* ========================================
            SEASON TIMELINE
