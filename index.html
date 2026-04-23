@@ -900,6 +900,121 @@
         .hero-stat-clickable:hover .hero-stat-value { text-decoration: underline; }
 
         /* ========================================
+           PROGRESS / ANALYTICS SECTION
+           ======================================== */
+        .analytics-card {
+            background: white;
+            border-radius: 12px;
+            padding: var(--space-md);
+            box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
+            border: 1px solid var(--green-100);
+            margin-bottom: var(--space-md);
+        }
+        .analytics-card:last-child { margin-bottom: 0; }
+
+        .analytics-subtitle {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--green-700);
+            margin-bottom: 0.25rem;
+        }
+
+        .analytics-note {
+            font-size: 0.8rem;
+            color: var(--green-400);
+            font-style: italic;
+            margin-bottom: var(--space-sm);
+        }
+
+        .trajectory-wrap {
+            height: 300px;
+            position: relative;
+        }
+
+        /* --- Heatmap --- */
+        .heatmap-wrap { overflow-x: auto; }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: 58px repeat(9, 1fr) 50px;
+            gap: 2px;
+            min-width: 390px;
+            margin-bottom: 0;
+        }
+
+        .heatmap-label-cell {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 6px 0 0;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--green-600);
+            white-space: nowrap;
+        }
+
+        .heatmap-hole-num {
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--green-400);
+            font-weight: 600;
+            padding: 2px 0 4px;
+            border-bottom: 2px solid var(--green-100);
+        }
+
+        .heatmap-total-num {
+            border-left: 2px solid var(--green-200);
+            color: var(--green-500);
+        }
+
+        .heatmap-cell {
+            text-align: center;
+            padding: 5px 2px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border-radius: 3px;
+            cursor: default;
+            transition: transform 0.12s ease;
+        }
+        .heatmap-cell:hover { transform: scale(1.12); z-index: 1; position: relative; }
+
+        .heatmap-par-cell {
+            background: var(--green-50);
+            color: var(--green-500);
+            font-size: 0.72rem;
+        }
+
+        .heatmap-total-cell {
+            font-weight: 700;
+            border-left: 2px solid var(--green-200);
+        }
+
+        .heatmap-no-data {
+            background: var(--green-50) !important;
+            color: var(--green-300) !important;
+        }
+
+        /* Nemesis / best-hole highlight — same thick black border for both */
+        .heatmap-nemesis,
+        .heatmap-fave { box-shadow: inset 0 0 0 3px rgba(0,0,0,0.85) !important; }
+
+        .hole-badge {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-top: 1px;
+        }
+
+        .heatmap-note {
+            font-size: 0.75rem;
+            color: var(--green-400);
+            font-style: italic;
+            margin-top: 0.6rem;
+            text-align: center;
+        }
+
+        /* ========================================
            RESPONSIVE ADJUSTMENTS
            ======================================== */
         @media (max-width: 600px) {
@@ -935,6 +1050,7 @@
          ======================================== -->
     <nav>
         <a href="#goals">Goals</a>
+        <a href="#progress">Progress</a>
         <a href="#timeline">Timeline</a>
         <a href="#stats">Stats</a>
         <a href="#rounds">Rounds</a>
@@ -957,6 +1073,38 @@
             <h2 class="section-title">Goals</h2>
             <div class="goals-grid" id="goals-grid">
                 <p class="loading">Loading goals...</p>
+            </div>
+        </section>
+
+        <!-- PROGRESS CHARTS SECTION -->
+        <section id="progress">
+            <h2 class="section-title">Progress</h2>
+
+            <!-- Road to 90 trajectory chart -->
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Road to 90 — Champion Course</h3>
+                <p class="analytics-note">18-hole scores over time · dashed line = target 90</p>
+                <div class="trajectory-wrap" id="trajectory-wrap">
+                    <canvas id="trajectory-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Champion Course heatmap -->
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Hole Heatmap — Champion Course</h3>
+                <p class="analytics-note">Average score per hole · green = par · red = over par · ★ best hole · ! nemesis hole (min. 2 rounds)</p>
+                <div id="heatmap-champion">
+                    <p class="loading">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Park Course heatmap -->
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Hole Heatmap — Park Course</h3>
+                <p class="analytics-note">Average score per hole · green = par · red = over par · ★ best hole · ! nemesis hole (min. 2 rounds)</p>
+                <div id="heatmap-park">
+                    <p class="loading">Loading...</p>
+                </div>
             </div>
         </section>
 
@@ -2095,8 +2243,315 @@
         }
 
         /* ========================================
+           PROGRESS CHARTS
+           ======================================== */
+
+        let trajectoryChart = null;
+
+        // True if the round is on the Champion Course (not Park)
+        function isChampionCourse(round) {
+            const c = round.course.toLowerCase();
+            return (c.includes('mieming') || c.includes('champion')) && !c.includes('park');
+        }
+
+        // Piecewise linear interpolation helper
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        // Color stops: par (0) = best green, gradient to deep red at +4
+        const HEATMAP_STOPS = [
+            { d: 0,   rgb: [40,  130, 40]  },   // dark green  (par)
+            { d: 1.0, rgb: [130, 200, 130] },   // light green (+1)
+            { d: 2.0, rgb: [250, 220, 80]  },   // yellow      (+2)
+            { d: 3.0, rgb: [240, 120, 50]  },   // orange      (+3)
+            { d: 4.0, rgb: [190, 45,  30]  },   // deep red    (+4)
+        ];
+
+        function heatmapColor(delta) {
+            const c = Math.max(0, Math.min(4, delta));
+            let lo = HEATMAP_STOPS[0], hi = HEATMAP_STOPS[HEATMAP_STOPS.length - 1];
+            for (let i = 0; i < HEATMAP_STOPS.length - 1; i++) {
+                if (c >= HEATMAP_STOPS[i].d && c <= HEATMAP_STOPS[i + 1].d) {
+                    lo = HEATMAP_STOPS[i]; hi = HEATMAP_STOPS[i + 1]; break;
+                }
+            }
+            const t = lo.d === hi.d ? 0 : (c - lo.d) / (hi.d - lo.d);
+            const r = Math.round(lerp(lo.rgb[0], hi.rgb[0], t));
+            const g = Math.round(lerp(lo.rgb[1], hi.rgb[1], t));
+            const b = Math.round(lerp(lo.rgb[2], hi.rgb[2], t));
+            return `rgb(${r},${g},${b})`;
+        }
+
+        function heatmapTextColor(delta) {
+            return (delta <= 0.3 || delta >= 3.2) ? '#fff' : '#1a2e1a';
+        }
+
+        // --- Road to 90 ---
+        function renderRoadTo90(roundsData) {
+            const danielRounds = roundsData.daniel
+                .filter(isChampionCourse)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            const amelieRounds = roundsData.amelie
+                .filter(isChampionCourse)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const wrap = document.getElementById('trajectory-wrap');
+            if (danielRounds.length === 0 && amelieRounds.length === 0) {
+                wrap.innerHTML = '<p class="loading" style="padding:0">No Champion Course 18-hole rounds yet.</p>';
+                return;
+            }
+
+            // Unified date axis — merge and sort all dates from both players
+            const allDates = [...new Set([
+                ...danielRounds.map(r => r.date),
+                ...amelieRounds.map(r => r.date),
+            ])].sort();
+
+            const danielByDate = Object.fromEntries(danielRounds.map(r => [r.date, r.score]));
+            const amelieByDate = Object.fromEntries(amelieRounds.map(r => [r.date, r.score]));
+
+            const labels      = allDates.map(d => formatDate(d));
+            const danielData  = allDates.map(d => danielByDate[d] ?? null);
+            const amelieData  = allDates.map(d => amelieByDate[d] ?? null);
+            const targetData  = allDates.map(() => 90);
+
+            const allScores = [...danielRounds, ...amelieRounds].map(r => r.score);
+            const yMin = Math.floor(Math.min(...allScores, 90) - 2);
+            const yMax = Math.ceil(Math.max(...allScores) + 3);
+
+            const ctx = document.getElementById('trajectory-chart');
+            if (!ctx) return;
+            if (trajectoryChart) { trajectoryChart.destroy(); trajectoryChart = null; }
+
+            trajectoryChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Daniel',
+                            data: danielData,
+                            borderColor: '#4a7c4a',
+                            backgroundColor: 'rgba(74,124,74,0.08)',
+                            fill: false,
+                            spanGaps: true,
+                            tension: 0.25,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#4a7c4a',
+                            borderWidth: 2.5,
+                        },
+                        {
+                            label: 'Amelie',
+                            data: amelieData,
+                            borderColor: '#c9a227',
+                            backgroundColor: 'rgba(201,162,39,0.08)',
+                            fill: false,
+                            spanGaps: true,
+                            tension: 0.25,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#c9a227',
+                            borderWidth: 2.5,
+                        },
+                        {
+                            label: 'Target: 90',
+                            data: targetData,
+                            borderColor: 'rgba(180,50,35,0.55)',
+                            borderDash: [8, 5],
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            spanGaps: true,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: yMin,
+                            max: yMax,
+                            ticks: { font: { size: 11 }, stepSize: 5 },
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                        },
+                        x: {
+                            ticks: { font: { size: 10 } },
+                            grid: { display: false },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 11 }, usePointStyle: true, padding: 16 },
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (item) => {
+                                    if (item.dataset.label === 'Target: 90') return null;
+                                    return `${item.dataset.label}: ${item.parsed.y}`;
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+        }
+
+        function isParkCourse(round) {
+            return round.course.toLowerCase().includes('park');
+        }
+
+        // --- Hole-by-Hole Heatmap (shared renderer) ---
+        // roundFilter: function(round) => boolean
+        function renderHeatmap(containerId, roundFilter) {
+            const container = document.getElementById(containerId);
+
+            function getScorecards(player) {
+                return allRoundsData
+                    .filter(r => r.player.toLowerCase() === player.toLowerCase()
+                              && roundFilter(r)
+                              && scorecardData[r.roundId])
+                    .map(r => scorecardData[r.roundId]);
+            }
+
+            const danielCards = getScorecards('Daniel');
+            const amelieCards = getScorecards('Amelie');
+
+            if (danielCards.length === 0 && amelieCards.length === 0) {
+                container.innerHTML = '<p class="loading" style="padding:0">No scorecard data for this course yet.</p>';
+                return;
+            }
+
+            function computeAvgs(cards) {
+                if (cards.length === 0) return null;
+                const totals = {};
+                cards.forEach(holeList => {
+                    holeList.forEach(h => {
+                        if (!totals[h.hole]) totals[h.hole] = { scoreSum: 0, parSum: 0, count: 0 };
+                        totals[h.hole].scoreSum += h.score;
+                        totals[h.hole].parSum   += h.par;
+                        totals[h.hole].count++;
+                    });
+                });
+                const avgs = {};
+                for (const [hole, t] of Object.entries(totals)) {
+                    avgs[+hole] = {
+                        avg:   t.scoreSum / t.count,
+                        par:   Math.round(t.parSum / t.count),
+                        delta: (t.scoreSum - t.parSum) / t.count,
+                        count: t.count,
+                    };
+                }
+                return avgs;
+            }
+
+            const dAvgs = computeAvgs(danielCards);
+            const aAvgs = computeAvgs(amelieCards);
+            const refAvgs = dAvgs || aAvgs;
+
+            // Detect whether back 9 has any data
+            const allHoleNums = Object.keys(refAvgs || {}).map(Number);
+            const hasBack9 = allHoleNums.some(h => h > 9);
+
+            // Per-player nemesis (highest delta) and best hole (lowest delta), min 2 rounds
+            function findExtremes(avgs) {
+                if (!avgs) return { nemesis: null, fave: null };
+                const eligible = Object.entries(avgs)
+                    .filter(([, a]) => a.count >= 2)
+                    .map(([h, a]) => ({ hole: +h, delta: a.delta }));
+                if (eligible.length === 0) return { nemesis: null, fave: null };
+                return {
+                    nemesis: eligible.reduce((w, e) => e.delta > w.delta ? e : w, eligible[0]).hole,
+                    fave:    eligible.reduce((b, e) => e.delta < b.delta ? e : b, eligible[0]).hole,
+                };
+            }
+
+            const dEx = findExtremes(dAvgs);
+            const aEx = findExtremes(aAvgs);
+
+            function playerRow(label, avgs, holes, ex) {
+                let cells = `<div class="heatmap-label-cell">${label}</div>`;
+                let totalScore = 0, totalPar = 0, dataCount = 0;
+                holes.forEach(h => {
+                    if (avgs && avgs[h]) {
+                        const a = avgs[h];
+                        const bg = heatmapColor(a.delta);
+                        const fg = heatmapTextColor(a.delta);
+                        const sign = a.delta >= 0 ? '+' : '';
+                        const isNemesis = ex.nemesis === h;
+                        const isFave    = ex.fave    === h;
+                        const extraClass = isNemesis ? ' heatmap-nemesis' : isFave ? ' heatmap-fave' : '';
+                        const badge = isNemesis
+                            ? '<span class="hole-badge">!</span>'
+                            : isFave
+                                ? '<span class="hole-badge">★</span>'
+                                : '';
+                        const titlePrefix = isNemesis ? '! Nemesis — ' : isFave ? '★ Best hole — ' : '';
+                        totalScore += a.avg;
+                        totalPar   += a.par;
+                        dataCount++;
+                        cells += `<div class="heatmap-cell${extraClass}" style="background:${bg};color:${fg};" title="${titlePrefix}avg ${a.avg.toFixed(2)} (${sign}${a.delta.toFixed(2)}) · ${a.count} round${a.count !== 1 ? 's' : ''}">${a.avg.toFixed(1)}${badge}</div>`;
+                    } else {
+                        cells += '<div class="heatmap-cell heatmap-no-data">—</div>';
+                    }
+                });
+                if (dataCount > 0) {
+                    const avgDeltaPerHole = (totalScore - totalPar) / dataCount;
+                    const bg = heatmapColor(avgDeltaPerHole);
+                    const fg = heatmapTextColor(avgDeltaPerHole);
+                    cells += `<div class="heatmap-cell heatmap-total-cell" style="background:${bg};color:${fg};">${Math.round(totalScore)}</div>`;
+                } else {
+                    cells += '<div class="heatmap-cell heatmap-total-cell heatmap-no-data">—</div>';
+                }
+                return cells;
+            }
+
+            function renderHalf(holes, totalLabel) {
+                let html = '<div class="heatmap-grid">';
+                html += '<div class="heatmap-label-cell"></div>';
+                holes.forEach(h => { html += `<div class="heatmap-hole-num">${h}</div>`; });
+                html += `<div class="heatmap-hole-num heatmap-total-num">${totalLabel}</div>`;
+                if (refAvgs) {
+                    let parTotal = 0;
+                    html += '<div class="heatmap-label-cell" style="color:var(--green-500);">Par</div>';
+                    holes.forEach(h => {
+                        const par = refAvgs[h] ? refAvgs[h].par : '—';
+                        if (refAvgs[h]) parTotal += refAvgs[h].par;
+                        html += `<div class="heatmap-cell heatmap-par-cell">${par}</div>`;
+                    });
+                    html += `<div class="heatmap-cell heatmap-par-cell heatmap-total-cell">${parTotal || '—'}</div>`;
+                }
+                html += playerRow('Daniel', dAvgs, holes, dEx);
+                html += playerRow('Amelie', aAvgs, holes, aEx);
+                html += '</div>';
+                return html;
+            }
+
+            const front = Array.from({length: 9}, (_, i) => i + 1);
+            const back  = Array.from({length: 9}, (_, i) => i + 10);
+
+            let html = '<div class="heatmap-wrap">';
+            html += renderHalf(front, hasBack9 ? 'Out' : 'Total');
+            if (hasBack9) {
+                html += '<div style="height:0.75rem;"></div>';
+                html += renderHalf(back, 'In');
+            }
+            html += '</div>';
+
+            const parts = [];
+            if (danielCards.length > 0) parts.push(`Daniel: ${danielCards.length} round${danielCards.length !== 1 ? 's' : ''}`);
+            if (amelieCards.length > 0) parts.push(`Amelie: ${amelieCards.length} round${amelieCards.length !== 1 ? 's' : ''}`);
+            html += `<p class="heatmap-note">${parts.join(' · ')}</p>`;
+
+            container.innerHTML = html;
+        }
+
+        /* ========================================
            FETCH AND INITIALIZE
-           
+
            Loads all 4 sheets in parallel.
            Scorecards and Blog sheets fail gracefully
            if they don't exist yet.
@@ -2129,6 +2584,9 @@
                 // Render all sections
                 renderHeroStats(roundsData);
                 renderGoals(roundsData);
+                renderRoadTo90(roundsData);
+                renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.holes === 18);
+                renderHeatmap('heatmap-park', r => isParkCourse(r));
                 renderStats(statsData);
                 renderPlayerRounds('daniel-rounds', roundsData.daniel);
                 renderPlayerRounds('amelie-rounds', roundsData.amelie);
