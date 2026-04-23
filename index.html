@@ -932,13 +932,12 @@
         }
 
         /* --- Heatmap --- */
-        .heatmap-wrap { overflow-x: auto; }
+        .heatmap-wrap { overflow-x: visible; }
 
         .heatmap-grid {
             display: grid;
-            grid-template-columns: 58px repeat(9, 1fr) 50px;
+            grid-template-columns: 54px repeat(9, 1fr) 46px;
             gap: 2px;
-            min-width: 390px;
             margin-bottom: 0;
         }
 
@@ -951,6 +950,7 @@
             font-weight: 600;
             color: var(--green-600);
             white-space: nowrap;
+            overflow: hidden;
         }
 
         .heatmap-hole-num {
@@ -987,6 +987,19 @@
         .heatmap-total-cell {
             font-weight: 700;
             border-left: 2px solid var(--green-200);
+        }
+
+        @media (max-width: 600px) {
+            .analytics-card { padding: var(--space-sm); }
+            .heatmap-grid {
+                grid-template-columns: 26px repeat(9, 1fr) 30px;
+                gap: 1px;
+            }
+            .heatmap-label-cell { font-size: 0.6rem; padding: 0 2px 0 0; }
+            .heatmap-hole-num   { font-size: 0.6rem; padding: 2px 0 3px; }
+            .heatmap-cell       { font-size: 0.65rem; padding: 4px 1px; }
+            .heatmap-par-cell   { font-size: 0.6rem; }
+            .hole-badge         { font-size: 0.75rem; }
         }
 
         .heatmap-no-data {
@@ -1080,8 +1093,8 @@
         <section id="progress">
             <h2 class="section-title">Progress</h2>
 
-            <!-- Road to 90 trajectory chart -->
-            <div class="analytics-card">
+            <!-- Road to 90 trajectory chart (hidden until both players have data) -->
+            <div class="analytics-card" style="display:none;">
                 <h3 class="analytics-subtitle">Road to 90 — Champion Course</h3>
                 <p class="analytics-note">18-hole scores over time · dashed line = target 90</p>
                 <div class="trajectory-wrap" id="trajectory-wrap">
@@ -1092,7 +1105,7 @@
             <!-- Champion Course heatmap -->
             <div class="analytics-card">
                 <h3 class="analytics-subtitle">Hole Heatmap — Champion Course</h3>
-                <p class="analytics-note">Average score per hole · green = par · red = over par · ★ best hole · ! nemesis hole (min. 2 rounds)</p>
+                <p class="analytics-note">Average score to par per hole · green = par · red = over par · ★ best hole · ! nemesis hole (min. 2 rounds)</p>
                 <div id="heatmap-champion">
                     <p class="loading">Loading...</p>
                 </div>
@@ -1101,7 +1114,7 @@
             <!-- Park Course heatmap -->
             <div class="analytics-card">
                 <h3 class="analytics-subtitle">Hole Heatmap — Park Course</h3>
-                <p class="analytics-note">Average score per hole · green = par · red = over par · ★ best hole · ! nemesis hole (min. 2 rounds)</p>
+                <p class="analytics-note">Average score to par per hole · green = par · red = over par · ★ best hole · ! nemesis hole (min. 2 rounds)</p>
                 <div id="heatmap-park">
                     <p class="loading">Loading...</p>
                 </div>
@@ -2493,16 +2506,18 @@
                         totalScore += a.avg;
                         totalPar   += a.par;
                         dataCount++;
-                        cells += `<div class="heatmap-cell${extraClass}" style="background:${bg};color:${fg};" title="${titlePrefix}avg ${a.avg.toFixed(2)} (${sign}${a.delta.toFixed(2)}) · ${a.count} round${a.count !== 1 ? 's' : ''}">${a.avg.toFixed(1)}${badge}</div>`;
+                        cells += `<div class="heatmap-cell${extraClass}" style="background:${bg};color:${fg};" title="${titlePrefix}avg ${a.avg.toFixed(2)} (${sign}${a.delta.toFixed(2)}) · ${a.count} round${a.count !== 1 ? 's' : ''}">${sign}${a.delta.toFixed(1)}${badge}</div>`;
                     } else {
                         cells += '<div class="heatmap-cell heatmap-no-data">—</div>';
                     }
                 });
                 if (dataCount > 0) {
-                    const avgDeltaPerHole = (totalScore - totalPar) / dataCount;
+                    const totalDelta = totalScore - totalPar;
+                    const avgDeltaPerHole = totalDelta / dataCount;
                     const bg = heatmapColor(avgDeltaPerHole);
                     const fg = heatmapTextColor(avgDeltaPerHole);
-                    cells += `<div class="heatmap-cell heatmap-total-cell" style="background:${bg};color:${fg};">${Math.round(totalScore)}</div>`;
+                    const totalSign = totalDelta >= 0 ? '+' : '';
+                    cells += `<div class="heatmap-cell heatmap-total-cell" style="background:${bg};color:${fg};">${totalSign}${totalDelta.toFixed(1)}</div>`;
                 } else {
                     cells += '<div class="heatmap-cell heatmap-total-cell heatmap-no-data">—</div>';
                 }
