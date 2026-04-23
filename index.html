@@ -623,6 +623,18 @@
             border: 2px solid var(--green-900);
         }
 
+        .score-double-bogey {
+            border: 2px solid var(--green-900);
+            outline: 2px solid var(--green-900);
+            outline-offset: 2px;
+        }
+
+        .score-triple-bogey {
+            border: 2px solid #c03020;
+            outline: 2px solid #c03020;
+            outline-offset: 2px;
+        }
+
         .scorecard-table .total-col {
             background: var(--green-50);
             font-weight: 700;
@@ -1027,6 +1039,93 @@
             text-align: center;
         }
 
+        .heatmap-cell[data-hole-key] { cursor: pointer; }
+
+        /* ========================================
+           HOLE DETAIL MODAL
+           ======================================== */
+        .hole-detail-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(26, 46, 26, 0.6);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-md);
+        }
+        .hole-detail-overlay.active { display: flex; }
+
+        .hole-detail-modal {
+            background: var(--cream);
+            border-radius: 12px;
+            max-width: 440px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 40px rgba(26, 46, 26, 0.3);
+            position: relative;
+        }
+
+        .hole-detail-header {
+            background: var(--green-800);
+            color: var(--cream);
+            padding: var(--space-md);
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .hole-detail-header h3 {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            line-height: 1.1;
+        }
+
+        .hole-detail-header p {
+            color: var(--green-300);
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .hole-detail-body { padding: var(--space-md); }
+
+        .hole-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .hole-detail-table th,
+        .hole-detail-table td {
+            padding: 0.4rem 0.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--green-100);
+        }
+
+        .hole-detail-table th {
+            background: var(--green-50);
+            color: var(--green-600);
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .hole-detail-table td:first-child { text-align: left; color: var(--green-600); }
+
+        .hole-detail-avg {
+            margin-top: var(--space-sm);
+            padding-top: var(--space-sm);
+            border-top: 2px solid var(--green-100);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--green-600);
+        }
+        .hole-detail-avg strong { color: var(--green-800); font-size: 1rem; }
+
         /* ========================================
            RESPONSIVE ADJUSTMENTS
            ======================================== */
@@ -1217,6 +1316,16 @@
         <div class="handicap-modal" id="handicap-modal">
             <button class="scorecard-close" onclick="closeHandicap()">&times;</button>
             <div id="handicap-content"></div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         HOLE DETAIL MODAL (appears when a heatmap cell is clicked)
+         ======================================== -->
+    <div class="hole-detail-overlay" id="hole-detail-overlay" onclick="closeHoleDetailIfBackground(event)">
+        <div class="hole-detail-modal" id="hole-detail-modal">
+            <button class="scorecard-close" onclick="closeHoleDetail()">&times;</button>
+            <div id="hole-detail-content"></div>
         </div>
     </div>
 
@@ -1440,6 +1549,14 @@
            HELPER FUNCTIONS
            ======================================== */
         
+        function scoreShapeClass(diff) {
+            if (diff <= -1) return 'score-under-par';
+            if (diff === 1) return 'score-over-par';
+            if (diff === 2) return 'score-double-bogey';
+            if (diff >= 3)  return 'score-triple-bogey';
+            return ''; // par
+        }
+
         function formatDate(dateStr) {
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -1920,8 +2037,7 @@
                     nineHoles.forEach(h => {
                         const diff = h.score - h.par;
                         let cls = '';
-                        if (diff < 0)      cls = 'score-under-par';
-                        else if (diff > 0) cls = 'score-over-par';
+                        cls = scoreShapeClass(diff);
                         t += '<td><span class="score-shape ' + cls + '">' + h.score + '</span></td>';
                     });
                     t += '<td class="total-col">' + nineScore + '</td></tr>';
@@ -1970,7 +2086,7 @@
         
         // Close on Escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') { closeScorecard(); closeHandicap(); }
+            if (e.key === 'Escape') { closeScorecard(); closeHandicap(); closeHoleDetail(); }
         });
 
         /* ========================================
@@ -2261,6 +2377,9 @@
 
         let trajectoryChart = null;
 
+        // Keyed by "player|holeNum|containerId" → array of round detail objects
+        const holeDetailCache = {};
+
         // True if the round is on the Champion Course (not Park)
         function isChampionCourse(round) {
             const c = round.course.toLowerCase();
@@ -2296,6 +2415,77 @@
 
         function heatmapTextColor(delta) {
             return (delta <= 0.3 || delta >= 3.2) ? '#fff' : '#1a2e1a';
+        }
+
+        // --- Hole Detail Modal ---
+        function openHoleDetail(key) {
+            const entry = holeDetailCache[key];
+            if (!entry) return;
+            const { player, holeNum, par, courseName, rounds } = entry;
+
+            const overlay = document.getElementById('hole-detail-overlay');
+            const content = document.getElementById('hole-detail-content');
+
+            const parLabel = `Par ${par}`;
+            const hasPutts = rounds.some(r => r.putts !== null);
+
+            let html = `
+                <div class="hole-detail-header">
+                    <div>
+                        <h3>${player} — Hole ${holeNum}</h3>
+                        <p>${courseName} · ${parLabel} · ${rounds.length} round${rounds.length !== 1 ? 's' : ''}</p>
+                    </div>
+                </div>
+                <div class="hole-detail-body">
+                    <table class="hole-detail-table">
+                        <tr>
+                            <th>Date</th>
+                            <th>Score</th>
+                            <th>To Par</th>
+                            ${hasPutts ? '<th>Putts</th>' : ''}
+                        </tr>
+            `;
+
+            rounds.forEach(r => {
+                const diff = r.score - r.par;
+                const sign = diff >= 0 ? '+' : '';
+                let shapeClass = '';
+                shapeClass = scoreShapeClass(diff);
+                html += `
+                    <tr>
+                        <td>${formatDate(r.date)}</td>
+                        <td><span class="score-shape ${shapeClass}">${r.score}</span></td>
+                        <td>${sign}${diff}</td>
+                        ${hasPutts ? `<td>${r.putts !== null ? r.putts : '—'}</td>` : ''}
+                    </tr>
+                `;
+            });
+
+            const totalDelta = rounds.reduce((s, r) => s + (r.score - r.par), 0);
+            const avgDelta   = totalDelta / rounds.length;
+            const avgSign    = avgDelta >= 0 ? '+' : '';
+
+            html += `
+                    </table>
+                    <div class="hole-detail-avg">
+                        <span>Average to par</span>
+                        <strong>${avgSign}${avgDelta.toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+
+            content.innerHTML = html;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeHoleDetail() {
+            document.getElementById('hole-detail-overlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function closeHoleDetailIfBackground(event) {
+            if (event.target === document.getElementById('hole-detail-overlay')) closeHoleDetail();
         }
 
         // --- Road to 90 ---
@@ -2422,47 +2612,62 @@
         function renderHeatmap(containerId, roundFilter) {
             const container = document.getElementById(containerId);
 
-            function getScorecards(player) {
-                return allRoundsData
-                    .filter(r => r.player.toLowerCase() === player.toLowerCase()
-                              && roundFilter(r)
-                              && scorecardData[r.roundId])
-                    .map(r => scorecardData[r.roundId]);
+            // Returns full round objects (with metadata) that match the filter and have scorecards
+            function getMatchingRounds(player) {
+                return allRoundsData.filter(r =>
+                    r.player.toLowerCase() === player.toLowerCase()
+                    && roundFilter(r)
+                    && scorecardData[r.roundId]
+                );
             }
 
-            const danielCards = getScorecards('Daniel');
-            const amelieCards = getScorecards('Amelie');
+            const danielRounds = getMatchingRounds('Daniel');
+            const amelieRounds = getMatchingRounds('Amelie');
 
-            if (danielCards.length === 0 && amelieCards.length === 0) {
+            if (danielRounds.length === 0 && amelieRounds.length === 0) {
                 container.innerHTML = '<p class="loading" style="padding:0">No scorecard data for this course yet.</p>';
                 return;
             }
 
-            function computeAvgs(cards) {
-                if (cards.length === 0) return null;
-                const totals = {};
-                cards.forEach(holeList => {
-                    holeList.forEach(h => {
-                        if (!totals[h.hole]) totals[h.hole] = { scoreSum: 0, parSum: 0, count: 0 };
-                        totals[h.hole].scoreSum += h.score;
-                        totals[h.hole].parSum   += h.par;
-                        totals[h.hole].count++;
+            // Build a per-hole detail list for the modal cache
+            // Returns { [holeNum]: [{date, score, par, putts}, ...] }
+            function buildHoleRounds(rounds) {
+                const byHole = {};
+                rounds.forEach(r => {
+                    (scorecardData[r.roundId] || []).forEach(h => {
+                        if (!byHole[h.hole]) byHole[h.hole] = [];
+                        byHole[h.hole].push({ date: r.date, score: h.score, par: h.par, putts: h.putts });
                     });
                 });
+                // Sort each hole's list by date
+                Object.values(byHole).forEach(arr => arr.sort((a, b) => new Date(a.date) - new Date(b.date)));
+                return byHole;
+            }
+
+            const danielHoleRounds = buildHoleRounds(danielRounds);
+            const amelieHoleRounds = buildHoleRounds(amelieRounds);
+
+            // Derive the course display name from the first matching round
+            const courseName = (danielRounds[0] || amelieRounds[0]).course.replace(/GC Mieming\s*/i, '');
+
+            function computeAvgs(holeRounds) {
+                if (Object.keys(holeRounds).length === 0) return null;
                 const avgs = {};
-                for (const [hole, t] of Object.entries(totals)) {
+                for (const [hole, list] of Object.entries(holeRounds)) {
+                    const scoreSum = list.reduce((s, r) => s + r.score, 0);
+                    const parSum   = list.reduce((s, r) => s + r.par, 0);
                     avgs[+hole] = {
-                        avg:   t.scoreSum / t.count,
-                        par:   Math.round(t.parSum / t.count),
-                        delta: (t.scoreSum - t.parSum) / t.count,
-                        count: t.count,
+                        avg:   scoreSum / list.length,
+                        par:   Math.round(parSum / list.length),
+                        delta: (scoreSum - parSum) / list.length,
+                        count: list.length,
                     };
                 }
                 return avgs;
             }
 
-            const dAvgs = computeAvgs(danielCards);
-            const aAvgs = computeAvgs(amelieCards);
+            const dAvgs = computeAvgs(danielHoleRounds);
+            const aAvgs = computeAvgs(amelieHoleRounds);
             const refAvgs = dAvgs || aAvgs;
 
             // Detect whether back 9 has any data
@@ -2485,8 +2690,27 @@
             const dEx = findExtremes(dAvgs);
             const aEx = findExtremes(aAvgs);
 
-            function playerRow(label, avgs, holes, ex) {
-                let cells = `<div class="heatmap-label-cell">${label}</div>`;
+            // Populate hole detail cache for modal use
+            function cacheHoleDetails(player, holeRounds, avgs) {
+                if (!avgs) return;
+                Object.entries(holeRounds).forEach(([holeStr, rounds]) => {
+                    const holeNum = +holeStr;
+                    const key = `${player}|${holeNum}|${containerId}`;
+                    holeDetailCache[key] = {
+                        player,
+                        holeNum,
+                        par: avgs[holeNum] ? avgs[holeNum].par : rounds[0].par,
+                        courseName,
+                        rounds,
+                    };
+                });
+            }
+
+            cacheHoleDetails('Daniel', danielHoleRounds, dAvgs);
+            cacheHoleDetails('Amelie', amelieHoleRounds, aAvgs);
+
+            function playerRow(player, avgs, holeRounds, holes, ex) {
+                let cells = `<div class="heatmap-label-cell">${player}</div>`;
                 let totalScore = 0, totalPar = 0, dataCount = 0;
                 holes.forEach(h => {
                     if (avgs && avgs[h]) {
@@ -2502,11 +2726,11 @@
                             : isFave
                                 ? '<span class="hole-badge">★</span>'
                                 : '';
-                        const titlePrefix = isNemesis ? '! Nemesis — ' : isFave ? '★ Best hole — ' : '';
+                        const key = `${player}|${h}|${containerId}`;
                         totalScore += a.avg;
                         totalPar   += a.par;
                         dataCount++;
-                        cells += `<div class="heatmap-cell${extraClass}" style="background:${bg};color:${fg};" title="${titlePrefix}avg ${a.avg.toFixed(2)} (${sign}${a.delta.toFixed(2)}) · ${a.count} round${a.count !== 1 ? 's' : ''}">${sign}${a.delta.toFixed(1)}${badge}</div>`;
+                        cells += `<div class="heatmap-cell${extraClass}" data-hole-key="${key}" style="background:${bg};color:${fg};" onclick="openHoleDetail('${key}')">${sign}${a.delta.toFixed(1)}${badge}</div>`;
                     } else {
                         cells += '<div class="heatmap-cell heatmap-no-data">—</div>';
                     }
@@ -2539,8 +2763,8 @@
                     });
                     html += `<div class="heatmap-cell heatmap-par-cell heatmap-total-cell">${parTotal || '—'}</div>`;
                 }
-                html += playerRow('Daniel', dAvgs, holes, dEx);
-                html += playerRow('Amelie', aAvgs, holes, aEx);
+                html += playerRow('Daniel', dAvgs, danielHoleRounds, holes, dEx);
+                html += playerRow('Amelie', aAvgs, amelieHoleRounds, holes, aEx);
                 html += '</div>';
                 return html;
             }
@@ -2557,8 +2781,8 @@
             html += '</div>';
 
             const parts = [];
-            if (danielCards.length > 0) parts.push(`Daniel: ${danielCards.length} round${danielCards.length !== 1 ? 's' : ''}`);
-            if (amelieCards.length > 0) parts.push(`Amelie: ${amelieCards.length} round${amelieCards.length !== 1 ? 's' : ''}`);
+            if (danielRounds.length > 0) parts.push(`Daniel: ${danielRounds.length} round${danielRounds.length !== 1 ? 's' : ''}`);
+            if (amelieRounds.length > 0) parts.push(`Amelie: ${amelieRounds.length} round${amelieRounds.length !== 1 ? 's' : ''}`);
             html += `<p class="heatmap-note">${parts.join(' · ')}</p>`;
 
             container.innerHTML = html;
