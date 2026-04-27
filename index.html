@@ -1507,6 +1507,7 @@
                 putts: row.putts ? parseInt(row.putts) : null,
                 fir: row.fir || null,
                 gir: row.gir || null,
+                excludeFromHandicap: (row.exclude_from_handicap || '').toLowerCase() === 'true',
             };
         }
         
@@ -1772,10 +1773,10 @@
                 return true;
             });
 
-            // Filter to Mieming rounds with valid hole counts
+            // Filter to Mieming rounds with valid hole counts, excluding casual rounds
             const eligible = unique.filter(r => {
                 const key = getCourseKey(r.player, r.course, r.teeColor);
-                return key && (r.holes === 9 || r.holes === 18);
+                return key && (r.holes === 9 || r.holes === 18) && !r.excludeFromHandicap;
             }).sort((a, b) => {
                 const d = new Date(a.date) - new Date(b.date);
                 return d !== 0 ? d : a.roundId.localeCompare(b.roundId);
@@ -1789,10 +1790,15 @@
             for (const r of eligible) {
                 const key = getCourseKey(r.player, r.course, r.teeColor);
                 const cd = COURSE_DATA[key];
-                const d = calcScoreDifferential(r.score, cd, r.holes);
+                // Apply triple-bogey cap per hole when scorecard data is available
+                const holeData = scorecardData[r.roundId];
+                const adjustedScore = holeData
+                    ? holeData.reduce((sum, h) => sum + Math.min(h.score, h.par + 3), 0)
+                    : r.score;
+                const d = calcScoreDifferential(adjustedScore, cd, r.holes);
                 const detail = {
                     roundId: r.roundId, date: r.date, course: r.course,
-                    teeColor: r.teeColor, score: r.score, par: r.par,
+                    teeColor: r.teeColor, score: r.score, adjustedScore, par: r.par,
                     holes: r.holes, diff: d, cr: cd.cr18, slope: cd.slope,
                 };
                 roundDetails.push(detail);
@@ -2158,6 +2164,13 @@
                     const usedCls = d.used ? ' class="diff-used"' : '';
                     const usedMark = d.used ? ' ✓' : '';
 
+                    const scoreCell = (r) => {
+                        const capped = r.adjustedScore && r.adjustedScore !== r.score;
+                        if (capped) {
+                            return `${r.adjustedScore} <span class="diff-pair" title="Raw: ${r.score}">(adj)</span>`;
+                        }
+                        return `${r.score} (${formatToPar(r.score, r.par)})`;
+                    };
                     if (d.type === 'paired') {
                         const r1 = d.rounds[0], r2 = d.rounds[1];
                         const shortCourse = (r) => r.course.replace(/GC Mieming\s*/i, '');
@@ -2166,7 +2179,7 @@
                                 <td${usedCls}>${i + 1}${usedMark}</td>
                                 <td>${formatDate(r1.date)}<br><span class="diff-pair">${formatDate(r2.date)}</span></td>
                                 <td>${shortCourse(r1)} (9h)<br><span class="diff-pair">${shortCourse(r2)} (9h)</span></td>
-                                <td>${r1.score} (${formatToPar(r1.score, r1.par)})<br><span class="diff-pair">${r2.score} (${formatToPar(r2.score, r2.par)})</span></td>
+                                <td>${scoreCell(r1)}<br><span class="diff-pair">${scoreCell(r2)}</span></td>
                                 <td${usedCls}>${d.diff.toFixed(1)}<br><span class="diff-pair">${r1.diff.toFixed(1)} + ${r2.diff.toFixed(1)}</span></td>
                             </tr>
                         `;
@@ -2178,7 +2191,7 @@
                                 <td${usedCls}>${i + 1}${usedMark}</td>
                                 <td>${formatDate(r.date)}</td>
                                 <td>${shortCourse} (18h)</td>
-                                <td>${r.score} (${formatToPar(r.score, r.par)})</td>
+                                <td>${scoreCell(r)}</td>
                                 <td${usedCls}>${d.diff.toFixed(1)}</td>
                             </tr>
                         `;
