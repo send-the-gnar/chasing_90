@@ -1970,6 +1970,7 @@
         
         function renderStats(statsData) {
             const container = document.getElementById('summary-stats');
+            if (!container) return;
             if (!statsData || statsData.length === 0) {
                 container.innerHTML = '<p class="loading">No stats available</p>';
                 return;
@@ -2883,8 +2884,8 @@
                 console.error('Error loading data:', error);
                 document.getElementById('goals-grid').innerHTML =
                     '<p class="loading">Error loading data. Check console for details.</p>';
-                document.getElementById('summary-stats').innerHTML = 
-                    '<p class="loading">Error loading stats.</p>';
+                const statsEl = document.getElementById('summary-stats');
+                if (statsEl) statsEl.innerHTML = '<p class="loading">Error loading stats.</p>';
             }
         }
         
