@@ -1162,9 +1162,8 @@
          ======================================== -->
     <nav>
         <a href="#goals">Goals</a>
-        <a href="#progress">Progress</a>
+        <a href="#progress">Stats</a>
         <a href="#timeline">Timeline</a>
-        <a href="#stats">Stats</a>
         <a href="#rounds">Rounds</a>
         <a href="blog.html">Blog</a>
         <!-- Imperial/Metric toggle button -->
@@ -1190,7 +1189,7 @@
 
         <!-- PROGRESS CHARTS SECTION -->
         <section id="progress">
-            <h2 class="section-title">Progress</h2>
+            <h2 class="section-title">Stats</h2>
 
             <!-- Road to 90 trajectory chart (hidden until both players have data) -->
             <div class="analytics-card" style="display:none;">
@@ -1229,12 +1228,12 @@
         </section>
 
         <!-- STATS SECTION -->
-        <section id="stats">
+        <!-- <section id="stats">
             <h2 class="section-title">Stats</h2>
             <div class="summary-stats" id="summary-stats">
                 <p class="loading">Loading stats...</p>
             </div>
-        </section>
+        </section> -->
 
         <!-- RECENT ROUNDS SECTION (18-hole) -->
         <section id="rounds">
@@ -2160,23 +2159,23 @@
                             </tr>
                 `;
 
-                hcp.diffs.forEach((d, i) => {
+                const scoreCell = (r) => {
+                    const capped = r.adjustedScore && r.adjustedScore !== r.score;
+                    if (capped) {
+                        return `${r.adjustedScore} <span class="diff-pair" title="Raw: ${r.score}">(adj)</span>`;
+                    }
+                    return `${r.score} (${formatToPar(r.score, r.par)})`;
+                };
+
+                const renderDiffRow = (d, originalIndex) => {
                     const usedCls = d.used ? ' class="diff-used"' : '';
                     const usedMark = d.used ? ' ✓' : '';
-
-                    const scoreCell = (r) => {
-                        const capped = r.adjustedScore && r.adjustedScore !== r.score;
-                        if (capped) {
-                            return `${r.adjustedScore} <span class="diff-pair" title="Raw: ${r.score}">(adj)</span>`;
-                        }
-                        return `${r.score} (${formatToPar(r.score, r.par)})`;
-                    };
                     if (d.type === 'paired') {
                         const r1 = d.rounds[0], r2 = d.rounds[1];
                         const shortCourse = (r) => r.course.replace(/GC Mieming\s*/i, '');
-                        html += `
+                        return `
                             <tr>
-                                <td${usedCls}>${i + 1}${usedMark}</td>
+                                <td${usedCls}>${originalIndex + 1}${usedMark}</td>
                                 <td>${formatDate(r1.date)}<br><span class="diff-pair">${formatDate(r2.date)}</span></td>
                                 <td>${shortCourse(r1)} (9h)<br><span class="diff-pair">${shortCourse(r2)} (9h)</span></td>
                                 <td>${scoreCell(r1)}<br><span class="diff-pair">${scoreCell(r2)}</span></td>
@@ -2186,9 +2185,9 @@
                     } else {
                         const r = d.rounds[0];
                         const shortCourse = r.course.replace(/GC Mieming\s*/i, '');
-                        html += `
+                        return `
                             <tr>
-                                <td${usedCls}>${i + 1}${usedMark}</td>
+                                <td${usedCls}>${originalIndex + 1}${usedMark}</td>
                                 <td>${formatDate(r.date)}</td>
                                 <td>${shortCourse} (18h)</td>
                                 <td>${scoreCell(r)}</td>
@@ -2196,9 +2195,31 @@
                             </tr>
                         `;
                     }
-                });
+                };
+
+                // Newest first, preserving original chronological index for the # column
+                const diffsNewestFirst = hcp.diffs.map((d, i) => ({ d, i })).reverse();
+                const visible = diffsNewestFirst.slice(0, 20);
+                const older = diffsNewestFirst.slice(20);
+
+                visible.forEach(({ d, i }) => { html += renderDiffRow(d, i); });
 
                 html += '</table>';
+
+                if (older.length > 0) {
+                    const olderId = `older-diffs-${playerName.replace(/\s+/g, '-')}`;
+                    html += `
+                        <div id="${olderId}" style="display:none;">
+                            <table class="handicap-table">
+                                ${older.map(({ d, i }) => renderDiffRow(d, i)).join('')}
+                            </table>
+                        </div>
+                        <button class="handicap-detail-toggle" style="margin-top:var(--space-sm);"
+                            onclick="const el=document.getElementById('${olderId}'); const shown=el.style.display!=='none'; el.style.display=shown?'none':'block'; this.textContent=shown?'▸ Load ${older.length} older round(s)':'▾ Hide older rounds';">
+                            ▸ Load ${older.length} older round(s)
+                        </button>
+                    `;
+                }
 
                 // Show unpaired 9-hole round if any
                 if (hcp.unpaired.length > 0) {
