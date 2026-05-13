@@ -1126,6 +1126,29 @@
         }
         .hole-detail-avg strong { color: var(--green-800); font-size: 1rem; }
 
+        .hole-detail-older { opacity: 0.45; }
+        .hole-detail-divider td {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--green-400);
+            font-style: italic;
+            padding: 0.45rem 0.5rem;
+            border-top: 1px dashed var(--green-200);
+            border-bottom: 1px dashed var(--green-200);
+        }
+        .hole-detail-rolling-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            background: var(--green-100);
+            color: var(--green-600);
+            border-radius: 10px;
+            padding: 0.1rem 0.45rem;
+            margin-left: 0.4rem;
+            vertical-align: middle;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
         /* ========================================
            RESPONSIVE ADJUSTMENTS
            ======================================== */
@@ -2456,7 +2479,7 @@
         function openHoleDetail(key) {
             const entry = holeDetailCache[key];
             if (!entry) return;
-            const { player, holeNum, par, courseName, rounds } = entry;
+            const { player, holeNum, par, courseName, rounds, rollingN } = entry;
 
             const overlay = document.getElementById('hole-detail-overlay');
             const content = document.getElementById('hole-detail-content');
@@ -2464,11 +2487,19 @@
             const parLabel = `Par ${par}`;
             const hasPutts = rounds.some(r => r.putts !== null);
 
+            // Newest first, preserve index for ordering
+            const newestFirst = [...rounds].reverse();
+            const windowSize = rollingN ? Math.min(rollingN, newestFirst.length) : newestFirst.length;
+            const isRolling = rollingN && rounds.length > 0;
+            const rollingLabel = isRolling
+                ? `<span class="hole-detail-rolling-badge">last ${windowSize}</span>`
+                : '';
+
             let html = `
                 <div class="hole-detail-header">
                     <div>
                         <h3>${player} — Hole ${holeNum}</h3>
-                        <p>${courseName} · ${parLabel} · ${rounds.length} round${rounds.length !== 1 ? 's' : ''}</p>
+                        <p>${courseName} · ${parLabel} · ${rounds.length} round${rounds.length !== 1 ? 's' : ''}${rollingLabel}</p>
                     </div>
                 </div>
                 <div class="hole-detail-body">
@@ -2481,13 +2512,18 @@
                         </tr>
             `;
 
-            rounds.forEach(r => {
+            newestFirst.forEach((r, i) => {
+                const isOlder = isRolling && i >= windowSize;
+                // Insert a visual separator between the rolling window and older rounds
+                if (isRolling && i === windowSize && rounds.length > windowSize) {
+                    const colspan = hasPutts ? 4 : 3;
+                    html += `<tr class="hole-detail-divider"><td colspan="${colspan}">Earlier rounds</td></tr>`;
+                }
                 const diff = r.score - r.par;
                 const sign = diff >= 0 ? '+' : '';
-                let shapeClass = '';
-                shapeClass = scoreShapeClass(diff);
+                const shapeClass = scoreShapeClass(diff);
                 html += `
-                    <tr>
+                    <tr${isOlder ? ' class="hole-detail-older"' : ''}>
                         <td>${formatDate(r.date)}</td>
                         <td><span class="score-shape ${shapeClass}">${r.score}</span></td>
                         <td>${sign}${diff}</td>
@@ -2496,18 +2532,35 @@
                 `;
             });
 
-            const totalDelta = rounds.reduce((s, r) => s + (r.score - r.par), 0);
-            const avgDelta   = totalDelta / rounds.length;
-            const avgSign    = avgDelta >= 0 ? '+' : '';
+            const rollingRounds = newestFirst.slice(0, windowSize);
+            const rollingDelta  = rollingRounds.reduce((s, r) => s + (r.score - r.par), 0) / rollingRounds.length;
+            const rollingSign   = rollingDelta >= 0 ? '+' : '';
 
-            html += `
-                    </table>
+            let avgHtml = '';
+            if (isRolling && rounds.length > windowSize) {
+                const allDelta = rounds.reduce((s, r) => s + (r.score - r.par), 0) / rounds.length;
+                const allSign  = allDelta >= 0 ? '+' : '';
+                avgHtml = `
                     <div class="hole-detail-avg">
-                        <span>Average to par</span>
-                        <strong>${avgSign}${avgDelta.toFixed(2)}</strong>
+                        <span>Last ${windowSize} avg</span>
+                        <strong>${rollingSign}${rollingDelta.toFixed(2)}</strong>
                     </div>
-                </div>
-            `;
+                    <div class="hole-detail-avg" style="margin-top:0.3rem;opacity:0.6;font-size:0.8rem;">
+                        <span>All-time avg (${rounds.length})</span>
+                        <strong style="font-size:0.9rem;">${allSign}${allDelta.toFixed(2)}</strong>
+                    </div>
+                `;
+            } else {
+                const label = isRolling ? `Last ${windowSize} avg` : 'Average to par';
+                avgHtml = `
+                    <div class="hole-detail-avg">
+                        <span>${label}</span>
+                        <strong>${rollingSign}${rollingDelta.toFixed(2)}</strong>
+                    </div>
+                `;
+            }
+
+            html += `</table>${avgHtml}</div>`;
 
             content.innerHTML = html;
             overlay.classList.add('active');
@@ -2644,7 +2697,9 @@
 
         // --- Hole-by-Hole Heatmap (shared renderer) ---
         // roundFilter: function(round) => boolean
-        function renderHeatmap(containerId, roundFilter) {
+        // options.rollingN: if set, heatmap shows average of last N rounds per hole
+        function renderHeatmap(containerId, roundFilter, options = {}) {
+            const rollingN = options.rollingN || null;
             const container = document.getElementById(containerId);
 
             // Returns full round objects (with metadata) that match the filter and have scorecards
@@ -2689,13 +2744,14 @@
                 if (Object.keys(holeRounds).length === 0) return null;
                 const avgs = {};
                 for (const [hole, list] of Object.entries(holeRounds)) {
-                    const scoreSum = list.reduce((s, r) => s + r.score, 0);
-                    const parSum   = list.reduce((s, r) => s + r.par, 0);
+                    const recent = rollingN ? list.slice(-rollingN) : list;
+                    const scoreSum = recent.reduce((s, r) => s + r.score, 0);
+                    const parSum   = recent.reduce((s, r) => s + r.par, 0);
                     avgs[+hole] = {
-                        avg:   scoreSum / list.length,
-                        par:   Math.round(parSum / list.length),
-                        delta: (scoreSum - parSum) / list.length,
-                        count: list.length,
+                        avg:   scoreSum / recent.length,
+                        par:   Math.round(parSum / recent.length),
+                        delta: (scoreSum - parSum) / recent.length,
+                        count: recent.length,
                     };
                 }
                 return avgs;
@@ -2737,6 +2793,7 @@
                         par: avgs[holeNum] ? avgs[holeNum].par : rounds[0].par,
                         courseName,
                         rounds,
+                        rollingN,
                     };
                 });
             }
@@ -2818,7 +2875,8 @@
             const parts = [];
             if (danielRounds.length > 0) parts.push(`Daniel: ${danielRounds.length} round${danielRounds.length !== 1 ? 's' : ''}`);
             if (amelieRounds.length > 0) parts.push(`Amelie: ${amelieRounds.length} round${amelieRounds.length !== 1 ? 's' : ''}`);
-            html += `<p class="heatmap-note">${parts.join(' · ')}</p>`;
+            const rollingNote = rollingN ? ` · rolling avg (last ${rollingN})` : '';
+            html += `<p class="heatmap-note">${parts.join(' · ')}${rollingNote}</p>`;
 
             container.innerHTML = html;
         }
@@ -2860,7 +2918,7 @@
                 renderGoals(roundsData);
                 renderRoadTo90(roundsData);
                 renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.holes === 18);
-                renderHeatmap('heatmap-park', r => isParkCourse(r));
+                renderHeatmap('heatmap-park', r => isParkCourse(r), { rollingN: 10 });
                 renderStats(statsData);
                 renderPlayerRounds('daniel-rounds', roundsData.daniel);
                 renderPlayerRounds('amelie-rounds', roundsData.amelie);
