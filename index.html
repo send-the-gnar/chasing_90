@@ -944,12 +944,18 @@
         }
 
         /* --- Heatmap --- */
-        .heatmap-wrap { overflow-x: visible; }
+        .heatmap-wrap {
+            overflow-x: visible;
+            display: grid;
+            grid-template-columns: 54px repeat(9, minmax(0, 1fr)) 46px;
+            column-gap: 2px;
+        }
+        .heatmap-wrap > * { grid-column: 1 / -1; }
 
         .heatmap-grid {
             display: grid;
-            grid-template-columns: 54px repeat(9, 1fr) 46px;
-            gap: 2px;
+            grid-template-columns: subgrid;
+            row-gap: 2px;
             margin-bottom: 0;
         }
 
@@ -1003,10 +1009,11 @@
 
         @media (max-width: 600px) {
             .analytics-card { padding: var(--space-sm); }
-            .heatmap-grid {
-                grid-template-columns: 26px repeat(9, 1fr) 30px;
-                gap: 1px;
+            .heatmap-wrap {
+                grid-template-columns: 26px repeat(9, minmax(0, 1fr)) 30px;
+                column-gap: 1px;
             }
+            .heatmap-grid { row-gap: 1px; }
             .heatmap-label-cell { font-size: 0.6rem; padding: 0 2px 0 0; }
             .heatmap-hole-num   { font-size: 0.6rem; padding: 2px 0 3px; }
             .heatmap-cell       { font-size: 0.65rem; padding: 4px 1px; }
@@ -2917,7 +2924,7 @@
                 renderHeroStats(roundsData);
                 renderGoals(roundsData);
                 renderRoadTo90(roundsData);
-                renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.holes === 18);
+                renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.holes === 18, { rollingN: 5 });
                 renderHeatmap('heatmap-park', r => isParkCourse(r), { rollingN: 10 });
                 renderStats(statsData);
                 renderPlayerRounds('daniel-rounds', roundsData.daniel);
