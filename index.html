@@ -2820,11 +2820,8 @@
                         const isNemesis = ex.nemesis === h;
                         const isFave    = ex.fave    === h;
                         const extraClass = isNemesis ? ' heatmap-nemesis' : isFave ? ' heatmap-fave' : '';
-                        const badge = isNemesis
-                            ? '<span class="hole-badge">!</span>'
-                            : isFave
-                                ? '<span class="hole-badge">★</span>'
-                                : '';
+                        const badgeChar = isNemesis ? '!' : '★';
+                        const badge = `<span class="hole-badge"${(!isNemesis && !isFave) ? ' style="visibility:hidden"' : ''}>${badgeChar}</span>`;
                         const key = `${player}|${h}|${containerId}`;
                         totalScore += a.avg;
                         totalPar   += a.par;
