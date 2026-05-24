@@ -1157,6 +1157,130 @@
         }
 
         /* ========================================
+           HANDICAP MODAL — COURSE TABS
+           ======================================== */
+        .hcp-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: var(--space-md);
+            flex-wrap: wrap;
+        }
+
+        .hcp-tab {
+            flex: 1;
+            min-width: 90px;
+            min-height: 44px;
+            padding: 0.4rem 0.6rem;
+            border-radius: 20px;
+            border: 1px solid var(--green-200);
+            background: none;
+            color: var(--green-600);
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .hcp-tab.active {
+            background: var(--green-700);
+            color: var(--cream);
+            border-color: var(--green-700);
+        }
+
+        .hcp-tab:hover:not(.active) {
+            background: var(--green-50);
+            border-color: var(--green-300);
+        }
+
+        .hcp-main-value {
+            font-size: 3.5rem;
+            font-weight: 600;
+            color: var(--green-800);
+            text-align: center;
+            line-height: 1;
+            padding: var(--space-xs) 0 0.2rem;
+        }
+
+        .hcp-main-label {
+            font-size: 0.85rem;
+            color: var(--green-500);
+            text-align: center;
+            margin-bottom: var(--space-xs);
+        }
+
+        .hcp-main-sublabel {
+            font-size: 0.8rem;
+            color: var(--green-400);
+            text-align: center;
+            margin-bottom: var(--space-md);
+            font-style: italic;
+        }
+
+        .hcp-comparison-box {
+            background: var(--green-50);
+            border: 1px solid var(--green-100);
+            border-radius: 8px;
+            padding: 0.5rem var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .hcp-comparison-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0;
+            font-size: 0.85rem;
+        }
+
+        .hcp-comparison-row + .hcp-comparison-row {
+            border-top: 1px solid var(--green-100);
+        }
+
+        .hcp-comparison-label { color: var(--green-600); }
+
+        .hcp-comparison-value {
+            font-weight: 600;
+            color: var(--green-800);
+            flex-shrink: 0;
+            margin-left: var(--space-xs);
+        }
+
+        .hcp-comparison-sub {
+            font-size: 0.72rem;
+            color: var(--green-400);
+            margin-left: 0.3rem;
+            font-weight: 400;
+        }
+
+        /* ========================================
+           HOLE DETAIL — SCORE HISTORY CHART
+           ======================================== */
+        .hole-chart-section {
+            margin-top: var(--space-md);
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--green-100);
+        }
+
+        .hole-chart-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--green-700);
+            margin-bottom: var(--space-xs);
+        }
+
+        .hole-chart-wrap {
+            height: 220px;
+            position: relative;
+        }
+
+        @media (max-width: 640px) {
+            .hole-chart-wrap { height: 180px; }
+        }
+
+        /* ========================================
            RESPONSIVE ADJUSTMENTS
            ======================================== */
         @media (max-width: 600px) {
@@ -1742,6 +1866,10 @@
             'amelie_champ_igel':  { cr18: 75.3,  slope: 134, par18: 73 },
         };
 
+        // Course handicap parameters for the two Mieming courses shown in the handicap modal tabs
+        const CHAMP_COURSE_HCP = { cr: 72.48, slope: 132, par: 73 };  // FUCHS/Blue, 18h
+        const PARK_COURSE_HCP  = { cr: 28.5,  slope: 94,  par: 29 };  // GAMS/Yellow, 9h
+
         function getCourseKey(player, course, teeColor) {
             const p = player.toLowerCase();
             const c = course.toLowerCase();
@@ -2130,6 +2258,116 @@
            ======================================== */
 
         let handicapChart = null;
+        let holeDetailChart = null;
+        let activeHcpState = null;
+
+        // ---- Handicap diff table helpers (module-scope so switchHcpTab can call them) ----
+
+        function hcpScoreCell(r) {
+            const capped = r.adjustedScore && r.adjustedScore !== r.score;
+            if (capped) return `${r.adjustedScore} <span class="diff-pair" title="Raw: ${r.score}">(adj)</span>`;
+            return `${r.score} (${formatToPar(r.score, r.par)})`;
+        }
+
+        function hcpRenderDiffRow(d, idx) {
+            const usedCls = d.used ? ' class="diff-used"' : '';
+            const usedMark = d.used ? ' ✓' : '';
+            if (d.type === 'paired') {
+                const r1 = d.rounds[0], r2 = d.rounds[1];
+                const sc = (r) => r.course.replace(/GC Mieming\s*/i, '');
+                return `
+                    <tr>
+                        <td${usedCls}>${idx + 1}${usedMark}</td>
+                        <td>${formatDate(r1.date)}<br><span class="diff-pair">${formatDate(r2.date)}</span></td>
+                        <td>${sc(r1)} (9h)<br><span class="diff-pair">${sc(r2)} (9h)</span></td>
+                        <td>${hcpScoreCell(r1)}<br><span class="diff-pair">${hcpScoreCell(r2)}</span></td>
+                        <td${usedCls}>${d.diff.toFixed(1)}<br><span class="diff-pair">${r1.diff.toFixed(1)} + ${r2.diff.toFixed(1)}</span></td>
+                    </tr>`;
+            }
+            const r = d.rounds[0];
+            const sc = r.course.replace(/GC Mieming\s*/i, '');
+            return `
+                <tr>
+                    <td${usedCls}>${idx + 1}${usedMark}</td>
+                    <td>${formatDate(r.date)}</td>
+                    <td>${sc} (18h)</td>
+                    <td>${hcpScoreCell(r)}</td>
+                    <td${usedCls}>${d.diff.toFixed(1)}</td>
+                </tr>`;
+        }
+
+        function buildHandicapDiffHtml(diffs, playerName, showUnpaired, hcp) {
+            if (diffs.length === 0) {
+                return '<p style="font-size:0.85rem;color:var(--green-400);font-style:italic;margin-top:var(--space-sm);">No rounds for this course yet.</p>';
+            }
+            const n = diffs.length;
+            const reversed = [...diffs].reverse();
+            const visible = reversed.slice(0, 20);
+            const older   = reversed.slice(20);
+
+            let h = `
+                <button class="handicap-detail-toggle" onclick="this.nextElementSibling.classList.toggle('open'); this.textContent = this.nextElementSibling.classList.contains('open') ? '▾ Hide differential breakdown' : '▸ Show differential breakdown'">▸ Show differential breakdown</button>
+                <div class="handicap-detail">
+                    <table class="handicap-table">
+                        <tr><th>#</th><th>Date</th><th>Round(s)</th><th>Score</th><th>Diff</th></tr>
+            `;
+            visible.forEach((d, i) => { h += hcpRenderDiffRow(d, n - 1 - i); });
+            h += '</table>';
+
+            if (older.length > 0) {
+                const olderId = `older-diffs-${playerName.replace(/\s+/g, '-')}`;
+                h += `
+                    <div id="${olderId}" style="display:none;">
+                        <table class="handicap-table">
+                            ${older.map((d, i) => hcpRenderDiffRow(d, n - 1 - (visible.length + i))).join('')}
+                        </table>
+                    </div>
+                    <button class="handicap-detail-toggle" style="margin-top:var(--space-sm);"
+                        onclick="const el=document.getElementById('${olderId}'); const shown=el.style.display!=='none'; el.style.display=shown?'none':'block'; this.textContent=shown?'▸ Load ${older.length} older round(s)':'▾ Hide older rounds';">
+                        ▸ Load ${older.length} older round(s)
+                    </button>`;
+            }
+            if (showUnpaired && hcp.unpaired.length > 0) {
+                const u = hcp.unpaired[0];
+                const sc = u.course.replace(/GC Mieming\s*/i, '');
+                h += `<p style="margin-top:var(--space-sm);font-size:0.8rem;color:var(--green-400);font-style:italic;">Unpaired 9-hole: ${sc} ${formatDate(u.date)} — ${u.score} (${formatToPar(u.score, u.par)}) · diff ${u.diff.toFixed(1)} — waiting for next 9h round</p>`;
+            }
+            h += '</div>';
+            return h;
+        }
+
+        function switchHcpTab(btn, tabId) {
+            const modal = document.getElementById('handicap-modal');
+            modal.querySelectorAll('.hcp-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            modal.querySelectorAll('.hcp-tab-panel').forEach(p => { p.style.display = 'none'; });
+            document.getElementById('hcp-panel-' + tabId).style.display = '';
+
+            if (!activeHcpState) return;
+            const { playerName, hcp } = activeHcpState;
+
+            // Re-render progression chart for the selected context
+            if (hcp.progression.length > 1) {
+                const courseParams = tabId === 'champion' ? CHAMP_COURSE_HCP
+                                   : tabId === 'park'     ? PARK_COURSE_HCP
+                                   : null;
+                renderHandicapChart(playerName, hcp.progression, courseParams);
+            }
+
+            // Re-render differential table, filtered to the selected course
+            const diffWrap = document.getElementById('handicap-diff-wrap');
+            if (!diffWrap) return;
+            if (tabId === 'whs') {
+                diffWrap.innerHTML = buildHandicapDiffHtml(hcp.diffs, playerName, true, hcp);
+            } else {
+                const isPark = tabId === 'park';
+                const filteredDiffs = hcp.diffs.filter(d => {
+                    const c = (d.rounds[0].course || '').toLowerCase();
+                    return isPark ? c.includes('park') : !c.includes('park');
+                });
+                diffWrap.innerHTML = buildHandicapDiffHtml(filteredDiffs, playerName, false, hcp);
+            }
+        }
 
         function openHandicap(playerName) {
             const hcp = handicapData[playerName];
@@ -2143,14 +2381,38 @@
 
             // Determine WHS table info for subtitle
             let subtitle = '';
+            let whsBestLabel = '';
             if (n >= 3) {
                 const row = WHS_TABLE.find(r => n >= r[0] && n <= r[1]);
                 const adj = row[3] !== 0 ? ` · ${row[3] > 0 ? '+' : ''}${row[3]} adj` : '';
                 subtitle = `${n} diff${n !== 1 ? 's' : ''} · best ${row[2]}${adj} · ×0.96`;
+                whsBestLabel = `(best ${row[2]} of ${Math.min(n, 20)})`;
             } else {
                 const needed = 3 - n;
                 subtitle = `${n} diff${n !== 1 ? 's' : ''} · need ${needed} more for estimate`;
             }
+
+            activeHcpState = { playerName, hcp };
+
+            const champCH = hcp.whi !== null
+                ? Math.round(hcp.whi * (CHAMP_COURSE_HCP.slope / 113) + (CHAMP_COURSE_HCP.cr - CHAMP_COURSE_HCP.par))
+                : null;
+            const parkCH = hcp.whi !== null
+                ? Math.round(hcp.whi * (PARK_COURSE_HCP.slope / 113) + (PARK_COURSE_HCP.cr - PARK_COURSE_HCP.par))
+                : null;
+            const champSubLabel = champCH !== null
+                ? `<div class="hcp-main-sublabel">Play off ${champCH} on the Champion Course</div>`
+                : '';
+            const parkSubLabel = parkCH !== null
+                ? `<div class="hcp-main-sublabel">Play off ${parkCH} per 9 holes on the Park Course</div>`
+                : '';
+
+            // Average differential for the last 20 combined diffs
+            const last20 = hcp.diffs.slice(-20);
+            const avgDiffCount = last20.length;
+            const avgDiff = avgDiffCount > 0
+                ? last20.reduce((s, d) => s + d.diff, 0) / avgDiffCount
+                : null;
 
             let html = `
                 <div class="handicap-header">
@@ -2158,12 +2420,28 @@
                         <h3>${playerName}</h3>
                         <span class="handicap-whi-label">${subtitle}</span>
                     </div>
-                    <div style="text-align:right;">
-                        <div class="handicap-whi">${whiStr}</div>
-                        <div class="handicap-whi-label">Est. WHI</div>
-                    </div>
                 </div>
                 <div class="handicap-body">
+                    <div class="hcp-main-value">${whiStr}</div>
+                    <div class="hcp-main-label">WHS Handicap Index</div>
+                    <div class="hcp-comparison-box">
+                        <div class="hcp-comparison-row">
+                            <span class="hcp-comparison-label">Avg of last ${avgDiffCount} differential${avgDiffCount !== 1 ? 's' : ''}</span>
+                            <span class="hcp-comparison-value">${avgDiff !== null ? avgDiff.toFixed(1) : '—'}</span>
+                        </div>
+                        <div class="hcp-comparison-row">
+                            <span class="hcp-comparison-label">WHS Index <span class="hcp-comparison-sub">${whsBestLabel}</span></span>
+                            <span class="hcp-comparison-value">${whiStr}</span>
+                        </div>
+                        <div class="hcp-comparison-row">
+                            <span class="hcp-comparison-label">Champion Course handicap</span>
+                            <span class="hcp-comparison-value">${champCH !== null ? champCH : '—'}</span>
+                        </div>
+                        <div class="hcp-comparison-row">
+                            <span class="hcp-comparison-label">Park Course handicap (9h)</span>
+                            <span class="hcp-comparison-value">${parkCH !== null ? parkCH : '—'}</span>
+                        </div>
+                    </div>
             `;
 
             // Progression chart
@@ -2177,89 +2455,7 @@
 
             // Detail toggle + table
             if (hcp.diffs.length > 0) {
-                html += `
-                    <button class="handicap-detail-toggle" onclick="this.nextElementSibling.classList.toggle('open'); this.textContent = this.nextElementSibling.classList.contains('open') ? '▾ Hide differential breakdown' : '▸ Show differential breakdown'">▸ Show differential breakdown</button>
-                    <div class="handicap-detail">
-                        <table class="handicap-table">
-                            <tr>
-                                <th>#</th>
-                                <th>Date</th>
-                                <th>Round(s)</th>
-                                <th>Score</th>
-                                <th>Diff</th>
-                            </tr>
-                `;
-
-                const scoreCell = (r) => {
-                    const capped = r.adjustedScore && r.adjustedScore !== r.score;
-                    if (capped) {
-                        return `${r.adjustedScore} <span class="diff-pair" title="Raw: ${r.score}">(adj)</span>`;
-                    }
-                    return `${r.score} (${formatToPar(r.score, r.par)})`;
-                };
-
-                const renderDiffRow = (d, originalIndex) => {
-                    const usedCls = d.used ? ' class="diff-used"' : '';
-                    const usedMark = d.used ? ' ✓' : '';
-                    if (d.type === 'paired') {
-                        const r1 = d.rounds[0], r2 = d.rounds[1];
-                        const shortCourse = (r) => r.course.replace(/GC Mieming\s*/i, '');
-                        return `
-                            <tr>
-                                <td${usedCls}>${originalIndex + 1}${usedMark}</td>
-                                <td>${formatDate(r1.date)}<br><span class="diff-pair">${formatDate(r2.date)}</span></td>
-                                <td>${shortCourse(r1)} (9h)<br><span class="diff-pair">${shortCourse(r2)} (9h)</span></td>
-                                <td>${scoreCell(r1)}<br><span class="diff-pair">${scoreCell(r2)}</span></td>
-                                <td${usedCls}>${d.diff.toFixed(1)}<br><span class="diff-pair">${r1.diff.toFixed(1)} + ${r2.diff.toFixed(1)}</span></td>
-                            </tr>
-                        `;
-                    } else {
-                        const r = d.rounds[0];
-                        const shortCourse = r.course.replace(/GC Mieming\s*/i, '');
-                        return `
-                            <tr>
-                                <td${usedCls}>${originalIndex + 1}${usedMark}</td>
-                                <td>${formatDate(r.date)}</td>
-                                <td>${shortCourse} (18h)</td>
-                                <td>${scoreCell(r)}</td>
-                                <td${usedCls}>${d.diff.toFixed(1)}</td>
-                            </tr>
-                        `;
-                    }
-                };
-
-                // Newest first, preserving original chronological index for the # column
-                const diffsNewestFirst = hcp.diffs.map((d, i) => ({ d, i })).reverse();
-                const visible = diffsNewestFirst.slice(0, 20);
-                const older = diffsNewestFirst.slice(20);
-
-                visible.forEach(({ d, i }) => { html += renderDiffRow(d, i); });
-
-                html += '</table>';
-
-                if (older.length > 0) {
-                    const olderId = `older-diffs-${playerName.replace(/\s+/g, '-')}`;
-                    html += `
-                        <div id="${olderId}" style="display:none;">
-                            <table class="handicap-table">
-                                ${older.map(({ d, i }) => renderDiffRow(d, i)).join('')}
-                            </table>
-                        </div>
-                        <button class="handicap-detail-toggle" style="margin-top:var(--space-sm);"
-                            onclick="const el=document.getElementById('${olderId}'); const shown=el.style.display!=='none'; el.style.display=shown?'none':'block'; this.textContent=shown?'▸ Load ${older.length} older round(s)':'▾ Hide older rounds';">
-                            ▸ Load ${older.length} older round(s)
-                        </button>
-                    `;
-                }
-
-                // Show unpaired 9-hole round if any
-                if (hcp.unpaired.length > 0) {
-                    const u = hcp.unpaired[0];
-                    const shortCourse = u.course.replace(/GC Mieming\s*/i, '');
-                    html += `<p style="margin-top:var(--space-sm);font-size:0.8rem;color:var(--green-400);font-style:italic;">Unpaired 9-hole: ${shortCourse} ${formatDate(u.date)} — ${u.score} (${formatToPar(u.score, u.par)}) · diff ${u.diff.toFixed(1)} — waiting for next 9h round</p>`;
-                }
-
-                html += '</div>';
+                html += `<div id="handicap-diff-wrap">${buildHandicapDiffHtml(hcp.diffs, playerName, true, hcp)}</div>`;
             }
 
             html += '</div>';
@@ -2273,28 +2469,35 @@
             }
         }
 
-        function renderHandicapChart(playerName, progression) {
+        function renderHandicapChart(playerName, progression, courseParams) {
             const ctx = document.getElementById('handicap-chart');
             if (!ctx) return;
 
             if (handicapChart) { handicapChart.destroy(); handicapChart = null; }
 
+            const toValue = courseParams
+                ? (whi) => Math.round(whi * (courseParams.slope / 113) + (courseParams.cr - courseParams.par))
+                : (whi) => whi;
+            const yLabel    = courseParams ? 'Course Handicap' : 'Handicap Index';
+            const dataLabel = courseParams ? 'Course HCP' : 'Est. WHI';
+
             const startingWhi = { 'Daniel': 33, 'Amelie': 36 };
             const startVal = startingWhi[playerName];
+            const startDisplay = startVal != null ? toValue(startVal) : null;
 
-            const labels = startVal != null
+            const labels = startDisplay != null
                 ? ['Start', ...progression.map(p => formatDate(p.date))]
                 : progression.map(p => formatDate(p.date));
-            const data = startVal != null
-                ? [startVal, ...progression.map(p => p.whi)]
-                : progression.map(p => p.whi);
+            const data = startDisplay != null
+                ? [startDisplay, ...progression.map(p => toValue(p.whi))]
+                : progression.map(p => toValue(p.whi));
 
             handicapChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Est. WHI',
+                        label: dataLabel,
                         data,
                         borderColor: '#4a7c4a',
                         backgroundColor: 'rgba(74, 124, 74, 0.1)',
@@ -2309,7 +2512,7 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            title: { display: true, text: 'Handicap Index', font: { size: 11 } },
+                            title: { display: true, text: yLabel, font: { size: 11 } },
                             ticks: { font: { size: 11 } },
                         },
                         x: {
@@ -2320,7 +2523,9 @@
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                label: (ctx) => `WHI: ${ctx.parsed.y.toFixed(1)}`
+                                label: (ctx) => courseParams
+                                    ? `${yLabel}: ${ctx.parsed.y}`
+                                    : `WHI: ${ctx.parsed.y.toFixed(1)}`
                             }
                         }
                     }
@@ -2502,6 +2707,26 @@
                 ? `<span class="hole-detail-rolling-badge">last ${windowSize}</span>`
                 : '';
 
+            // Score history chart section (built before HTML so it can go at top of body)
+            let chartHtml = '';
+            if (rounds.length < 3) {
+                chartHtml = `
+                    <div class="hole-chart-section">
+                        <p class="hole-chart-title">H${holeNum} Score History</p>
+                        <p style="font-size:0.8rem;color:var(--green-400);font-style:italic;margin-top:0.25rem;">Not enough data yet (need 3+ rounds).</p>
+                    </div>
+                `;
+            } else {
+                chartHtml = `
+                    <div class="hole-chart-section">
+                        <p class="hole-chart-title">H${holeNum} Score History</p>
+                        <div class="hole-chart-wrap">
+                            <canvas id="hole-detail-chart"></canvas>
+                        </div>
+                    </div>
+                `;
+            }
+
             let html = `
                 <div class="hole-detail-header">
                     <div>
@@ -2510,6 +2735,7 @@
                     </div>
                 </div>
                 <div class="hole-detail-body">
+                    ${chartHtml}
                     <table class="hole-detail-table">
                         <tr>
                             <th>Date</th>
@@ -2570,6 +2796,9 @@
             html += `</table>${avgHtml}</div>`;
 
             content.innerHTML = html;
+            if (rounds.length >= 3) {
+                renderHoleDetailChart(rounds, par, holeNum);
+            }
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
@@ -2577,10 +2806,133 @@
         function closeHoleDetail() {
             document.getElementById('hole-detail-overlay').classList.remove('active');
             document.body.style.overflow = '';
+            if (holeDetailChart) { holeDetailChart.destroy(); holeDetailChart = null; }
         }
 
         function closeHoleDetailIfBackground(event) {
             if (event.target === document.getElementById('hole-detail-overlay')) closeHoleDetail();
+        }
+
+        function renderHoleDetailChart(rounds, par, holeNum) {
+            const ctx = document.getElementById('hole-detail-chart');
+            if (!ctx) return;
+            if (holeDetailChart) { holeDetailChart.destroy(); holeDetailChart = null; }
+
+            const ROLLING_WINDOW = 5;
+
+            const labels = rounds.map(r => {
+                const d = new Date(r.date);
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+            });
+
+            const barColors = rounds.map(r => {
+                if (r.score <= par - 1) return '#3B82F6';   // birdie or better
+                if (r.score === par)    return '#22C55E';    // par
+                if (r.score === par + 1) return '#EAB308';  // bogey
+                return '#EF4444';                            // double bogey+
+            });
+
+            const rollingAvg = rounds.map((_, i) => {
+                if (i < ROLLING_WINDOW - 1) return null;
+                const window = rounds.slice(i - ROLLING_WINDOW + 1, i + 1);
+                return window.reduce((s, r) => s + r.score, 0) / ROLLING_WINDOW;
+            });
+
+            const maxScore = Math.max(...rounds.map(r => r.score));
+            const yMin = Math.max(1, par - 2);
+            const yMax = maxScore + 1;
+            const rotateLabels = rounds.length > 10;
+
+            holeDetailChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Score',
+                            data: rounds.map(r => r.score),
+                            backgroundColor: barColors,
+                            borderColor: barColors,
+                            borderWidth: 1,
+                            order: 3,
+                        },
+                        {
+                            label: '5-round avg',
+                            data: rollingAvg,
+                            type: 'line',
+                            borderColor: '#475569',
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#475569',
+                            fill: false,
+                            spanGaps: false,
+                            tension: 0.3,
+                            order: 1,
+                        },
+                        {
+                            label: 'Par',
+                            data: Array(rounds.length).fill(par),
+                            type: 'line',
+                            borderColor: '#6B7280',
+                            borderWidth: 1,
+                            borderDash: [4, 4],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 2,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: yMin,
+                            max: yMax,
+                            ticks: {
+                                font: { size: 10 },
+                                stepSize: 1,
+                                precision: 0,
+                            },
+                            grid: { color: 'rgba(0,0,0,0.06)' },
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: 9 },
+                                maxRotation: rotateLabels ? 45 : 0,
+                                minRotation: rotateLabels ? 45 : 0,
+                            },
+                            grid: { display: false },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { size: 10 },
+                                padding: 10,
+                                usePointStyle: false,
+                            },
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (item) => {
+                                    if (item.dataset.label === 'Par') return `Par: ${par}`;
+                                    if (item.dataset.label === '5-round avg') {
+                                        return item.parsed.y !== null
+                                            ? `5-round avg: ${item.parsed.y.toFixed(1)}`
+                                            : null;
+                                    }
+                                    const diff = item.parsed.y - par;
+                                    const sign = diff >= 0 ? '+' : '';
+                                    return `Score: ${item.parsed.y} (${sign}${diff})`;
+                                },
+                            },
+                        },
+                    },
+                },
+            });
         }
 
         // --- Road to 90 ---
