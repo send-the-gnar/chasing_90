@@ -2002,8 +2002,9 @@
             // Sort by date for progression
             diffs.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            // Determine which diffs are "used" (lowest N per WHS table)
-            const diffValues = diffs.map(d => d.diff);
+            // WHS: only the most recent 20 differentials are eligible
+            const recentDiffs = diffs.slice(-20);
+            const diffValues = recentDiffs.map(d => d.diff);
             const n = diffValues.length;
             const usedIndices = new Set();
             if (n >= 3) {
@@ -2013,12 +2014,14 @@
                     sorted.slice(0, row[2]).forEach(s => usedIndices.add(s.i));
                 }
             }
-            diffs.forEach((d, i) => { d.used = usedIndices.has(i); });
+            // Diffs older than 20 are never used; map indices back into the full array
+            const offset = diffs.length - recentDiffs.length;
+            diffs.forEach((d, i) => { d.used = usedIndices.has(i - offset); });
 
-            // Rolling WHI progression
+            // Rolling WHI progression (each point uses a rolling window of last 20)
             const progression = [];
             for (let i = 0; i < diffs.length; i++) {
-                const slice = diffs.slice(0, i + 1).map(d => d.diff);
+                const slice = diffs.slice(Math.max(0, i - 19), i + 1).map(d => d.diff);
                 const whi = whsFromDiffs(slice);
                 if (whi !== null) {
                     progression.push({ date: diffs[i].date, whi });
