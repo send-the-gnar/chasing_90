@@ -198,15 +198,6 @@
             letter-spacing: 0.05em;
         }
 
-        .hcp-trend {
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-left: 0.3em;
-            vertical-align: middle;
-            opacity: 0.9;
-        }
-        .hcp-trend-improved { color: var(--green-200); }
-        .hcp-trend-worse    { color: #f4a4a4; }
 
         @media (max-width: 600px) {
             .hero-stats-inner {
@@ -2076,33 +2067,30 @@
                     whiClickable = true;
                 }
 
-                // Handicap trend: compare current WHI to 3 diffs ago
-                let trendHtml = '';
-                if (hcp.whi !== null && hcp.progression.length >= 2) {
-                    const prog = hcp.progression;
-                    const lookback = Math.min(3, prog.length - 1);
-                    const delta = prog[prog.length - 1].whi - prog[prog.length - 1 - lookback].whi;
-                    if (Math.abs(delta) >= 0.1) {
-                        const improved = delta < 0;
-                        const cls = improved ? 'hcp-trend-improved' : 'hcp-trend-worse';
-                        const arrow = improved ? '▼' : '▲';
-                        trendHtml = `<span class="hcp-trend ${cls}">${arrow}${Math.abs(delta).toFixed(1)}</span>`;
-                    }
-                }
+                // Rounds played: total holes / 18, rounded down
+                const roundsPlayed = Math.floor(totalHoles / 18);
 
                 // Best 9-hole score over par (exclude scrambles)
                 const nineCompetitive = p.nine.filter(r => r.roundType !== 'scramble');
-                let bestOverPar = '—';
+                let best9OverPar = '—';
                 if (nineCompetitive.length > 0) {
                     const best = nineCompetitive.reduce((min, r) => {
                         const diff = r.score - r.par;
                         return diff < min ? diff : min;
                     }, Infinity);
-                    bestOverPar = (best >= 0 ? '+' : '') + best;
+                    best9OverPar = (best >= 0 ? '+' : '') + best;
                 }
 
-                // 18-hole rounds played (exclude scrambles)
-                const roundsPlayed = p.eighteen.filter(r => r.roundType !== 'scramble').length;
+                // Best 18-hole score over par (exclude scrambles)
+                const eighteenCompetitive = p.eighteen.filter(r => r.roundType !== 'scramble');
+                let best18OverPar = '—';
+                if (eighteenCompetitive.length > 0) {
+                    const best = eighteenCompetitive.reduce((min, r) => {
+                        const diff = r.score - r.par;
+                        return diff < min ? diff : min;
+                    }, Infinity);
+                    best18OverPar = (best >= 0 ? '+' : '') + best;
+                }
 
                 return `
                     <div class="hero-player">
@@ -2117,11 +2105,15 @@
                                 <div class="hero-stat-label">Rounds Played</div>
                             </div>
                             <div class="hero-stat${whiClickable ? ' hero-stat-clickable' : ''}"${whiClickable ? ` onclick="openHandicap('${p.name}')"` : ''}>
-                                <div class="hero-stat-value">${whiDisplay}${trendHtml}</div>
+                                <div class="hero-stat-value">${whiDisplay}</div>
                                 <div class="hero-stat-label">${whiLabel}</div>
                             </div>
                             <div class="hero-stat">
-                                <div class="hero-stat-value">${bestOverPar}</div>
+                                <div class="hero-stat-value">${best18OverPar}</div>
+                                <div class="hero-stat-label">Best 18-Hole</div>
+                            </div>
+                            <div class="hero-stat">
+                                <div class="hero-stat-value">${best9OverPar}</div>
                                 <div class="hero-stat-label">Best 9-Hole</div>
                             </div>
                         </div>
