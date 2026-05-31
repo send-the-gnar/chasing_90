@@ -1385,6 +1385,15 @@
                     <p class="loading">Loading...</p>
                 </div>
             </div>
+
+            <!-- Park Course score distribution -->
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Score Distribution — Park Course (9 holes)</h3>
+                <p class="analytics-note">How often each score-to-par appears across all rounds</p>
+                <div class="trajectory-wrap" style="height:220px">
+                    <canvas id="park-histogram"></canvas>
+                </div>
+            </div>
         </section>
 
         <!-- SEASON TIMELINE -->
@@ -2689,6 +2698,86 @@
            ======================================== */
 
         let trajectoryChart = null;
+        let parkHistogramChart = null;
+
+        function renderParkHistogram() {
+            const eligible = r =>
+                isParkCourse(r) && r.holes === 9 && r.roundType !== 'scramble' && !r.excludeFromHandicap;
+
+            const danielRounds = allRoundsData.filter(r => r.player.toLowerCase() === 'daniel' && eligible(r));
+            const amelieRounds = allRoundsData.filter(r => r.player.toLowerCase() === 'amelie' && eligible(r));
+
+            const container = document.getElementById('park-histogram').parentElement;
+            if (danielRounds.length === 0 && amelieRounds.length === 0) {
+                container.querySelector('canvas').style.display = 'none';
+                return;
+            }
+
+            // Build to-par bins spanning both players' full range
+            const allOverPar = [...danielRounds, ...amelieRounds].map(r => r.score - r.par);
+            const minOP = Math.min(...allOverPar);
+            const maxOP = Math.max(...allOverPar);
+            const labels = [];
+            for (let v = minOP; v <= maxOP; v++) labels.push(v >= 0 ? `+${v}` : `${v}`);
+            const binValues = [];
+            for (let v = minOP; v <= maxOP; v++) binValues.push(v);
+
+            const countFor = rounds => binValues.map(v => rounds.filter(r => (r.score - r.par) === v).length);
+
+            const ctx = document.getElementById('park-histogram');
+            if (parkHistogramChart) { parkHistogramChart.destroy(); parkHistogramChart = null; }
+
+            parkHistogramChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Daniel',
+                            data: countFor(danielRounds),
+                            backgroundColor: 'rgba(74,124,74,0.75)',
+                            borderColor: '#4a7c4a',
+                            borderWidth: 1,
+                            borderRadius: 3,
+                        },
+                        {
+                            label: 'Amelie',
+                            data: countFor(amelieRounds),
+                            backgroundColor: 'rgba(201,162,39,0.75)',
+                            borderColor: '#c9a227',
+                            borderWidth: 1,
+                            borderRadius: 3,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, font: { size: 11 } },
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            title: { display: true, text: 'Rounds', font: { size: 11 }, color: '#6b9b6b' },
+                        },
+                        x: {
+                            ticks: { font: { size: 11 } },
+                            grid: { display: false },
+                            title: { display: true, text: 'Score to par', font: { size: 11 }, color: '#6b9b6b' },
+                        },
+                    },
+                    plugins: {
+                        legend: { labels: { font: { size: 11 }, boxWidth: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                title: items => `${items[0].label} over par`,
+                                label: item => ` ${item.dataset.label}: ${item.raw} round${item.raw !== 1 ? 's' : ''}`,
+                            },
+                        },
+                    },
+                },
+            });
+        }
 
         // Keyed by "player|holeNum|containerId" → array of round detail objects
         const holeDetailCache = {};
@@ -3320,6 +3409,7 @@
                 renderRoadTo90(roundsData);
                 renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.holes === 18 && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 5 });
                 renderHeatmap('heatmap-park', r => isParkCourse(r) && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 10 });
+                renderParkHistogram();
                 renderStats(statsData);
                 renderPlayerRounds('daniel-rounds', roundsData.daniel);
                 renderPlayerRounds('amelie-rounds', roundsData.amelie);
