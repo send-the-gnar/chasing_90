@@ -150,21 +150,20 @@ nav a:hover { color: var(--gold-light); }
 
 .hero-player {
     display: flex;
-    align-items: center;
-    gap: var(--space-md);
+    flex-direction: column;
+    gap: var(--space-xs);
 }
 
 .hero-player-name {
     font-family: var(--font-display);
     font-size: 1.1rem;
     color: var(--cream);
-    white-space: nowrap;
 }
 
 .hero-player-stats {
-    display: flex;
-    gap: var(--space-md);
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-xs) var(--space-sm);
 }
 
 .hero-stat {
@@ -190,8 +189,11 @@ nav a:hover { color: var(--gold-light); }
         grid-template-columns: 1fr;
         gap: var(--space-sm);
     }
-    .hero-player {
-        gap: var(--space-sm);
+    .hero-player-stats {
+        gap: var(--space-xs);
+    }
+    .hero-stat-value {
+        font-size: 1.3rem;
     }
 }
 
