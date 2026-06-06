@@ -25,6 +25,7 @@ async function loadData() {
         renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.holes === 18 && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 5 });
         renderHeatmap('heatmap-park',     r => isParkCourse(r) && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 10 });
         renderParkHistogram();
+        renderScoringStats();
         renderStats(statsData);
         renderPlayerRounds('daniel-rounds',          roundsData.daniel);
         renderPlayerRounds('amelie-rounds',          roundsData.amelie);

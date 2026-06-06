@@ -16,6 +16,8 @@
     --cream: #fdfbf7;
     --gold: #c9a227;
     --gold-light: #e8d48a;
+    --daniel: #4a6fa5;
+    --amelie: #4a7c4a;
 
     --font-display: 'DM Serif Display', Georgia, serif;
     --font-body: 'DM Sans', -apple-system, sans-serif;
@@ -1276,6 +1278,77 @@ footer p { opacity: 0.8; }
 
 @media (max-width: 640px) {
     .hole-chart-wrap { height: 180px; }
+}
+
+/* ========================================
+   SCORING DISTRIBUTION CHARTS + TABLE
+   ======================================== */
+.scoring-charts-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+.scoring-chart-label {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--green-600);
+    margin-bottom: var(--space-xs);
+}
+
+@media (max-width: 600px) {
+    .scoring-charts-wrap { grid-template-columns: 1fr; }
+}
+
+/* ========================================
+   SCORING DISTRIBUTION TABLE
+   ======================================== */
+.scoring-dist-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin-top: var(--space-xs);
+}
+
+.scoring-dist-table th,
+.scoring-dist-table td {
+    padding: 0.35rem 0.6rem;
+    text-align: center;
+    border-bottom: 1px solid var(--green-100);
+}
+
+.scoring-dist-table th {
+    font-weight: 600;
+    color: var(--green-600);
+    background: var(--green-50);
+    font-size: 0.78rem;
+}
+
+.scoring-dist-table td:first-child,
+.scoring-dist-table th:first-child {
+    text-align: left;
+    font-weight: 500;
+}
+
+.scoring-dist-table .pct-col {
+    color: var(--green-400);
+    font-size: 0.75rem;
+}
+
+.scoring-table-subhead th {
+    background: none;
+    font-weight: 500;
+    color: var(--green-400);
+    font-size: 0.72rem;
+    padding-top: 0;
+}
+
+.scoring-table-sub {
+    font-weight: 400;
+    color: var(--green-400);
+    font-size: 0.72rem;
+    margin-left: 0.25rem;
 }
 
 /* ========================================

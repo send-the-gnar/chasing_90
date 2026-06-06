@@ -202,6 +202,14 @@ function renderHeroStats(roundsData) {
             best18OverPar = (best >= 0 ? '+' : '') + best;
         }
 
+        let birdieCount = 0;
+        p.all.forEach(r => {
+            if (r.roundType === 'scramble') return;
+            const holes = scorecardData[r.roundId];
+            if (!holes) return;
+            holes.forEach(h => { if (h.score - h.par <= -1) birdieCount++; });
+        });
+
         return `
             <div class="hero-player">
                 <span class="hero-player-name">${p.name}</span>
@@ -225,6 +233,10 @@ function renderHeroStats(roundsData) {
                     <div class="hero-stat">
                         <div class="hero-stat-value">${best9OverPar}</div>
                         <div class="hero-stat-label">Best 9-Hole</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">${birdieCount}</div>
+                        <div class="hero-stat-label">Birdies</div>
                     </div>
                 </div>
             </div>

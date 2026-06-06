@@ -75,6 +75,22 @@
                     <canvas id="park-histogram"></canvas>
                 </div>
             </div>
+
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Hole Scoring Breakdown</h3>
+                <p class="analytics-note">All rounds with scorecard data · excluding scrambles</p>
+                <div class="scoring-charts-wrap">
+                    <div class="scoring-chart-half">
+                        <p class="scoring-chart-label">Daniel</p>
+                        <div style="height:200px"><canvas id="scoring-dist-chart-daniel"></canvas></div>
+                    </div>
+                    <div class="scoring-chart-half">
+                        <p class="scoring-chart-label">Amelie</p>
+                        <div style="height:200px"><canvas id="scoring-dist-chart-amelie"></canvas></div>
+                    </div>
+                </div>
+                <div id="scoring-dist-table" style="margin-top:var(--space-sm);"></div>
+            </div>
         </section>
 
         <section id="timeline">
