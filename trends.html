@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Chasing 90 — Trends</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1 class="site-title">Chasing 90</h1>
+        <p class="site-subtitle">A golf journal</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="trends.html" class="active">Trends</a>
+        <a href="blog.html">Blog</a>
+    </nav>
+
+    <main>
+        <div class="course-switch">
+            <div class="course-tabs">
+                <button class="course-tab" data-course="park" onclick="setTrendsCourse('park')">Park Course · 9 holes</button>
+                <button class="course-tab" data-course="champion" onclick="setTrendsCourse('champion')">Champion Course · 18 holes</button>
+            </div>
+            <p class="course-switch-note">Par 29 and par 73 don't compare stroke for stroke, so trends show one course at a time. Incomplete rounds and away courses are excluded.</p>
+        </div>
+
+        <div class="trends-layout">
+            <div class="trends-main">
+
+                <section id="rolling">
+                    <h2 class="section-title">Rolling Averages</h2>
+                    <div class="analytics-card">
+                        <h3 class="analytics-subtitle">Score Trend — 3- and 10-Round Moving Averages</h3>
+                        <p class="analytics-note" id="rolling-note"></p>
+                        <div class="scoring-charts-wrap">
+                            <div class="scoring-chart-half">
+                                <p class="scoring-chart-label">Daniel</p>
+                                <div style="height:260px; position:relative;" id="rolling-wrap-daniel"><canvas></canvas></div>
+                            </div>
+                            <div class="scoring-chart-half">
+                                <p class="scoring-chart-label">Amelie</p>
+                                <div style="height:260px; position:relative;" id="rolling-wrap-amelie"><canvas></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="monthly">
+                    <h2 class="section-title">Month by Month</h2>
+                    <div class="analytics-card">
+                        <h3 class="analytics-subtitle">Scoring by Calendar Month</h3>
+                        <p class="analytics-note" id="monthly-note"></p>
+                        <div class="monthly-table-wrap" id="monthly-table">
+                            <p class="loading">Loading monthly stats...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pace">
+                    <h2 class="section-title">Pace to Goal</h2>
+                    <div class="analytics-card">
+                        <h3 class="analytics-subtitle" id="pace-title">Projected Path to Goal</h3>
+                        <p class="analytics-note" id="pace-note"></p>
+                        <div class="trajectory-wrap" id="pace-chart-wrap">
+                            <canvas id="pace-chart"></canvas>
+                        </div>
+                        <div class="pace-summary" id="pace-summary"></div>
+                    </div>
+                </section>
+
+            </div>
+
+            <aside class="trends-sidebar">
+                <section id="records">
+                    <h2 class="section-title">Personal Records</h2>
+                    <p class="records-course" id="records-course"></p>
+                    <div id="records-content">
+                        <p class="loading">Loading records...</p>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </main>
+
+    <footer>
+        <p>Chasing 90 — Daniel &amp; Amelie's golf journal</p>
+    </footer>
+
+    <!-- JS load order matters: trends.js uses globals and helpers from the files before it -->
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/heatmap.js"></script>
+    <script src="js/trends.js"></script>
+
+</body>
+</html>
