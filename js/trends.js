@@ -445,14 +445,38 @@ function parOrBetterStreak(playerKey) {
     return { best, bestDate };
 }
 
-function mostBirdiesInRound(playerKey) {
+function mostParsInRound(playerKey) {
+    // Considers full 18-hole rounds and paired 9-hole rounds (for handicap), regardless of active tab
     let best = null, bestCount = 0;
-    eligibleTrendRounds(playerKey).forEach(r => {
-        const holes = scorecardData[r.roundId];
-        if (!holes || holes.length === 0) return;
-        const birdies = holes.filter(h => h.score < h.par).length;
-        if (birdies > bestCount) { bestCount = birdies; best = r; }
+
+    const eligible = allRoundsData.filter(r =>
+        r.player.toLowerCase() === playerKey
+        && (isParkCourse(r) || isChampionCourse(r))
+        && (r.holes === 9 || r.holes === 18)
+        && r.roundType !== 'scramble'
+        && !r.excludeFromHandicap
+    ).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const nineRounds = [];
+    eligible.forEach(r => {
+        if (r.holes === 18) {
+            const holes = scorecardData[r.roundId];
+            if (!holes || holes.length === 0) return;
+            const pars = holes.filter(h => h.score === h.par).length;
+            if (pars > bestCount) { bestCount = pars; best = r; }
+        } else {
+            nineRounds.push(r);
+        }
     });
+
+    for (let i = 0; i + 1 < nineRounds.length; i += 2) {
+        const r1 = nineRounds[i], r2 = nineRounds[i + 1];
+        const h1 = scorecardData[r1.roundId], h2 = scorecardData[r2.roundId];
+        if (!h1 || !h2) continue;
+        const pars = [...h1, ...h2].filter(h => h.score === h.par).length;
+        if (pars > bestCount) { bestCount = pars; best = r2; }
+    }
+
     return { count: bestCount, round: best };
 }
 
@@ -485,7 +509,7 @@ function renderRecords() {
 
     const blocks = TREND_PLAYERS.map(p => {
         const streak  = parOrBetterStreak(p.key);
-        const birdies = mostBirdiesInRound(p.key);
+        const topPars = mostParsInRound(p.key);
         const months  = bestAndWorstMonths(p.key);
 
         let items = '';
@@ -494,9 +518,9 @@ function renderRecords() {
             streak.best > 0 ? `${streak.best} hole${streak.best !== 1 ? 's' : ''}` : '—',
             streak.bestDate ? `set ${formatDate(streak.bestDate)}` : 'needs scorecard data');
         items += recordItem(
-            'Most birdies in a round',
-            birdies.count > 0 ? `${birdies.count}` : '—',
-            birdies.round ? formatDate(birdies.round.date) : 'no birdies yet — they\'re coming');
+            'Most pars in a round',
+            topPars.count > 0 ? `${topPars.count}` : '—',
+            topPars.round ? formatDate(topPars.round.date) : 'no scorecard data yet');
         items += recordItem(
             'Best scoring month',
             months.best ? monthLabel(months.best.key) : '—',
@@ -514,7 +538,7 @@ function renderRecords() {
     });
 
     el.innerHTML = blocks.join('')
-        + '<p class="records-note">Streaks and birdie counts use hole-by-hole scorecard data, so rounds without a scorecard don\'t count toward them.</p>';
+        + '<p class="records-note">Streaks and par counts use hole-by-hole scorecard data, so rounds without a scorecard don\'t count toward them.</p>';
 }
 
 // ---- Course switching + page load ----
