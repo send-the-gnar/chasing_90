@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Chasing 90 — Stroke Audit</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1 class="site-title">Chasing 90</h1>
+        <p class="site-subtitle">A golf journal</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="trends.html">Trends</a>
+        <a href="strokes.html" class="active">Strokes</a>
+        <a href="blog.html">Blog</a>
+    </nav>
+
+    <main>
+        <div class="course-switch">
+            <div class="course-tabs">
+                <button class="course-tab" data-course="park" onclick="setAuditCourse('park')">Park Course · 9 holes</button>
+                <button class="course-tab" data-course="champion" onclick="setAuditCourse('champion')">Champion Course · 18 holes</button>
+            </div>
+            <p class="course-switch-note">Where do the strokes between you and the goal actually go? Scorecard rounds only · scrambles and incomplete rounds excluded.</p>
+        </div>
+
+        <section id="gap">
+            <h2 class="section-title">The Gap</h2>
+            <div class="gap-grid" id="gap-grid">
+                <p class="loading">Loading...</p>
+            </div>
+        </section>
+
+        <section id="breakdown">
+            <h2 class="section-title">Where the Strokes Go</h2>
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Strokes Over Par per Round, by Source</h3>
+                <p class="analytics-note" id="breakdown-note"></p>
+                <div style="height:150px; position:relative;" id="breakdown-chart-wrap"><canvas></canvas></div>
+                <div id="frontback-note"></div>
+                <div id="partype-table" style="margin-top:var(--space-sm);"></div>
+            </div>
+        </section>
+
+        <section id="nemesis">
+            <h2 class="section-title">Costliest Holes</h2>
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Where Rounds Go to Die</h3>
+                <p class="analytics-note" id="nemesis-note"></p>
+                <div class="scoring-charts-wrap" id="nemesis-grid"></div>
+            </div>
+        </section>
+
+        <section id="putting">
+            <h2 class="section-title">Putting</h2>
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">The Three-Putt Tax</h3>
+                <p class="analytics-note" id="putting-note"></p>
+                <div id="putting-table"></div>
+            </div>
+        </section>
+
+        <section id="path">
+            <h2 class="section-title">Fastest Path</h2>
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle" id="path-title">Fastest Path to the Goal</h3>
+                <p class="analytics-note">Estimated strokes per round each fix is worth, biggest first · levers overlap (a three-putt double counts in two), so read as direction, not arithmetic</p>
+                <div class="scoring-charts-wrap" id="levers-grid"></div>
+            </div>
+        </section>
+
+        <section id="whatif">
+            <h2 class="section-title">What If</h2>
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Round Replay Simulator</h3>
+                <p class="analytics-note">Pick a round, toggle the fixes, see what the score would have been</p>
+                <div id="whatif-body"><p class="loading">Loading...</p></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Chasing 90 — Daniel &amp; Amelie's golf journal</p>
+    </footer>
+
+    <!-- JS load order matters: strokes.js uses globals and helpers from the files before it -->
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/heatmap.js"></script>
+    <script src="js/courses.js"></script>
+    <script src="js/strokes.js"></script>
+
+</body>
+</html>

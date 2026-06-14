@@ -1572,6 +1572,137 @@ nav a.active { color: var(--gold-light); }
 }
 
 /* ========================================
+   STROKE AUDIT PAGE
+   ======================================== */
+.gap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-md);
+}
+
+.gap-card {
+    background: white;
+    border-radius: 12px;
+    padding: var(--space-md);
+    box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
+    border: 1px solid var(--green-100);
+    text-align: center;
+}
+
+.gap-number {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    line-height: 1.1;
+    color: var(--green-800);
+}
+
+.gap-label {
+    font-size: 0.85rem;
+    color: var(--green-600);
+    margin-bottom: var(--space-xs);
+}
+
+.nemesis-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--green-100);
+    font-size: 0.85rem;
+}
+.nemesis-row:last-child { border-bottom: none; }
+
+.nemesis-hole { font-weight: 600; color: var(--green-800); white-space: nowrap; }
+.nemesis-stats { color: var(--green-500); flex: 1; font-size: 0.78rem; }
+.nemesis-potential { font-weight: 600; color: #b04a36; font-size: 0.8rem; white-space: nowrap; }
+
+.lever-list {
+    list-style: none;
+    counter-reset: lever;
+    margin: 0;
+}
+
+.lever-item {
+    counter-increment: lever;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--green-100);
+}
+.lever-item:last-child { border-bottom: none; }
+
+.lever-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--green-800);
+}
+.lever-head > span:first-child::before {
+    content: counter(lever) '. ';
+    color: var(--green-400);
+}
+
+.lever-save { color: #2d7a2d; white-space: nowrap; }
+
+.lever-note {
+    font-size: 0.76rem;
+    color: var(--green-400);
+    margin-top: 0.1rem;
+}
+
+.lever-verdict {
+    margin-top: var(--space-xs);
+    padding-top: var(--space-xs);
+    border-top: 1px solid var(--green-100);
+    font-size: 0.82rem;
+    color: var(--green-700);
+}
+
+.whatif-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.whatif-controls select {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: var(--green-800);
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--green-200);
+    border-radius: 8px;
+    background: white;
+    max-width: 100%;
+}
+
+.whatif-toggle {
+    font-size: 0.85rem;
+    color: var(--green-700);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+}
+.whatif-toggle input { accent-color: var(--green-600); }
+.whatif-disabled { opacity: 0.45; }
+
+.whatif-result { margin-top: var(--space-sm); }
+
+.whatif-score {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    color: var(--green-800);
+    line-height: 1.2;
+}
+
+.whatif-arrow { color: var(--green-300); }
+.whatif-topar { font-size: 1rem; color: var(--green-400); }
+
+.whatif-verdict { font-size: 0.88rem; color: var(--green-700); margin-top: 0.2rem; }
+.whatif-goal-hit { color: #2d7a2d; }
+
+/* ========================================
    RESPONSIVE ADJUSTMENTS
    ======================================== */
 @media (max-width: 600px) {

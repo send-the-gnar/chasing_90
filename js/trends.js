@@ -1,65 +1,22 @@
 // Trends page: rolling averages, monthly table, pace-to-goal projection, personal records.
 // Relies on globals from config.js (scorecardData, allRoundsData) and helpers from data.js
 // (parseCSV, processRoundsData, processScorecardData), render.js (formatDate, formatToPar)
-// and heatmap.js (isChampionCourse, isParkCourse).
-//
-// The two Mieming courses (par 73 vs par 29) don't compare stroke for stroke, so the whole
-// page renders one course at a time and works in raw scores. Requiring the course's standard
-// round length also drops incomplete rounds (12-, 14-, 6-hole partials in the sheet).
+// and courses.js (COURSE_VIEWS, PLAYERS, courseRounds).
 
 const PACE_FIT_POINTS = 20;  // most recent rolling-average points the projection is fitted to
 const MS_PER_DAY      = 86400000;
 
-const TREND_COURSES = {
-    park: {
-        label: 'Park Course',
-        match: isParkCourse,
-        holes: 9,
-        par: 29,
-        target: 29 + GOAL_9_OVER_PAR,            // 36 — the journal's 9-hole goal
-        targetLabel: `Goal: ${29 + GOAL_9_OVER_PAR} (+${GOAL_9_OVER_PAR})`,
-        goalPhrase: `reach the 9-hole goal of ${29 + GOAL_9_OVER_PAR}`,
-        paceTitle: `Projected Path to ${29 + GOAL_9_OVER_PAR} — the 9-Hole Goal`,
-    },
-    champion: {
-        label: 'Champion Course',
-        match: isChampionCourse,
-        holes: 18,
-        par: 73,
-        target: 90,
-        targetLabel: 'Break 90',
-        goalPhrase: 'break 90',
-        paceTitle: 'Projected Path to Breaking 90',
-    },
-};
-
 let currentCourse = localStorage.getItem('chasing90-trends-course') || 'park';
-if (!TREND_COURSES[currentCourse]) currentCourse = 'park';
+if (!COURSE_VIEWS[currentCourse]) currentCourse = 'park';
 
 let rollingChartDaniel = null;
 let rollingChartAmelie = null;
 let paceChart          = null;
 
-const TREND_PLAYERS = [
-    // Distinct dot shapes on top of color so the players stay tellable apart when dots overlap
-    { key: 'daniel', name: 'Daniel', dot: 'circle',   color: { solid: '#4a6fa5', fill: 'rgba(74,111,165,0.08)', faint: 'rgba(74,111,165,0.6)' } },
-    { key: 'amelie', name: 'Amelie', dot: 'triangle', color: { solid: '#4a7c4a', fill: 'rgba(74,124,74,0.08)',  faint: 'rgba(74,124,74,0.6)'  } },
-];
-
 // ---- Shared helpers ----
 
-// Complete, competitive rounds on the selected course, oldest first.
-// The holes check excludes incomplete rounds and keeps scores comparable.
 function eligibleTrendRounds(playerKey) {
-    const course = TREND_COURSES[currentCourse];
-    return allRoundsData
-        .filter(r => r.player.toLowerCase() === playerKey
-            && course.match(r)
-            && r.holes === course.holes
-            && r.roundType !== 'scramble'
-            && !r.excludeFromHandicap)
-        .slice()
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    return courseRounds(playerKey, currentCourse);
 }
 
 function scoreWithPar(score, par) {
@@ -176,8 +133,8 @@ function renderRollingChart(canvasWrapId, player) {
 function renderRollingCharts() {
     if (rollingChartDaniel) { rollingChartDaniel.destroy(); rollingChartDaniel = null; }
     if (rollingChartAmelie) { rollingChartAmelie.destroy(); rollingChartAmelie = null; }
-    rollingChartDaniel = renderRollingChart('rolling-wrap-daniel', TREND_PLAYERS[0]);
-    rollingChartAmelie = renderRollingChart('rolling-wrap-amelie', TREND_PLAYERS[1]);
+    rollingChartDaniel = renderRollingChart('rolling-wrap-daniel', PLAYERS[0]);
+    rollingChartAmelie = renderRollingChart('rolling-wrap-amelie', PLAYERS[1]);
 }
 
 // ---- 2. Month-by-month table ----
@@ -256,7 +213,7 @@ function linearRegression(points) {
 }
 
 function renderPaceChart() {
-    const course  = TREND_COURSES[currentCourse];
+    const course  = COURSE_VIEWS[currentCourse];
     const wrap    = document.getElementById('pace-chart-wrap');
     const summary = document.getElementById('pace-summary');
 
@@ -266,7 +223,7 @@ function renderPaceChart() {
 
     // Fit the trend to the rolling average, not raw scores: one hot or cold round
     // shouldn't own the projection. The average window matches the data volume.
-    const playerData = TREND_PLAYERS.map(p => {
+    const playerData = PLAYERS.map(p => {
         const rounds = eligibleTrendRounds(p.key);
         if (rounds.length < 5) return null;
         const w = rounds.length >= 16 ? 10 : rounds.length >= 8 ? 5 : 3;
@@ -507,7 +464,7 @@ function recordItem(label, value, sub) {
 function renderRecords() {
     const el = document.getElementById('records-content');
 
-    const blocks = TREND_PLAYERS.map(p => {
+    const blocks = PLAYERS.map(p => {
         const streak  = parOrBetterStreak(p.key);
         const topPars = mostParsInRound(p.key);
         const months  = bestAndWorstMonths(p.key);
@@ -544,7 +501,7 @@ function renderRecords() {
 // ---- Course switching + page load ----
 
 function renderTrends() {
-    const course = TREND_COURSES[currentCourse];
+    const course = COURSE_VIEWS[currentCourse];
 
     document.querySelectorAll('.course-tab').forEach(btn =>
         btn.classList.toggle('active', btn.dataset.course === currentCourse));
@@ -565,7 +522,7 @@ function renderTrends() {
 }
 
 function setTrendsCourse(key) {
-    if (!TREND_COURSES[key] || key === currentCourse) return;
+    if (!COURSE_VIEWS[key] || key === currentCourse) return;
     currentCourse = key;
     localStorage.setItem('chasing90-trends-course', key);
     renderTrends();
