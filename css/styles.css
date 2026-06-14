@@ -1620,42 +1620,76 @@ nav a.active { color: var(--gold-light); }
     list-style: none;
     counter-reset: lever;
     margin: 0;
+    padding: 0;
 }
 
 .lever-item {
     counter-increment: lever;
-    padding: 0.5rem 0;
+    padding: 0.6rem 0;
     border-bottom: 1px solid var(--green-100);
+    /* number gutter so wrapped label lines hang under the text, not the number */
+    padding-left: 1.6rem;
+    position: relative;
 }
 .lever-item:last-child { border-bottom: none; }
+
+.lever-item::before {
+    content: counter(lever);
+    position: absolute;
+    left: 0;
+    top: 0.6rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%;
+    background: var(--green-100);
+    color: var(--green-700);
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 .lever-head {
     display: flex;
     justify-content: space-between;
-    gap: 0.5rem;
+    align-items: baseline;
+    gap: 0.6rem;
+}
+
+.lever-label {
     font-size: 0.88rem;
     font-weight: 600;
     color: var(--green-800);
-}
-.lever-head > span:first-child::before {
-    content: counter(lever) '. ';
-    color: var(--green-400);
+    line-height: 1.35;
 }
 
-.lever-save { color: #2d7a2d; white-space: nowrap; }
+.lever-save {
+    flex-shrink: 0;
+    background: rgba(45, 122, 45, 0.12);
+    color: #2d7a2d;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
 
 .lever-note {
     font-size: 0.76rem;
     color: var(--green-400);
-    margin-top: 0.1rem;
+    margin-top: 0.15rem;
+    line-height: 1.4;
 }
 
 .lever-verdict {
-    margin-top: var(--space-xs);
-    padding-top: var(--space-xs);
-    border-top: 1px solid var(--green-100);
+    margin-top: var(--space-sm);
+    padding: 0.55rem 0.7rem;
+    background: var(--green-50);
+    border-radius: 8px;
     font-size: 0.82rem;
     color: var(--green-700);
+    line-height: 1.45;
 }
 
 .whatif-controls {

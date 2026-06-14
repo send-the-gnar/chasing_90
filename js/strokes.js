@@ -329,7 +329,10 @@ function renderLevers() {
         } else {
             body = '<ol class="lever-list">' + levers.map(l => `
                 <li class="lever-item">
-                    <div class="lever-head"><span>${l.label}</span><span class="lever-save">−${fmt1(l.save)}/round</span></div>
+                    <div class="lever-head">
+                        <span class="lever-label">${l.label}</span>
+                        <span class="lever-save">~${fmt1(l.save)}/rd</span>
+                    </div>
                     <p class="lever-note">${l.note}</p>
                 </li>`).join('') + '</ol>';
 
