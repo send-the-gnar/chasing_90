@@ -310,6 +310,42 @@ function buildLevers(a) {
         });
     }
 
+    // Par-type weakness: the hole type that plays worst relative to your own per-hole
+    // baseline. Relative framing keeps it from re-counting the doubles lever's strokes.
+    const types = Object.entries(a.parTypes).map(([par, t]) => ({
+        par: +par, perHole: t.over / t.holes, perRound: t.holes / a.carded, holes: t.holes,
+    }));
+    const totalHoles = types.reduce((s, t) => s + t.holes, 0);
+    const overallPerHole = types.reduce((s, t) => s + t.perHole * t.holes, 0) / totalHoles;
+    const worstType = types
+        .filter(t => t.holes >= a.carded) // at least ~1 such hole per round, real sample
+        .sort((x, y) => y.perHole - x.perHole)[0];
+    if (worstType) {
+        const typeSave = (worstType.perHole - overallPerHole) * worstType.perRound;
+        if (typeSave >= 0.4) {
+            levers.push({
+                save: typeSave,
+                label: `Sharpen your par ${worstType.par}s`,
+                note: `they play to +${fmt1(worstType.perHole)}/hole vs +${fmt1(overallPerHole)}/hole across the rest of your round`,
+            });
+        }
+    }
+
+    // Front/back fade (18-hole only): the cost of not playing your better nine twice.
+    if (a.fbRounds >= 2) {
+        const front = a.front / a.fbRounds, back = a.back / a.fbRounds;
+        const fade = Math.abs(back - front);
+        if (fade >= 0.8) {
+            const worse = back > front ? 'back' : 'front';
+            const better = worse === 'back' ? 'front' : 'back';
+            levers.push({
+                save: fade,
+                label: `Steady the ${worse} nine`,
+                note: `+${fmt1(Math.max(front, back))} on the ${worse} vs +${fmt1(Math.min(front, back))} on the ${better} — match your better nine`,
+            });
+        }
+    }
+
     return levers.sort((x, y) => y.save - x.save);
 }
 
@@ -437,7 +473,7 @@ function renderAudit() {
     renderGap();
     renderBreakdown();
     renderNemesis();
-    renderPutting();
+    // renderPutting();  // hidden until both players have putt data (section removed from strokes.html)
     renderLevers();
     renderWhatIf();
 }
