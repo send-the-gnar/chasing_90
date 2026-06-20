@@ -782,6 +782,7 @@ section { margin-bottom: var(--space-xl); }
 .timeline-dot.type-first         { background: #e06c4a; box-shadow: 0 0 0 2px #f0a890; }
 .timeline-dot.type-season        { background: var(--green-700); box-shadow: 0 0 0 2px var(--green-400); }
 .timeline-dot.type-equipment     { background: #5b8fb9; box-shadow: 0 0 0 2px #a3c8e0; }
+.timeline-dot.type-tournament    { background: #b8860b; box-shadow: 0 0 0 2px var(--gold-light); }
 
 /* The card itself */
 .timeline-card {
@@ -817,6 +818,7 @@ section { margin-bottom: var(--space-xl); }
 .timeline-badge.type-season        { background: var(--green-100); color: var(--green-700); }
 .timeline-badge.type-equipment     { background: #d6eaf8; color: #2e6d8e; }
 .timeline-badge.type-milestone     { background: var(--green-50); color: var(--green-600); }
+.timeline-badge.type-tournament    { background: var(--gold); color: #3d2e00; font-weight: 600; }
 
 .timeline-title {
     font-family: var(--font-display);

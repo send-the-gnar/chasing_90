@@ -191,6 +191,22 @@
             box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
         }
 
+        /* Cover image — centered and height-capped so it never crops.
+           Works for portrait (vertical phone) and landscape photos alike. */
+        .post-cover {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            max-height: 520px;
+            margin: 0 auto var(--space-md);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .post-cover { max-height: 70vh; }
+        }
+
         /* ========================================
            COMMENTS
            ======================================== */
@@ -515,6 +531,12 @@
                 const date = post.date || '';
                 const rawContent = post.content || '';
                 const postId = post.post_id || post.title || '';
+                const coverUrl = (post.image_url || '').trim();
+
+                // Optional cover image — rendered above the content when image_url is set
+                const coverHtml = coverUrl
+                    ? `<img class="post-cover" src="${escapeHtml(coverUrl)}" alt="${escapeHtml(title)}" loading="lazy">`
+                    : '';
 
                 // Convert markdown to HTML
                 let htmlContent = '';
@@ -528,6 +550,7 @@
                     <article class="blog-post" id="post-${encodeURIComponent(postId)}">
                         <p class="post-date">${date}</p>
                         <h3 class="post-title">${title}</h3>
+                        ${coverHtml}
                         <div class="post-content">${htmlContent}</div>
                         ${renderComments(postId)}
                     </article>

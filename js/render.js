@@ -326,6 +326,7 @@ function renderTimeline(milestonesData) {
         season: 'Season',
         equipment: 'Equipment',
         milestone: 'Milestone',
+        tournament: '🏆 Tournament',
     };
 
     let html = milestonesData.map((m, i) => {
