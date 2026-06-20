@@ -506,6 +506,16 @@
             return div.innerHTML;
         }
 
+        // Rewrite Cloudinary URLs to auto-convert format (fixes HEIC phone photos
+        // that browsers can't render) and optimize delivery size. Works on a bare
+        // URL or an HTML string containing several. Safe to call when no match.
+        function cloudinaryAuto(input) {
+            return (input || '').replace(
+                /(https?:\/\/res\.cloudinary\.com\/[^\s"')]+?\/upload\/)(?!f_auto)/g,
+                '$1f_auto,q_auto,w_1400,c_limit/'
+            );
+        }
+
         /* ========================================
            BLOG RENDERING
            ======================================== */
@@ -535,7 +545,7 @@
 
                 // Optional cover image — rendered above the content when image_url is set
                 const coverHtml = coverUrl
-                    ? `<img class="post-cover" src="${escapeHtml(coverUrl)}" alt="${escapeHtml(title)}" loading="lazy">`
+                    ? `<img class="post-cover" src="${escapeHtml(cloudinaryAuto(coverUrl))}" alt="${escapeHtml(title)}" loading="lazy">`
                     : '';
 
                 // Convert markdown to HTML
@@ -545,6 +555,8 @@
                 } catch (e) {
                     htmlContent = '<p>' + rawContent + '</p>';
                 }
+                // Auto-optimize any inline Cloudinary images in the post body
+                htmlContent = cloudinaryAuto(htmlContent);
 
                 return `
                     <article class="blog-post" id="post-${encodeURIComponent(postId)}">

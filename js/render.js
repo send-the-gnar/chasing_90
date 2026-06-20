@@ -1,5 +1,14 @@
 // ---- Formatting helpers ----
 
+// Rewrite Cloudinary URLs to auto-convert format (fixes HEIC phone photos that
+// browsers can't render) and optimize delivery size. Safe to call on any string.
+function cloudinaryAuto(input) {
+    return (input || '').replace(
+        /(https?:\/\/res\.cloudinary\.com\/[^\s"')]+?\/upload\/)(?!f_auto)/g,
+        '$1f_auto,q_auto,w_1400,c_limit/'
+    );
+}
+
 function scoreShapeClass(diff) {
     if (diff <= -1) return 'score-under-par';
     if (diff === 1) return 'score-over-par';
@@ -335,7 +344,7 @@ function renderTimeline(milestonesData) {
         const type = (m.type || 'milestone').trim().toLowerCase().replace(/\s+/g, '_');
         const typeClass = 'type-' + type.replace(/_/g, '-');
         const label = typeLabels[type] || type.replace(/_/g, ' ');
-        const imageUrl = (m.image_url || '').trim();
+        const imageUrl = cloudinaryAuto((m.image_url || '').trim());
 
         return `
             <div class="timeline-entry ${side}${hiddenClass}">
