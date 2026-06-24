@@ -7,10 +7,6 @@ const COURSE_DATA = {
     'amelie_champ_igel':  { cr18: 75.3,  slope: 134, par18: 73 },
 };
 
-// Course handicap parameters used in the handicap modal
-const CHAMP_COURSE_HCP = { cr: 72.48, slope: 132, par: 73 };
-const PARK_COURSE_HCP  = { cr: 28.5,  slope: 94,  par: 29 };
-
 function getCourseKey(player, course, teeColor) {
     const p = player.toLowerCase();
     const c = course.toLowerCase();
@@ -55,7 +51,7 @@ function whsFromDiffs(diffs) {
     const sorted = [...diffs].sort((a, b) => a - b);
     const used = sorted.slice(0, row[2]);
     const avg = used.reduce((s, v) => s + v, 0) / used.length;
-    return Math.round(((avg + row[3]) * 0.96) * 10) / 10;
+    return Math.round((avg + row[3]) * 10) / 10;
 }
 
 function calculateHandicap(allRounds) {

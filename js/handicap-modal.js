@@ -1,6 +1,24 @@
 let handicapChart   = null;
 let activeHcpState  = null;
 
+// Tiny inline trend line. Lower index is better, so the lowest value is drawn
+// at the bottom — a line sloping down-right means improving, matching the big
+// WHI chart's orientation.
+function miniSparkline(values, w = 84, h = 22) {
+    if (!values || values.length < 2) return '';
+    const pad = 3;
+    const min = Math.min(...values), max = Math.max(...values);
+    const span = max - min || 1;
+    const n = values.length;
+    const x = i => pad + (i / (n - 1)) * (w - 2 * pad);
+    const y = v => pad + ((max - v) / span) * (h - 2 * pad);
+    const pts = values.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    return `<svg class="hcp-sparkline" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">
+        <polyline points="${pts}" fill="none" stroke="var(--green-500)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${x(n - 1).toFixed(1)}" cy="${y(values[n - 1]).toFixed(1)}" r="1.8" fill="var(--green-700)"/>
+    </svg>`;
+}
+
 function hcpScoreCell(r) {
     const capped = r.adjustedScore && r.adjustedScore !== r.score;
     if (capped) return `${r.adjustedScore} <span class="diff-pair" title="Raw: ${r.score}">(adj)</span>`;
@@ -74,37 +92,6 @@ function buildHandicapDiffHtml(diffs, playerName, showUnpaired, hcp) {
     return h;
 }
 
-function switchHcpTab(btn, tabId) {
-    const modal = document.getElementById('handicap-modal');
-    modal.querySelectorAll('.hcp-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    modal.querySelectorAll('.hcp-tab-panel').forEach(p => { p.style.display = 'none'; });
-    document.getElementById('hcp-panel-' + tabId).style.display = '';
-
-    if (!activeHcpState) return;
-    const { playerName, hcp } = activeHcpState;
-
-    if (hcp.progression.length > 1) {
-        const courseParams = tabId === 'champion' ? CHAMP_COURSE_HCP
-                           : tabId === 'park'     ? PARK_COURSE_HCP
-                           : null;
-        renderHandicapChart(playerName, hcp.progression, courseParams);
-    }
-
-    const diffWrap = document.getElementById('handicap-diff-wrap');
-    if (!diffWrap) return;
-    if (tabId === 'whs') {
-        diffWrap.innerHTML = buildHandicapDiffHtml(hcp.diffs, playerName, true, hcp);
-    } else {
-        const isPark = tabId === 'park';
-        const filteredDiffs = hcp.diffs.filter(d => {
-            const c = (d.rounds[0].course || '').toLowerCase();
-            return isPark ? c.includes('park') : !c.includes('park');
-        });
-        diffWrap.innerHTML = buildHandicapDiffHtml(filteredDiffs, playerName, false, hcp);
-    }
-}
-
 function openHandicap(playerName) {
     const hcp = handicapData[playerName];
     if (!hcp) return;
@@ -120,7 +107,7 @@ function openHandicap(playerName) {
     if (n >= 3) {
         const row = WHS_TABLE.find(r => n >= r[0] && n <= r[1]);
         const adj = row[3] !== 0 ? ` · ${row[3] > 0 ? '+' : ''}${row[3]} adj` : '';
-        subtitle     = `${n} diff${n !== 1 ? 's' : ''} · best ${row[2]}${adj} · ×0.96`;
+        subtitle     = `${n} diff${n !== 1 ? 's' : ''} · best ${row[2]}${adj}`;
         whsBestLabel = `(best ${row[2]} of ${Math.min(n, 20)})`;
     } else {
         const needed = 3 - n;
@@ -129,12 +116,61 @@ function openHandicap(playerName) {
 
     activeHcpState = { playerName, hcp };
 
-    const champCH = hcp.whi !== null
-        ? Math.round(hcp.whi * (CHAMP_COURSE_HCP.slope / 113) + (CHAMP_COURSE_HCP.cr - CHAMP_COURSE_HCP.par))
-        : null;
-    const parkCH = hcp.whi !== null
-        ? Math.round(hcp.whi * (PARK_COURSE_HCP.slope / 113) + (PARK_COURSE_HCP.cr - PARK_COURSE_HCP.par))
-        : null;
+    // Per-course WHS index: the same best-N-of-last-20 calculation as the
+    // headline index, restricted to one course. This keeps every course on the
+    // same scale as the overall index (and each other), so the gap is a clean
+    // "demonstrated ability" comparison net of slope/CR. The sparkline plots the
+    // rolling course index so recent direction is visible. Park (paired 9h) and
+    // champ diffs are both full 18-hole, slope/CR-normalized, so they compare
+    // directly.
+    const courseStats = (isPark) => {
+        const diffs = hcp.diffs.filter(d => {
+            const c = (d.rounds[0].course || '').toLowerCase();
+            return isPark ? c.includes('park') : !c.includes('park');
+        }).map(d => d.diff);
+        const n = diffs.length;
+        if (n === 0) return { n: 0 };
+        const prog = [];
+        for (let i = 0; i < n; i++) {
+            const whi = whsFromDiffs(diffs.slice(Math.max(0, i - 19), i + 1));
+            if (whi !== null) prog.push(whi);
+        }
+        if (prog.length === 0) {  // fewer than 3 diffs — can't form an index
+            return { n, index: null, avg: diffs.reduce((s, v) => s + v, 0) / n };
+        }
+        const m   = Math.min(n, 20);
+        const row = WHS_TABLE.find(r => m >= r[0] && m <= r[1]);
+        const index = prog[prog.length - 1];
+        const back  = prog[Math.max(0, prog.length - 6)];  // ~5 index-points ago
+        return { n, index, prog, best: row ? row[2] : null, window: m, trendDelta: index - back };
+    };
+    const champStats = courseStats(false);
+    const parkStats  = courseStats(true);
+
+    const courseRow = (label, s) => {
+        const row = (inner, sub) => `
+                <div class="hcp-comparison-row">
+                    <span class="hcp-comparison-label">${label}${sub ? ` <span class="hcp-comparison-sub">${sub}</span>` : ''}</span>
+                    <span class="hcp-course-stat">${inner}</span>
+                </div>`;
+        if (s.n === 0) return row('<span class="hcp-comparison-value">—</span>', '');
+        if (s.index === null) {
+            return row(`<span class="hcp-comparison-value">${s.avg.toFixed(1)}</span>
+                        <span class="hcp-course-trend hcp-trend-flat">avg · need 3 for index</span>`,
+                       `${s.n} diff${s.n !== 1 ? 's' : ''}`);
+        }
+        const d = s.trendDelta;
+        const better = d < -0.05, worse = d > 0.05;
+        const arrow = better ? '▼' : worse ? '▲' : '◆';
+        const word  = better ? 'better' : worse ? 'worse' : 'steady';
+        const cls   = better ? 'hcp-trend-better' : worse ? 'hcp-trend-worse' : 'hcp-trend-flat';
+        const spark = miniSparkline(s.prog);
+        const trend = s.prog.length > 1
+            ? `<span class="hcp-course-trend ${cls}">${arrow} ${Math.abs(d).toFixed(1)} recent</span>`
+            : '';
+        const sub = s.best ? `best ${s.best} of ${s.window}` : '';
+        return row(`<span class="hcp-comparison-value">${s.index.toFixed(1)}</span>${spark}${trend}`, sub);
+    };
 
     const last20    = hcp.diffs.slice(-20);
     const avgDiffCount = last20.length;
@@ -161,14 +197,8 @@ function openHandicap(playerName) {
                     <span class="hcp-comparison-label">WHS Index <span class="hcp-comparison-sub">${whsBestLabel}</span></span>
                     <span class="hcp-comparison-value">${whiStr}</span>
                 </div>
-                <div class="hcp-comparison-row">
-                    <span class="hcp-comparison-label">Champion Course handicap</span>
-                    <span class="hcp-comparison-value">${champCH !== null ? champCH : '—'}</span>
-                </div>
-                <div class="hcp-comparison-row">
-                    <span class="hcp-comparison-label">Park Course handicap (9h)</span>
-                    <span class="hcp-comparison-value">${parkCH !== null ? parkCH : '—'}</span>
-                </div>
+                ${courseRow('Champion Course', champStats)}
+                ${courseRow('Park Course', parkStats)}
             </div>
     `;
 

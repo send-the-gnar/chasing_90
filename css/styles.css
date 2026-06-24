@@ -1328,6 +1328,34 @@ footer p { opacity: 0.8; }
     font-weight: 400;
 }
 
+.hcp-course-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    margin-left: var(--space-xs);
+}
+
+.hcp-course-stat .hcp-comparison-value { margin-left: 0; }
+
+.hcp-sparkline {
+    display: block;
+    margin: 2px 0 1px;
+    overflow: visible;
+}
+
+.hcp-course-trend {
+    font-size: 0.68rem;
+    font-style: italic;
+    font-weight: 400;
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+.hcp-trend-better { color: var(--green-600); }
+.hcp-trend-worse  { color: var(--green-300); }
+.hcp-trend-flat   { color: var(--green-400); }
+
 /* ========================================
    HOLE DETAIL — SCORE HISTORY CHART
    ======================================== */
