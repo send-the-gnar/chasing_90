@@ -1767,11 +1767,238 @@ nav a.active { color: var(--gold-light); }
 .whatif-goal-hit { color: #2d7a2d; }
 
 /* ========================================
+   PRACTICE PAGE (checkable routines)
+   ======================================== */
+.routine-meta {
+    font-size: 0.85rem;
+    color: var(--green-600);
+    margin-top: var(--space-sm);
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}
+.routine-meta .routine-time {
+    display: inline-block;
+    background: var(--green-700);
+    color: var(--cream);
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+}
+
+/* Focus (branch) selector — only shown for the deep session */
+.focus-bar {
+    text-align: center;
+    margin-bottom: var(--space-lg);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--green-50);
+    border: 1px solid var(--green-100);
+    border-radius: 12px;
+}
+
+.focus-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--green-500);
+    margin-bottom: var(--space-xs);
+}
+
+.focus-blurb {
+    font-size: 0.82rem;
+    color: var(--green-600);
+    font-style: italic;
+    margin-top: var(--space-xs);
+}
+
+/* Progress bar + reset */
+.routine-progress {
+    position: sticky;
+    top: 56px;
+    z-index: 50;
+    background: var(--cream);
+    padding: var(--space-xs) 0 var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.pprogress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+}
+
+.pprogress-count {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--green-700);
+}
+
+.pprogress-reset {
+    background: none;
+    border: 1px solid var(--green-200);
+    color: var(--green-600);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.3rem 0.85rem;
+    border-radius: 20px;
+    cursor: pointer;
+    min-height: 36px;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.pprogress-reset:hover { background: var(--green-50); border-color: var(--green-300); color: var(--green-800); }
+
+.pprogress-bar {
+    height: 8px;
+    background: var(--green-100);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.pprogress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-600) 0%, var(--green-400) 100%);
+    border-radius: 10px;
+    transition: width 0.35s ease-out;
+}
+
+/* A block of drills */
+.pblock { margin-bottom: var(--space-md); }
+
+.pblock-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-sm);
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--green-100);
+}
+
+.pblock-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--green-700);
+    line-height: 1.2;
+}
+
+.pblock-tags { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+.pchip {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.pchip-time  { background: var(--green-100); color: var(--green-700); }
+.pchip-where { background: none; color: var(--green-500); border: 1px solid var(--green-200); }
+
+/* Individual drill — a big, tappable checkbox row */
+.drill-list { display: flex; flex-direction: column; }
+
+.drill {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--green-50);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.drill:last-child { border-bottom: none; }
+
+.drill-check {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    margin-top: 2px;
+    accent-color: var(--green-600);
+    cursor: pointer;
+}
+
+.drill-body { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+
+.drill-name {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--green-800);
+    line-height: 1.3;
+}
+
+.drill-detail {
+    font-size: 0.85rem;
+    color: var(--green-600);
+    line-height: 1.45;
+}
+
+.drill-target {
+    font-size: 0.82rem;
+    color: var(--green-700);
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.1rem;
+}
+
+.drill-target-tag {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(201, 162, 39, 0.12);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.drill-why {
+    font-size: 0.78rem;
+    color: var(--green-400);
+    font-style: italic;
+    line-height: 1.4;
+    border-left: 2px solid var(--green-100);
+    padding-left: 0.6rem;
+    margin-top: 0.15rem;
+}
+
+/* Checked-off state */
+.drill.done .drill-name {
+    color: var(--green-400);
+    text-decoration: line-through;
+}
+.drill.done .drill-detail,
+.drill.done .drill-target,
+.drill.done .drill-why { opacity: 0.5; }
+
+.routine-footnote {
+    font-size: 0.78rem;
+    color: var(--green-400);
+    font-style: italic;
+    line-height: 1.6;
+    margin-top: var(--space-lg);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--green-100);
+}
+.routine-footnote a { color: var(--green-600); }
+
+/* ========================================
    RESPONSIVE ADJUSTMENTS
    ======================================== */
 @media (max-width: 600px) {
     main { padding: var(--space-lg) var(--space-sm); }
     nav { gap: var(--space-md); }
+    .pblock-title { font-size: 1.1rem; }
+    .drill-check { width: 28px; height: 28px; }
     .scorecard-modal { max-height: 90vh; }
     .handicap-modal { max-height: 90vh; }
     .scorecard-header { flex-direction: column; gap: var(--space-xs); }

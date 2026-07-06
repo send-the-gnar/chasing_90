@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Chasing 90 — Practice</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <header>
+        <h1 class="site-title">Chasing 90</h1>
+        <p class="site-subtitle">A golf journal</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="trends.html">Trends</a>
+        <a href="strokes.html">Strokes</a>
+        <a href="practice.html" class="active">Practice</a>
+        <a href="blog.html">Blog</a>
+    </nav>
+
+    <main>
+        <div class="course-switch">
+            <div class="course-tabs routine-toggle">
+                <button class="course-tab" data-view="short" onclick="setRoutineView('short')">After-Work Tune-Up · ~1 hr</button>
+                <button class="course-tab" data-view="long" onclick="setRoutineView('long')">Deep Session · ~1 hr 45</button>
+            </div>
+            <p class="routine-meta" id="routine-meta"></p>
+        </div>
+
+        <div class="focus-bar" id="focus-bar"></div>
+
+        <section id="routine">
+            <div class="routine-progress" id="routine-progress"></div>
+            <div id="routine-blocks">
+                <p class="loading">Loading routine...</p>
+            </div>
+            <p class="routine-footnote">
+                Tick drills off as you go — your place is saved on this device, so a locked screen won't lose it.
+                Hit <strong>Reset</strong> to start a fresh session. Routines are built around where our games leak the
+                most strokes — see the <a href="strokes.html">Stroke Audit</a> for the why.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Chasing 90 — Daniel &amp; Amelie's golf journal</p>
+    </footer>
+
+    <script src="js/practice.js"></script>
+
+</body>
+</html>
