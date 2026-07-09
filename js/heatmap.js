@@ -69,6 +69,7 @@ function renderHeatmap(containerId, roundFilter, options = {}) {
         const byHole = {};
         rounds.forEach(r => {
             (scorecardData[r.roundId] || []).forEach(h => {
+                if (h.score <= 0) return;   // skip holes not yet played on a partial round
                 if (!byHole[h.hole]) byHole[h.hole] = [];
                 byHole[h.hole].push({ date: r.date, score: h.score, par: h.par, putts: h.putts });
             });

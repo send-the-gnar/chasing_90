@@ -22,7 +22,9 @@ async function loadData() {
         renderHeroStats(roundsData);
         renderGoals(roundsData);
         renderRoadTo90(roundsData);
-        renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.holes === 18 && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 5 });
+        // Per-hole heatmaps count every hole actually played, so partial rounds
+        // (e.g. 12 of 18) are included — no full-round length requirement.
+        renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 5 });
         renderHeatmap('heatmap-park',     r => isParkCourse(r) && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 10 });
         renderParkHistogram();
         renderScoringStats();
