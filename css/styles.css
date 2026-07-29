@@ -1727,6 +1727,41 @@ nav a.active { color: var(--gold-light); }
     margin-bottom: var(--space-xs);
 }
 
+/* Tee to green — fairways & greens in regulation */
+.ttg-stats {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-lg);
+}
+.ttg-stat { text-align: center; }
+.ttg-value {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    line-height: 1.1;
+    color: var(--green-800);
+}
+.ttg-value.empty { color: var(--green-300); }
+.ttg-stat-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--green-600);
+}
+.ttg-stat-sub { font-size: 0.72rem; color: var(--green-400); }
+.ttg-derived {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--green-500);
+    margin-top: var(--space-sm);
+}
+.ttg-insight {
+    font-size: 0.78rem;
+    color: var(--green-600);
+    line-height: 1.5;
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--green-50);
+}
+
 .nemesis-row {
     display: flex;
     align-items: baseline;

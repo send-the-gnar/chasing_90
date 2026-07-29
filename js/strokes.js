@@ -218,6 +218,113 @@ function renderBreakdown() {
         </table>`;
 }
 
+// ---- Tee to green: fairways & greens in regulation ----
+
+// FIR/GIR are logged per round as a rate, but inconsistently: some rows are
+// percent strings ("71.43%"), others raw fractions ("0.7143", "0.5", "1").
+// Normalise everything to a 0–1 fraction; blank means the stat wasn't tracked.
+function parseRate(raw) {
+    if (raw == null) return null;
+    const s = String(raw).trim();
+    if (s === '') return null;
+    let v = parseFloat(s.replace('%', ''));
+    if (isNaN(v)) return null;
+    if (s.includes('%') || v > 1) v = v / 100;   // "71.43%" or a bare "71" → 0.7143
+    return v < 0 ? null : Math.min(v, 1);         // "0.7143" / "0.5" / "1" pass through
+}
+
+function buildTeeToGreen(playerKey) {
+    const rounds = courseRounds(playerKey, auditCourse);
+    if (rounds.length === 0) return null;
+
+    const fir = [], gir = [], girScores = [];
+    rounds.forEach(r => {
+        const f = parseRate(r.fir);
+        const g = parseRate(r.gir);
+        if (f !== null) fir.push(f);
+        if (g !== null) { gir.push(g); girScores.push({ gir: g, score: r.score }); }
+    });
+    if (fir.length === 0 && gir.length === 0) return null;
+
+    const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+    return {
+        totalRounds: rounds.length,
+        firAvg: fir.length ? avg(fir) : null, firN: fir.length,
+        girAvg: gir.length ? avg(gir) : null, girN: gir.length,
+        girScores,
+    };
+}
+
+// Do greens track scoring? Split the tracked rounds into the better- and
+// worse-green halves and compare average score. Only surfaced with a real
+// sample and when it points the expected way — a noisy inversion says nothing.
+function girScoreInsight(pairs) {
+    if (pairs.length < 6) return null;
+    const sorted = pairs.slice().sort((a, b) => a.gir - b.gir);
+    const half = Math.floor(sorted.length / 2);
+    const low  = sorted.slice(0, half);
+    const high = sorted.slice(sorted.length - half);
+    const avgBy = (arr, k) => arr.reduce((s, p) => s + p[k], 0) / arr.length;
+    const diff = avgBy(low, 'score') - avgBy(high, 'score');
+    if (diff <= 0) return null;
+    return {
+        n: half, diff,
+        highGir: avgBy(high, 'gir'), highScore: avgBy(high, 'score'),
+        lowGir:  avgBy(low, 'gir'),  lowScore:  avgBy(low, 'score'),
+    };
+}
+
+function renderTeeToGreen() {
+    const course = COURSE_VIEWS[auditCourse];
+    const note = document.getElementById('ttg-note');
+    const grid = document.getElementById('ttg-grid');
+
+    const built = PLAYERS.map(p => ({ p, t: buildTeeToGreen(p.key) }));
+
+    if (!built.some(x => x.t)) {
+        note.textContent = '';
+        grid.innerHTML = '<p class="loading" style="padding:0">No fairway or green data logged on this course yet.</p>';
+        return;
+    }
+
+    note.textContent = 'Fairways hit off the tee (FIR) and greens hit in regulation (GIR), '
+        + 'averaged over the rounds where they were tracked — greens hit is the single biggest lever on score.';
+
+    const pct = v => v === null ? '—' : Math.round(v * 100) + '%';
+
+    grid.innerHTML = built.map(({ p, t }) => {
+        if (!t) {
+            return `<div><p class="scoring-chart-label" style="color:${p.color.solid}">${p.name}</p>
+                <p class="record-sub" style="text-align:center">No fairway or green data on this course yet.</p></div>`;
+        }
+        const greensPerRound = t.girAvg !== null ? fmt1(t.girAvg * course.holes) : null;
+        const ins = girScoreInsight(t.girScores);
+        const insightHtml = ins
+            ? `<p class="ttg-insight">The ${ins.n} best-green rounds here (~${pct(ins.highGir)} GIR) averaged
+                 <strong>${fmt1(ins.highScore)}</strong>; the ${ins.n} fewest-green rounds (~${pct(ins.lowGir)})
+                 averaged <strong>${fmt1(ins.lowScore)}</strong> — about ${fmt1(ins.diff)} strokes a round.</p>`
+            : '';
+        return `
+            <div>
+                <p class="scoring-chart-label" style="color:${p.color.solid}">${p.name}</p>
+                <div class="ttg-stats">
+                    <div class="ttg-stat">
+                        <p class="ttg-value${t.firAvg === null ? ' empty' : ''}">${pct(t.firAvg)}</p>
+                        <p class="ttg-stat-label">Fairways</p>
+                        <p class="ttg-stat-sub">${t.firN ? `${t.firN} of ${t.totalRounds} rounds` : 'not tracked'}</p>
+                    </div>
+                    <div class="ttg-stat">
+                        <p class="ttg-value${t.girAvg === null ? ' empty' : ''}">${pct(t.girAvg)}</p>
+                        <p class="ttg-stat-label">Greens</p>
+                        <p class="ttg-stat-sub">${t.girN ? `${t.girN} of ${t.totalRounds} rounds` : 'not tracked'}</p>
+                    </div>
+                </div>
+                ${greensPerRound ? `<p class="ttg-derived">~${greensPerRound} of ${course.holes} greens hit per round</p>` : ''}
+                ${insightHtml}
+            </div>`;
+    }).join('');
+}
+
 // ---- 3. Costliest holes ----
 
 function renderNemesis() {
@@ -472,6 +579,7 @@ function renderAudit() {
         btn.classList.toggle('active', btn.dataset.course === auditCourse));
     renderGap();
     renderBreakdown();
+    renderTeeToGreen();
     renderNemesis();
     // renderPutting();  // hidden until both players have putt data (section removed from strokes.html)
     renderLevers();
