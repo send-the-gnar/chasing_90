@@ -59,14 +59,17 @@ function renderRoundCard(round) {
         teeDisplay += ` <span class="distance-value" data-meters="${teeLengthMeters}">${formatDistance(teeLengthMeters)}</span>`;
     }
 
+    const tournamentClass = round.roundType === 'tournament' ? ' round-card-tournament' : '';
+
     return `
-        <div class="round-card"
+        <div class="round-card${tournamentClass}"
              data-round-id="${round.roundId}"
              data-has-scorecard="${hasScorecard}"
              onclick="openScorecard('${round.roundId}')">
             <div class="round-header">
                 <span class="round-date">${formatDate(round.date)}</span>
                 <span class="round-course">${round.course}</span>
+                ${round.roundType === 'tournament' ? '<span class="round-type-badge round-type-tournament">🏆 Tournament</span>' : ''}
                 ${round.roundType === 'scramble' ? '<span class="round-type-badge">Scramble</span>' : ''}
                 <span class="round-tees">${teeDisplay}</span>
             </div>
@@ -378,4 +381,87 @@ function toggleTimeline(btn) {
         btn.textContent = 'Show all milestones ↓';
         document.getElementById('timeline').scrollIntoView({ behavior: 'smooth' });
     }
+}
+
+// ---- Tournaments ----
+
+// Longest run of shared leading words across course names, used as the event
+// venue — e.g. "Mieming Champion Course" + "Mieming Park Course" → "Mieming".
+function commonVenue(courses) {
+    const names = courses.filter(Boolean).map(c => c.trim());
+    if (names.length === 0) return 'Tournament';
+    if (names.length === 1) return names[0];
+    const words = names.map(c => c.split(/\s+/));
+    const shared = [];
+    for (let i = 0; i < words[0].length; i++) {
+        const w = words[0][i];
+        if (words.every(list => list[i] === w)) shared.push(w);
+        else break;
+    }
+    return shared.join(' ') || names.join(' · ');
+}
+
+function renderTournamentRound(round) {
+    const toPar = formatToPar(round.score, round.par);
+    const hasScorecard = scorecardData[round.roundId] ? 'true' : 'false';
+
+    const stats = [];
+    if (round.putts) stats.push(`<span class="round-stat"><span class="round-stat-label">Putts</span> ${round.putts}</span>`);
+    if (round.fir)   stats.push(`<span class="round-stat"><span class="round-stat-label">FIR</span> ${round.fir}</span>`);
+    if (round.gir)   stats.push(`<span class="round-stat"><span class="round-stat-label">GIR</span> ${round.gir}</span>`);
+
+    return `
+        <div class="tournament-round"
+             data-has-scorecard="${hasScorecard}"
+             onclick="openScorecard('${round.roundId}')">
+            <div class="tournament-round-info">
+                <span class="tournament-round-player">${round.player}</span>
+                <span class="tournament-round-course">${round.course}</span>
+                <span class="tournament-round-holes">${round.holes} holes</span>
+            </div>
+            <div class="tournament-round-result">
+                <span class="tournament-round-score">${round.score}</span>
+                <span class="tournament-round-topar">(${toPar})</span>
+            </div>
+            ${stats.length ? `<div class="round-stats tournament-round-stats">${stats.join('')}</div>` : ''}
+        </div>
+    `;
+}
+
+function renderTournaments() {
+    const section = document.getElementById('tournaments');
+    const container = document.getElementById('tournament-list');
+    if (!container) return;
+
+    const rounds = allRoundsData.filter(r => r.roundType === 'tournament');
+    if (rounds.length === 0) {
+        if (section) section.style.display = 'none';
+        return;
+    }
+
+    // Rounds played on the same day form one tournament event.
+    const byDate = {};
+    rounds.forEach(r => { (byDate[r.date] = byDate[r.date] || []).push(r); });
+    const dates = Object.keys(byDate).sort((a, b) => new Date(b) - new Date(a));
+
+    container.innerHTML = dates.map(date => {
+        const eventRounds = byDate[date].slice().sort((a, b) => b.holes - a.holes);
+        const venue = commonVenue(eventRounds.map(r => r.course));
+        return `
+            <div class="tournament-event">
+                <div class="tournament-event-header">
+                    <span class="tournament-trophy">🏆</span>
+                    <div class="tournament-event-heading">
+                        <p class="tournament-event-name">${venue}</p>
+                        <p class="tournament-event-date">${formatDateLong(date)}</p>
+                    </div>
+                </div>
+                <div class="tournament-round-group">
+                    ${eventRounds.map(renderTournamentRound).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (section) section.style.display = '';
 }

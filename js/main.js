@@ -21,6 +21,7 @@ async function loadData() {
 
         renderHeroStats(roundsData);
         renderGoals(roundsData);
+        renderTournaments();
         renderRoadTo90(roundsData);
         // Per-hole heatmaps count every hole actually played, so partial rounds
         // (e.g. 12 of 18) are included — no full-round length requirement.

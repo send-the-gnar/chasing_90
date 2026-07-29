@@ -485,6 +485,101 @@ section { margin-bottom: var(--space-xl); }
 }
 .practice-list .round-card:hover { background: var(--green-50); }
 
+/* ---- Tournament rounds in the main lists ---- */
+.round-type-badge.round-type-tournament {
+    background: var(--gold-light);
+    color: #3d2e00;
+    border-color: var(--gold);
+}
+
+.round-card-tournament,
+.practice-list .round-card-tournament {
+    border-left: 3px solid var(--gold);
+    background: linear-gradient(90deg, #faf3dd 0%, var(--green-50) 55%);
+}
+.round-card-tournament:hover,
+.practice-list .round-card-tournament:hover {
+    background: linear-gradient(90deg, #f5ead0 0%, var(--green-100) 55%);
+    border-left-color: var(--gold);
+}
+
+/* ========================================
+   TOURNAMENTS SECTION
+   ======================================== */
+.tournament-intro {
+    font-size: 0.85rem;
+    color: var(--green-500);
+    margin-bottom: var(--space-md);
+    font-style: italic;
+}
+
+.tournament-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-md);
+}
+
+.tournament-event {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--green-100);
+    border-top: 3px solid var(--gold);
+    box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
+    overflow: hidden;
+}
+
+.tournament-event-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: linear-gradient(90deg, #faf3dd 0%, white 75%);
+    border-bottom: 1px solid var(--green-100);
+}
+
+.tournament-trophy { font-size: 1.5rem; line-height: 1; }
+
+.tournament-event-name {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: var(--green-800);
+    line-height: 1.2;
+}
+.tournament-event-date { font-size: 0.8rem; color: var(--green-500); }
+
+.tournament-round-group { padding: 0 var(--space-md) var(--space-xs); }
+
+.tournament-round {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.15rem var(--space-sm);
+    padding: var(--space-sm) 0;
+    cursor: pointer;
+}
+.tournament-round + .tournament-round { border-top: 1px solid var(--green-50); }
+.tournament-round[data-has-scorecard="false"] { cursor: default; }
+
+.tournament-round-info { display: flex; flex-direction: column; gap: 0.1rem; }
+.tournament-round-player { font-weight: 600; color: var(--green-800); font-size: 0.95rem; }
+.tournament-round-course { font-size: 0.85rem; color: var(--green-600); }
+.tournament-round-holes { font-size: 0.75rem; color: var(--green-400); }
+
+.tournament-round-result { display: flex; align-items: baseline; gap: 0.4rem; justify-self: end; }
+.tournament-round-score { font-size: 1.6rem; font-weight: 600; color: var(--green-800); line-height: 1; }
+.tournament-round-topar { font-size: 0.9rem; color: var(--green-500); font-weight: 500; }
+
+.tournament-round-stats { grid-column: 1 / -1; margin-top: 0.15rem; }
+
+/* Scorecard affordance, mirroring .round-card's hover hint */
+.tournament-round[data-has-scorecard="true"] .tournament-round-holes::after {
+    content: ' · view scorecard →';
+    color: var(--green-400);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.tournament-round[data-has-scorecard="true"]:hover .tournament-round-holes::after { opacity: 1; }
+
 /* ========================================
    VIEW ALL / HISTORY
    ======================================== */
