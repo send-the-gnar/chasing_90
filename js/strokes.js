@@ -219,19 +219,7 @@ function renderBreakdown() {
 }
 
 // ---- Tee to green: fairways & greens in regulation ----
-
-// FIR/GIR are logged per round as a rate, but inconsistently: some rows are
-// percent strings ("71.43%"), others raw fractions ("0.7143", "0.5", "1").
-// Normalise everything to a 0–1 fraction; blank means the stat wasn't tracked.
-function parseRate(raw) {
-    if (raw == null) return null;
-    const s = String(raw).trim();
-    if (s === '') return null;
-    let v = parseFloat(s.replace('%', ''));
-    if (isNaN(v)) return null;
-    if (s.includes('%') || v > 1) v = v / 100;   // "71.43%" or a bare "71" → 0.7143
-    return v < 0 ? null : Math.min(v, 1);         // "0.7143" / "0.5" / "1" pass through
-}
+// (parseRate lives in data.js — shared with the Clubs page)
 
 function buildTeeToGreen(playerKey) {
     const rounds = courseRounds(playerKey, auditCourse);

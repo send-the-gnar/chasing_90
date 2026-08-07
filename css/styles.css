@@ -2110,6 +2110,53 @@ nav a.active { color: var(--gold-light); }
 .drill.done .drill-target,
 .drill.done .drill-why { opacity: 0.5; }
 
+/* Focus decision hint under the branch tabs */
+.focus-hint {
+    font-size: 0.78rem;
+    color: var(--green-400);
+    margin-top: var(--space-xs);
+    line-height: 1.6;
+}
+.focus-hint strong { color: var(--green-600); font-weight: 600; }
+
+/* Round Rules card — process goals for real rounds */
+.rules-intro {
+    font-size: 0.85rem;
+    color: var(--green-500);
+    font-style: italic;
+    margin-bottom: var(--space-sm);
+}
+
+.rules-list { display: flex; flex-direction: column; }
+
+.rule-item {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: flex-start;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--green-50);
+}
+.rule-item:last-child { border-bottom: none; }
+
+.rule-num {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--green-100);
+    color: var(--green-700);
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.1rem;
+}
+
+.rule-body { display: flex; flex-direction: column; gap: 0.15rem; }
+.rule-name { font-weight: 600; font-size: 0.92rem; color: var(--green-800); }
+.rule-note { font-size: 0.82rem; color: var(--green-500); line-height: 1.5; }
+
 .routine-footnote {
     font-size: 0.78rem;
     color: var(--green-400);
@@ -2120,6 +2167,130 @@ nav a.active { color: var(--gold-light); }
     border-top: 1px solid var(--green-100);
 }
 .routine-footnote a { color: var(--green-600); }
+
+/* ========================================
+   CLUBS PAGE (gear before/after)
+   ======================================== */
+.gear-verdict-grid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-lg);
+    padding: var(--space-sm) 0 var(--space-xs);
+    flex-wrap: wrap;
+}
+
+.gear-verdict-col { text-align: center; min-width: 130px; }
+
+.gear-verdict-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--green-500);
+    font-weight: 600;
+}
+
+.gear-verdict-value {
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    line-height: 1.15;
+    color: var(--green-800);
+}
+
+.gear-verdict-sub { font-size: 0.75rem; color: var(--green-400); }
+
+.gear-verdict-arrow { font-size: 1.4rem; color: var(--green-300); }
+
+.gear-pending .gear-verdict-value { color: var(--green-300); }
+
+.gear-verdict-line {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--green-600);
+    margin-top: var(--space-xs);
+    padding-top: var(--space-xs);
+    border-top: 1px solid var(--green-100);
+}
+
+.gear-better { color: #2d7a2d; }
+.gear-worse  { color: #962f1f; }
+
+/* Method note between the verdict and the metric rows (Trends page embed) */
+.gear-method-note {
+    margin-top: var(--space-md);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--green-100);
+}
+
+/* Metric comparison rows */
+.gear-metric-row {
+    display: grid;
+    grid-template-columns: minmax(150px, 1.4fr) 1fr 1fr 1fr;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--green-50);
+}
+.gear-metric-row:last-child { border-bottom: none; }
+
+.gear-metric-head {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--green-500);
+    font-weight: 600;
+    border-bottom: 1px solid var(--green-100);
+}
+.gear-metric-head .gear-metric-cell { text-align: center; }
+
+.gear-metric-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--green-800);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.gear-metric-cell { text-align: center; }
+
+.gear-metric-value { font-size: 1.15rem; font-weight: 600; color: var(--green-800); }
+.gear-metric-value.gear-empty { color: var(--green-300); }
+.gear-topar { font-size: 0.75rem; color: var(--green-400); font-weight: 400; }
+.gear-metric-sub { font-size: 0.7rem; color: var(--green-400); }
+
+.gear-tag {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.gear-tag-iron    { background: #f6e3d7; color: #a05226; }
+.gear-tag-control { background: var(--green-100); color: var(--green-600); }
+
+.gear-delta { font-size: 0.85rem; font-weight: 600; }
+.gear-delta-good { color: #2d7a2d; }
+.gear-delta-bad  { color: #962f1f; }
+.gear-delta-none { color: var(--green-300); font-weight: 400; }
+
+/* Timeline charts */
+.gear-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+.gear-chart-wrap { height: 220px; position: relative; }
+
+@media (max-width: 700px) {
+    .gear-charts { grid-template-columns: 1fr; }
+    .gear-metric-row { grid-template-columns: minmax(110px, 1.2fr) 1fr 1fr 0.8fr; }
+    .gear-verdict-grid { gap: var(--space-md); }
+}
 
 /* ========================================
    RESPONSIVE ADJUSTMENTS

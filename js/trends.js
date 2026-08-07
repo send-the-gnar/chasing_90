@@ -519,6 +519,7 @@ function renderTrends() {
     renderMonthlyTable();
     renderPaceChart();
     renderRecords();
+    renderGear();   // "New Irons — Before & After" section (gear.js)
 }
 
 function setTrendsCourse(key) {

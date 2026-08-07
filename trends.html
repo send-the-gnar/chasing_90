@@ -82,6 +82,31 @@
                     </div>
                 </section>
 
+                <section id="gear">
+                    <h2 class="section-title">New Irons — Before &amp; After</h2>
+                    <div class="analytics-card">
+                        <h3 class="analytics-subtitle">Daniel · Custom-Fit Irons · August 8, 2026</h3>
+                        <p class="analytics-note" id="gear-story"></p>
+                        <div id="gear-verdict"><p class="loading">Loading...</p></div>
+                        <p class="analytics-note gear-method-note" id="gear-method"></p>
+                        <div id="gear-metrics"></div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3 class="analytics-subtitle">Every Round, Around the Switch</h3>
+                        <p class="analytics-note">Dashed line = the day the new irons arrived · orange dots = rounds with the new set</p>
+                        <div class="gear-charts">
+                            <div>
+                                <p class="scoring-chart-label">Score</p>
+                                <div class="gear-chart-wrap" id="gear-chart-score"></div>
+                            </div>
+                            <div>
+                                <p class="scoring-chart-label">Greens in Regulation</p>
+                                <div class="gear-chart-wrap" id="gear-chart-gir"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </div>
 
             <aside class="trends-sidebar">
@@ -100,12 +125,14 @@
         <p>Chasing 90 — Daniel &amp; Amelie's golf journal</p>
     </footer>
 
-    <!-- JS load order matters: trends.js uses globals and helpers from the files before it -->
+    <!-- JS load order matters: trends.js uses globals and helpers from the files before it;
+         gear.js renders the New Irons section and is driven by trends.js's renderTrends() -->
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
     <script src="js/render.js"></script>
     <script src="js/heatmap.js"></script>
     <script src="js/courses.js"></script>
+    <script src="js/gear.js"></script>
     <script src="js/trends.js"></script>
 
 </body>

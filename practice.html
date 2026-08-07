@@ -30,8 +30,8 @@
     <main>
         <div class="course-switch">
             <div class="course-tabs routine-toggle">
-                <button class="course-tab" data-view="short" onclick="setRoutineView('short')">After-Work Tune-Up · ~1 hr</button>
-                <button class="course-tab" data-view="long" onclick="setRoutineView('long')">Deep Session · ~1 hr 45</button>
+                <button class="course-tab" data-view="short" onclick="setRoutineView('short')">After-Work Tune-Up · ~55 min</button>
+                <button class="course-tab" data-view="long" onclick="setRoutineView('long')">Deep Session · ~1 hr 40</button>
             </div>
             <p class="routine-meta" id="routine-meta"></p>
         </div>
@@ -43,10 +43,17 @@
             <div id="routine-blocks">
                 <p class="loading">Loading routine...</p>
             </div>
+        </section>
+
+        <section id="transfer">
+            <h2 class="section-title">Between Sessions</h2>
+            <div id="round-rules"></div>
             <p class="routine-footnote">
                 Tick drills off as you go — your place is saved on this device, so a locked screen won't lose it.
-                Hit <strong>Reset</strong> to start a fresh session. Routines are built around where our games leak the
-                most strokes — see the <a href="strokes.html">Stroke Audit</a> for the why.
+                Hit <strong>Reset</strong> to start a fresh session. Built for a 17-handicap from what the data
+                actually says — fairways are fine, greens and up-and-downs are not. See the
+                <a href="strokes.html">Stroke Audit</a> for the numbers and the <a href="trends.html#gear">Trends</a> page
+                for how the new irons are settling in.
             </p>
         </section>
     </main>
