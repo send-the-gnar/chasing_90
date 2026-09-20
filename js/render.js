@@ -17,14 +17,20 @@ function scoreShapeClass(diff) {
     return '';
 }
 
+// "2026-09-19" parses as UTC midnight, which toLocaleDateString then renders as
+// the previous day anywhere west of Greenwich — every date on the site reads a
+// day early while we're in the US. Build the date in local time instead.
+function parseLocalDate(dateStr) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr).trim());
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(dateStr);
+}
+
 function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return parseLocalDate(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function formatDateLong(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return parseLocalDate(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 function formatToPar(score, par) {

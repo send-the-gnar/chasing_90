@@ -123,24 +123,30 @@ function openHandicap(playerName) {
     // rolling course index so recent direction is visible. Nine-hole courses
     // (Park, Cape Ann) contribute paired diffs, which are full 18-hole and
     // slope/CR-normalized like the 18-hole ones, so every row compares directly.
+    // A nine pairs with the next nine in date order whatever course that was on
+    // (the WHS rule), so a pair can straddle two courses. Such a diff counts in
+    // both rows — both courses contributed half of it — and the row says so.
     const courseStats = (label) => {
-        const diffs = hcp.diffs.filter(d => courseGroupLabel(d.rounds[0].course) === label)
-            .map(d => d.diff);
+        const at      = r => courseGroupLabel(r.course) === label;
+        const onCourse = d => d.rounds.some(at);
+        const diffs   = hcp.diffs.filter(onCourse).map(d => d.diff);
+        const mixed   = hcp.diffs.filter(d => onCourse(d) && !d.rounds.every(at)).length;
+        const pending = hcp.unpaired.filter(at).length;
         const n = diffs.length;
-        if (n === 0) return { n: 0 };
+        if (n === 0) return { n: 0, mixed, pending };
         const prog = [];
         for (let i = 0; i < n; i++) {
             const whi = whsFromDiffs(diffs.slice(Math.max(0, i - 19), i + 1));
             if (whi !== null) prog.push(whi);
         }
         if (prog.length === 0) {  // fewer than 3 diffs — can't form an index
-            return { n, index: null, avg: diffs.reduce((s, v) => s + v, 0) / n };
+            return { n, mixed, pending, index: null, avg: diffs.reduce((s, v) => s + v, 0) / n };
         }
         const m   = Math.min(n, 20);
         const row = WHS_TABLE.find(r => m >= r[0] && m <= r[1]);
         const index = prog[prog.length - 1];
         const back  = prog[Math.max(0, prog.length - 6)];  // ~5 index-points ago
-        return { n, index, prog, best: row ? row[2] : null, window: m, trendDelta: index - back };
+        return { n, mixed, pending, index, prog, best: row ? row[2] : null, window: m, trendDelta: index - back };
     };
 
     const courseRow = (label, s) => {
@@ -149,11 +155,19 @@ function openHandicap(playerName) {
                     <span class="hcp-comparison-label">${label}${sub ? ` <span class="hcp-comparison-sub">${sub}</span>` : ''}</span>
                     <span class="hcp-course-stat">${inner}</span>
                 </div>`;
-        if (s.n === 0) return row('<span class="hcp-comparison-value">—</span>', '');
+        // A nine that hasn't been paired yet has no differential, but it is logged
+        // and it will count — say so rather than showing nothing for the course.
+        const pendingNote = s.pending
+            ? `${s.pending} nine${s.pending !== 1 ? 's' : ''} waiting to pair`
+            : '';
+        const notes = (base) => [base, s.mixed ? `${s.mixed} paired across courses` : '', pendingNote]
+            .filter(Boolean).join(' · ');
+
+        if (s.n === 0) return row('<span class="hcp-comparison-value">—</span>', notes(''));
         if (s.index === null) {
             return row(`<span class="hcp-comparison-value">${s.avg.toFixed(1)}</span>
                         <span class="hcp-course-trend hcp-trend-flat">avg · need 3 for index</span>`,
-                       `${s.n} diff${s.n !== 1 ? 's' : ''}`);
+                       notes(`${s.n} diff${s.n !== 1 ? 's' : ''}`));
         }
         const d = s.trendDelta;
         const better = d < -0.05, worse = d > 0.05;
@@ -164,7 +178,7 @@ function openHandicap(playerName) {
         const trend = s.prog.length > 1
             ? `<span class="hcp-course-trend ${cls}">${arrow} ${Math.abs(d).toFixed(1)} recent</span>`
             : '';
-        const sub = s.best ? `best ${s.best} of ${s.window}` : '';
+        const sub = notes(s.best ? `best ${s.best} of ${s.window}` : '');
         return row(`<span class="hcp-comparison-value">${s.index.toFixed(1)}</span>${spark}${trend}`, sub);
     };
 
@@ -173,10 +187,12 @@ function openHandicap(playerName) {
     // have a differential, in the order they were first played.
     const HOME_LABELS = ['Champion Course', 'Park Course'];
     const awayLabels = [];
-    hcp.diffs.forEach(d => {
-        const l = courseGroupLabel(d.rounds[0].course);
+    const noteCourse = (course) => {
+        const l = courseGroupLabel(course);
         if (!HOME_LABELS.includes(l) && !awayLabels.includes(l)) awayLabels.push(l);
-    });
+    };
+    hcp.diffs.forEach(d => d.rounds.forEach(r => noteCourse(r.course)));
+    hcp.unpaired.forEach(r => noteCourse(r.course));
     const courseRowsHtml = [...HOME_LABELS, ...awayLabels]
         .map(l => courseRow(l, courseStats(l)))
         .join('');
