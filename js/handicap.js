@@ -1,3 +1,11 @@
+// Course/tee ratings. `cr18` is always the 18-hole course rating: 9-hole courses
+// store double their published 9-hole rating and calcScoreDifferential halves it
+// back, so one field covers both.
+//
+// Away-course ratings come from published scorecards (GolfLink / TeeOff, Sept 2026).
+// Where a course publishes no women's rating for the white tees, Amelie's white
+// entry reuses the men's numbers — the differential is then slightly generous to
+// her, so check the card on site and correct here if it lists a women's white.
 const COURSE_DATA = {
     'daniel_park':        { cr18: 57.0,  slope: 94,  par18: 58 },
     'amelie_park':        { cr18: 58.8,  slope: 97,  par18: 58 },
@@ -5,23 +13,96 @@ const COURSE_DATA = {
     'daniel_champ_fuchs': { cr18: 72.48, slope: 132, par18: 73 },
     'daniel_champ_igel':  { cr18: 70.1,  slope: 129, par18: 73 },
     'amelie_champ_igel':  { cr18: 75.3,  slope: 134, par18: 73 },
+
+    // ---- Massachusetts / Maine ----
+
+    // Beverly Golf & Tennis, Beverly MA — 18 holes, par 70 (Donald Ross, 1910)
+    'daniel_beverly_white':   { cr18: 68.8, slope: 122, par18: 70 },
+    'daniel_beverly_blue':    { cr18: 70.3, slope: 124, par18: 70 },
+    'amelie_beverly_white':   { cr18: 68.8, slope: 122, par18: 70 },  // men's white — no women's white published
+    'amelie_beverly_red':     { cr18: 71.6, slope: 124, par18: 73 },  // women's rating, women's par
+
+    // Wenham Country Club, Wenham MA — 18 holes, par 65 (31 out / 34 in)
+    'daniel_wenham_white':    { cr18: 63.3, slope: 112, par18: 65 },
+    'amelie_wenham_white':    { cr18: 63.3, slope: 112, par18: 65 },  // men's white — no women's white published
+    'amelie_wenham_red':      { cr18: 65.3, slope: 111, par18: 65 },
+
+    // Cape Ann Golf Club, Essex MA — 9 holes, par 34. cr18 = published 9-hole rating x2.
+    'daniel_capeann_white':   { cr18: 67.0, slope: 123, par18: 68 },  // 33.5 / 123 over nine
+    'daniel_capeann_blue':    { cr18: 69.8, slope: 124, par18: 68 },  // 34.9 / 124 over nine
+    'amelie_capeann_white':   { cr18: 73.4, slope: 126, par18: 68 },  // 36.7 / 126 over nine — women's white is rated here
+    'amelie_capeann_red':     { cr18: 65.4, slope: 111, par18: 68 },  // 32.7 / 111 over nine
+
+    // Dunegrass Golf Club, Old Orchard Beach ME — 18 holes, par 71 (Dan Maples, 1998)
+    'daniel_dunegrass_white': { cr18: 70.2, slope: 130, par18: 71 },
+    'daniel_dunegrass_gold':  { cr18: 72.1, slope: 137, par18: 71 },
+    'amelie_dunegrass_white': { cr18: 70.2, slope: 130, par18: 71 },  // men's white — no women's white published
+    'amelie_dunegrass_green': { cr18: 68.1, slope: 126, par18: 71 },
+    'amelie_dunegrass_black': { cr18: 68.0, slope: 113, par18: 71 },  // forward tees
 };
+
+// Courses away from Mieming, matched on the sheet's course name. `tees` maps a
+// COURSE_DATA tee suffix to the tee-colour keywords that select it; anything the
+// sheet writes that isn't listed (or isn't rated for that player) falls back to
+// `defaultTee`, since white is what we normally play.
+const AWAY_COURSES = [
+    {
+        id: 'beverly', label: 'Beverly G&T', defaultTee: 'white',
+        match: c => c.includes('beverly'),
+        tees: { blue: ['blue'], red: ['red', 'forward'], white: ['white'] },
+    },
+    {
+        id: 'wenham', label: 'Wenham CC', defaultTee: 'white',
+        match: c => c.includes('wenham'),
+        tees: { red: ['red', 'forward'], white: ['white'] },
+    },
+    {
+        id: 'capeann', label: 'Cape Ann', defaultTee: 'white',
+        // "Cape Anne" is the common misspelling and shows up in the sheet
+        match: c => c.includes('cape ann'),
+        tees: { blue: ['blue'], red: ['red', 'forward'], white: ['white'] },
+    },
+    {
+        id: 'dunegrass', label: 'Dunegrass', defaultTee: 'white',
+        match: c => c.includes('dunegrass') || c.includes('dune grass'),
+        tees: { gold: ['gold', 'back'], green: ['green'], black: ['black', 'forward'], white: ['white'] },
+    },
+];
 
 function getCourseKey(player, course, teeColor) {
     const p = player.toLowerCase();
     const c = course.toLowerCase();
     const t = teeColor.toLowerCase();
+
     const isMieming = c.includes('mieming') || c.includes('park course') || c.includes('champion');
-    if (!isMieming) return null;
+    if (isMieming) {
+        const isPark = c.includes('park');
+        if (isPark) return p === 'daniel' ? 'daniel_park' : 'amelie_park';
 
-    const isPark = c.includes('park');
-    if (isPark) return p === 'daniel' ? 'daniel_park' : 'amelie_park';
+        if (p === 'amelie') return 'amelie_champ_igel';
+        if (t.includes('blue') || t.includes('fuchs')) return 'daniel_champ_fuchs';
+        if (t.includes('yellow') || t.includes('back') || t.includes('gams')) return 'daniel_champ_gams';
+        if (t.includes('red') || t.includes('igel')) return 'daniel_champ_igel';
+        return 'daniel_champ_gams';
+    }
 
-    if (p === 'amelie') return 'amelie_champ_igel';
-    if (t.includes('blue') || t.includes('fuchs')) return 'daniel_champ_fuchs';
-    if (t.includes('yellow') || t.includes('back') || t.includes('gams')) return 'daniel_champ_gams';
-    if (t.includes('red') || t.includes('igel')) return 'daniel_champ_igel';
-    return 'daniel_champ_gams';
+    const away = AWAY_COURSES.find(a => a.match(c));
+    if (!away) return null;
+
+    const suffix = Object.keys(away.tees).find(s => away.tees[s].some(k => t.includes(k))) || away.defaultTee;
+    for (const key of [`${p}_${away.id}_${suffix}`, `${p}_${away.id}_${away.defaultTee}`]) {
+        if (COURSE_DATA[key]) return key;
+    }
+    return null;
+}
+
+// Label for the per-course breakdown in the handicap modal.
+function courseGroupLabel(course) {
+    const c = (course || '').toLowerCase();
+    if (c.includes('park')) return 'Park Course';
+    if (c.includes('mieming') || c.includes('champion')) return 'Champion Course';
+    const away = AWAY_COURSES.find(a => a.match(c));
+    return away ? away.label : (course || 'Other');
 }
 
 function calcScoreDifferential(score, courseData, holes) {

@@ -120,14 +120,12 @@ function openHandicap(playerName) {
     // headline index, restricted to one course. This keeps every course on the
     // same scale as the overall index (and each other), so the gap is a clean
     // "demonstrated ability" comparison net of slope/CR. The sparkline plots the
-    // rolling course index so recent direction is visible. Park (paired 9h) and
-    // champ diffs are both full 18-hole, slope/CR-normalized, so they compare
-    // directly.
-    const courseStats = (isPark) => {
-        const diffs = hcp.diffs.filter(d => {
-            const c = (d.rounds[0].course || '').toLowerCase();
-            return isPark ? c.includes('park') : !c.includes('park');
-        }).map(d => d.diff);
+    // rolling course index so recent direction is visible. Nine-hole courses
+    // (Park, Cape Ann) contribute paired diffs, which are full 18-hole and
+    // slope/CR-normalized like the 18-hole ones, so every row compares directly.
+    const courseStats = (label) => {
+        const diffs = hcp.diffs.filter(d => courseGroupLabel(d.rounds[0].course) === label)
+            .map(d => d.diff);
         const n = diffs.length;
         if (n === 0) return { n: 0 };
         const prog = [];
@@ -144,8 +142,6 @@ function openHandicap(playerName) {
         const back  = prog[Math.max(0, prog.length - 6)];  // ~5 index-points ago
         return { n, index, prog, best: row ? row[2] : null, window: m, trendDelta: index - back };
     };
-    const champStats = courseStats(false);
-    const parkStats  = courseStats(true);
 
     const courseRow = (label, s) => {
         const row = (inner, sub) => `
@@ -172,6 +168,19 @@ function openHandicap(playerName) {
         return row(`<span class="hcp-comparison-value">${s.index.toFixed(1)}</span>${spark}${trend}`, sub);
     };
 
+    // The two Mieming courses always get a row — they're the home courses, and an
+    // empty one still says something. Away courses (trips) only appear once they
+    // have a differential, in the order they were first played.
+    const HOME_LABELS = ['Champion Course', 'Park Course'];
+    const awayLabels = [];
+    hcp.diffs.forEach(d => {
+        const l = courseGroupLabel(d.rounds[0].course);
+        if (!HOME_LABELS.includes(l) && !awayLabels.includes(l)) awayLabels.push(l);
+    });
+    const courseRowsHtml = [...HOME_LABELS, ...awayLabels]
+        .map(l => courseRow(l, courseStats(l)))
+        .join('');
+
     const last20    = hcp.diffs.slice(-20);
     const avgDiffCount = last20.length;
     const avgDiff   = avgDiffCount > 0
@@ -197,8 +206,7 @@ function openHandicap(playerName) {
                     <span class="hcp-comparison-label">WHS Index <span class="hcp-comparison-sub">${whsBestLabel}</span></span>
                     <span class="hcp-comparison-value">${whiStr}</span>
                 </div>
-                ${courseRow('Champion Course', champStats)}
-                ${courseRow('Park Course', parkStats)}
+                ${courseRowsHtml}
             </div>
     `;
 
