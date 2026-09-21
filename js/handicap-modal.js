@@ -120,9 +120,9 @@ function openHandicap(playerName) {
     // headline index, restricted to one course. This keeps every course on the
     // same scale as the overall index (and each other), so the gap is a clean
     // "demonstrated ability" comparison net of slope/CR. The sparkline plots the
-    // rolling course index so recent direction is visible. Nine-hole courses
-    // (Park, Cape Ann) contribute paired diffs, which are full 18-hole and
-    // slope/CR-normalized like the 18-hole ones, so every row compares directly.
+    // rolling course index so recent direction is visible. The Park Course is a
+    // nine, so it contributes paired diffs, which are full 18-hole and
+    // slope/CR-normalized like the 18-hole ones, so both rows compare directly.
     // A nine pairs with the next nine in date order whatever course that was on
     // (the WHS rule), so a pair can straddle two courses. Such a diff counts in
     // both rows — both courses contributed half of it — and the row says so.
@@ -182,18 +182,12 @@ function openHandicap(playerName) {
         return row(`<span class="hcp-comparison-value">${s.index.toFixed(1)}</span>${spark}${trend}`, sub);
     };
 
-    // The two Mieming courses always get a row — they're the home courses, and an
-    // empty one still says something. Away courses (trips) only appear once they
-    // have a differential, in the order they were first played.
+    // Only the two Mieming courses get a row — they're the home courses and the
+    // only ones played often enough for a per-course index to mean anything.
+    // Away rounds (trips) still count toward the headline index and appear in
+    // the differential breakdown; they just don't get a row of their own.
     const HOME_LABELS = ['Champion Course', 'Park Course'];
-    const awayLabels = [];
-    const noteCourse = (course) => {
-        const l = courseGroupLabel(course);
-        if (!HOME_LABELS.includes(l) && !awayLabels.includes(l)) awayLabels.push(l);
-    };
-    hcp.diffs.forEach(d => d.rounds.forEach(r => noteCourse(r.course)));
-    hcp.unpaired.forEach(r => noteCourse(r.course));
-    const courseRowsHtml = [...HOME_LABELS, ...awayLabels]
+    const courseRowsHtml = HOME_LABELS
         .map(l => courseRow(l, courseStats(l)))
         .join('');
 
