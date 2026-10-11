@@ -7,6 +7,10 @@
 // config.js (scorecardData, allRoundsData), helpers from data.js (parseRate),
 // render.js (formatDate) and courses.js (COURSE_VIEWS, courseRounds).
 
+// Master switch for the section. While false, renderGear() leaves the section
+// hidden (trends.html ships it with the `hidden` attribute) and does no work.
+const GEAR_SECTION_ENABLED = false;
+
 const GEAR_CHANGES = [
     {
         key: 'irons2026',
@@ -330,6 +334,10 @@ function renderGearCharts(change, courseKey) {
 // Called from renderTrends(); currentCourse is trends.js's course selection.
 
 function renderGear() {
+    const section = document.getElementById('gear');
+    section.hidden = !GEAR_SECTION_ENABLED;
+    if (!GEAR_SECTION_ENABLED) return;
+
     const change = GEAR_CHANGES[0];
     const course = COURSE_VIEWS[currentCourse];
     const split  = gearSplit(change, currentCourse);
