@@ -82,7 +82,18 @@
 
             <div class="analytics-card">
                 <h3 class="analytics-subtitle">Hole Scoring Breakdown</h3>
-                <p class="analytics-note">All rounds with scorecard data · excluding scrambles</p>
+                <p class="analytics-note" id="scoring-note">All rounds with scorecard data · excluding scrambles</p>
+                <div class="scoring-controls">
+                    <div class="course-tabs">
+                        <button class="course-tab active" data-scoring-window="all" onclick="setScoringWindow('all')">All time</button>
+                        <button class="course-tab" data-scoring-window="recent" onclick="setScoringWindow('recent')">Last 180 holes</button>
+                    </div>
+                    <div class="course-tabs">
+                        <button class="course-tab active" data-scoring-course="all" onclick="setScoringCourse('all')">All courses</button>
+                        <button class="course-tab" data-scoring-course="park" onclick="setScoringCourse('park')">Park</button>
+                        <button class="course-tab" data-scoring-course="champion" onclick="setScoringCourse('champion')">Champion</button>
+                    </div>
+                </div>
                 <div class="scoring-charts-wrap">
                     <div class="scoring-chart-half">
                         <p class="scoring-chart-label">Daniel</p>

@@ -2,6 +2,8 @@ let trajectoryChart    = null;
 let parkHistogramChart = null;
 let scoringDistChartDaniel = null;
 let scoringDistChartAmelie = null;
+let scoringWindow = 'all';   // 'all' | 'recent'
+let scoringCourse = 'all';   // key of SCORING_COURSES
 
 const DANIEL_COLOR = { solid: '#4a6fa5', fill: 'rgba(74,111,165,0.08)', bar: 'rgba(74,111,165,0.75)' };
 const AMELIE_COLOR = { solid: '#4a7c4a', fill: 'rgba(74,124,74,0.08)',  bar: 'rgba(74,124,74,0.75)'  };
@@ -201,15 +203,36 @@ function renderParkHistogram() {
     });
 }
 
-function getScoringDistribution(playerName) {
+// "Recent" = each player's latest RECENT_HOLES holes. 180 is roughly a month of current play;
+// under ~90 holes the bogey/double+ shares swing by several points on sampling noise alone.
+const RECENT_HOLES = 180;
+
+// The two Mieming courses (par 29 vs 73) play very differently, so a recent window is only
+// like-for-like within one course. "All" keeps every course, away rounds included.
+const SCORING_COURSES = {
+    all:      { label: 'All courses',     match: () => true },
+    park:     { label: 'Park Course',     match: r => isParkCourse(r) },
+    champion: { label: 'Champion Course', match: r => isChampionCourse(r) },
+};
+
+// maxHoles: walk back from the newest round until at least this many holes are counted, then
+// finish the day the cut lands on (rounds on the same date have no recorded order), so `since`
+// is exact. match: round filter, e.g. a course.
+function getScoringDistribution(playerName, { maxHoles = null, match = () => true } = {}) {
     const counts = { eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0 };
     let total = 0;
-    allRoundsData.forEach(r => {
-        if (r.player.toLowerCase() !== playerName.toLowerCase()) return;
-        if (r.roundType === 'scramble') return;
-        const holes = scorecardData[r.roundId];
-        if (!holes || holes.length === 0) return;
-        holes.forEach(h => {
+    let since = null;
+
+    const rounds = allRoundsData
+        .filter(r => r.player.toLowerCase() === playerName.toLowerCase()
+            && r.roundType !== 'scramble'
+            && match(r)
+            && (scorecardData[r.roundId] || []).length > 0)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));   // newest first
+
+    for (const r of rounds) {
+        if (maxHoles && total >= maxHoles && r.date !== since) break;
+        scorecardData[r.roundId].forEach(h => {
             const diff = h.score - h.par;
             total++;
             if      (diff <= -2) counts.eagle++;
@@ -218,8 +241,9 @@ function getScoringDistribution(playerName) {
             else if (diff ===  1) counts.bogey++;
             else                  counts.double++;
         });
-    });
-    return { counts, total };
+        since = r.date;
+    }
+    return { counts, total, since };
 }
 
 function makeScoringChart(canvasId, dist, color, yMax) {
@@ -270,14 +294,35 @@ function renderScoringStats() {
     const tableEl = document.getElementById('scoring-dist-table');
     if (!tableEl) return;
 
-    const daniel = getScoringDistribution('daniel');
-    const amelie = getScoringDistribution('amelie');
+    const recent = scoringWindow === 'recent';
+    const course = SCORING_COURSES[scoringCourse];
 
+    document.querySelectorAll('[data-scoring-window]').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.scoringWindow === scoringWindow));
+    document.querySelectorAll('[data-scoring-course]').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.scoringCourse === scoringCourse));
+    document.querySelector('[data-scoring-window="recent"]').textContent = `Last ${RECENT_HOLES} holes`;
+
+    const noteParts = [recent ? `Each player's latest ~${RECENT_HOLES} holes` : 'All rounds with scorecard data'];
+    if (scoringCourse !== 'all') noteParts.push(`${course.label} only`);
+    else if (recent) noteParts.push('all courses');
+    noteParts.push('excluding scrambles');
+    document.getElementById('scoring-note').textContent = noteParts.join(' · ');
+
+    const opts = { maxHoles: recent ? RECENT_HOLES : null, match: course.match };
+    const daniel = getScoringDistribution('daniel', opts);
+    const amelie = getScoringDistribution('amelie', opts);
+
+    if (scoringDistChartDaniel) { scoringDistChartDaniel.destroy(); scoringDistChartDaniel = null; }
+    if (scoringDistChartAmelie) { scoringDistChartAmelie.destroy(); scoringDistChartAmelie = null; }
+
+    const chartsWrap = document.querySelector('.scoring-charts-wrap');
     if (daniel.total === 0 && amelie.total === 0) {
-        document.querySelector('.scoring-charts-wrap').style.display = 'none';
-        tableEl.innerHTML = '<p class="loading">No hole-by-hole scorecard data yet.</p>';
+        chartsWrap.style.display = 'none';
+        tableEl.innerHTML = `<p class="loading">No hole-by-hole scorecard data${scoringCourse === 'all' ? '' : ' for this course'} yet.</p>`;
         return;
     }
+    chartsWrap.style.display = '';
 
     const categories = ['Eagle+', 'Birdie', 'Par', 'Bogey', 'Double+'];
     const catKeys    = ['eagle', 'birdie', 'par', 'bogey', 'double'];
@@ -287,9 +332,6 @@ function renderScoringStats() {
     ]);
     const yMax = Math.min(100, Math.ceil(Math.max(...allPcts) / 10) * 10 + 10);
 
-    if (scoringDistChartDaniel) { scoringDistChartDaniel.destroy(); scoringDistChartDaniel = null; }
-    if (scoringDistChartAmelie) { scoringDistChartAmelie.destroy(); scoringDistChartAmelie = null; }
-
     scoringDistChartDaniel = makeScoringChart('scoring-dist-chart-daniel', daniel,
         { bg: DANIEL_COLOR.bar, border: DANIEL_COLOR.solid }, yMax);
     scoringDistChartAmelie = makeScoringChart('scoring-dist-chart-amelie', amelie,
@@ -297,6 +339,8 @@ function renderScoringStats() {
 
     const pct = (n, t) => t > 0 ? (n / t * 100).toFixed(1) + '%' : '—';
     const dT = daniel.total, aT = amelie.total;
+    // The recent window starts on a different date for each player, so say where it starts.
+    const holesLabel = d => `${d.total} holes` + (recent && d.since ? ` · since ${formatDate(d.since)}` : '');
 
     let rows = catKeys.map((k, i) => `
         <tr>
@@ -310,8 +354,8 @@ function renderScoringStats() {
             <thead>
                 <tr>
                     <th></th>
-                    <th colspan="2">Daniel <span class="scoring-table-sub">${dT} holes</span></th>
-                    <th colspan="2">Amelie <span class="scoring-table-sub">${aT} holes</span></th>
+                    <th colspan="2">Daniel <span class="scoring-table-sub">${holesLabel(daniel)}</span></th>
+                    <th colspan="2">Amelie <span class="scoring-table-sub">${holesLabel(amelie)}</span></th>
                 </tr>
                 <tr class="scoring-table-subhead">
                     <th>Score</th>
@@ -321,4 +365,16 @@ function renderScoringStats() {
             </thead>
             <tbody>${rows}</tbody>
         </table>`;
+}
+
+function setScoringWindow(key) {
+    if (key === scoringWindow) return;
+    scoringWindow = key;
+    renderScoringStats();
+}
+
+function setScoringCourse(key) {
+    if (!SCORING_COURSES[key] || key === scoringCourse) return;
+    scoringCourse = key;
+    renderScoringStats();
 }
