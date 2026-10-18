@@ -31,6 +31,7 @@ async function loadData() {
         // renderGirChart();  // monthly GIR card is hidden in index.html for now
         renderParkHistogram();
         renderScoringStats();
+        renderHandicapCompare();
         renderStats(statsData);
         renderPlayerRounds('daniel-rounds',          roundsData.daniel);
         renderPlayerRounds('amelie-rounds',          roundsData.amelie);

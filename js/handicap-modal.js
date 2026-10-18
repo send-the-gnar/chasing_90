@@ -251,16 +251,10 @@ function renderHandicapChart(playerName, progression, courseParams) {
     const yLabel    = courseParams ? 'Course Handicap' : 'Handicap Index';
     const dataLabel = courseParams ? 'Course HCP' : 'Est. WHI';
 
-    const startingWhi = { 'Daniel': 33, 'Amelie': 36 };
-    const startVal    = startingWhi[playerName];
-    const startDisplay = startVal != null ? toValue(startVal) : null;
-
-    const labels = startDisplay != null
-        ? ['Start', ...progression.map(p => formatDate(p.date))]
-        : progression.map(p => formatDate(p.date));
-    const data = startDisplay != null
-        ? [startDisplay, ...progression.map(p => toValue(p.whi))]
-        : progression.map(p => toValue(p.whi));
+    // The first point is the first index the player actually earned (the third
+    // differential), not a seeded starting handicap.
+    const labels = progression.map(p => formatDate(p.date));
+    const data   = progression.map(p => toValue(p.whi));
 
     handicapChart = new Chart(ctx, {
         type: 'line',
