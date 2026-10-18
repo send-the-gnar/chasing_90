@@ -22,7 +22,6 @@
     </header>
 
     <nav>
-        <a href="#goals">Goals</a>
         <a href="#progress">Stats</a>
         <a href="#tournaments">Tournaments</a>
         <a href="#timeline">Timeline</a>
@@ -38,7 +37,7 @@
 
     <main>
 
-        <section id="goals">
+        <section id="goals" style="display:none;">
             <h2 class="section-title">Goals</h2>
             <div class="goals-grid" id="goals-grid">
                 <p class="loading">Loading goals...</p>
@@ -70,6 +69,30 @@
                 <div id="heatmap-park">
                     <p class="loading">Loading...</p>
                 </div>
+            </div>
+
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Scoring Average — Champion Course</h3>
+                <p class="analytics-note">18-hole rounds, excluding scrambles · x = rounds played · dots = rounds · lines = rolling average · dashed line = goal · lower is better</p>
+                <div class="trajectory-wrap" id="scoring-avg-champion"></div>
+            </div>
+
+            <div class="analytics-card">
+                <h3 class="analytics-subtitle">Scoring Average — Park Course</h3>
+                <p class="analytics-note">9-hole rounds, excluding scrambles · x = rounds played · dots = rounds · lines = rolling average · dashed line = goal · lower is better</p>
+                <div class="trajectory-wrap" id="scoring-avg-park"></div>
+            </div>
+
+            <div class="analytics-card" style="display:none;">
+                <h3 class="analytics-subtitle">Greens in Regulation by Month</h3>
+                <p class="analytics-note">Pooled by month and weighted by holes played, so 9-hole rounds don't add noise · months under 18 holes hidden · Amelie's GIR starts in June</p>
+                <div class="scoring-controls">
+                    <div class="course-tabs">
+                        <button class="course-tab active" data-gir-course="park" onclick="setGirCourse('park')">Park</button>
+                        <button class="course-tab" data-gir-course="champion" onclick="setGirCourse('champion')">Champion</button>
+                    </div>
+                </div>
+                <div class="trajectory-wrap" style="height:240px" id="gir-chart-wrap"></div>
             </div>
 
             <div class="analytics-card">
@@ -221,7 +244,9 @@
     <script src="js/birdies.js"></script>
     <script src="js/render.js"></script>
     <script src="js/heatmap.js"></script>
+    <script src="js/courses.js"></script>
     <script src="js/charts.js"></script>
+    <script src="js/scoring-average.js"></script>
     <script src="js/scorecard-modal.js"></script>
     <script src="js/handicap-modal.js"></script>
     <script src="js/birdie-modal.js"></script>

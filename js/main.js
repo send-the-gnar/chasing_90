@@ -27,6 +27,8 @@ async function loadData() {
         // (e.g. 12 of 18) are included — no full-round length requirement.
         renderHeatmap('heatmap-champion', r => isChampionCourse(r) && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 5 });
         renderHeatmap('heatmap-park',     r => isParkCourse(r) && r.roundType !== 'scramble' && !r.excludeFromHandicap, { rollingN: 10 });
+        renderScoringAverages();
+        // renderGirChart();  // monthly GIR card is hidden in index.html for now
         renderParkHistogram();
         renderScoringStats();
         renderStats(statsData);
