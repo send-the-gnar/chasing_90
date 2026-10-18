@@ -57,7 +57,7 @@ async function loadData() {
 }
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeScorecard(); closeHandicap(); closeHoleDetail(); }
+    if (e.key === 'Escape') { closeScorecard(); closeHandicap(); closeBirdies(); closeHoleDetail(); }
 });
 
 document.addEventListener('DOMContentLoaded', () => {

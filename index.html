@@ -196,6 +196,13 @@
         </div>
     </div>
 
+    <div class="birdie-overlay" id="birdie-overlay" onclick="closeBirdiesIfBackground(event)">
+        <div class="birdie-modal" id="birdie-modal">
+            <button class="scorecard-close" onclick="closeBirdies()">&times;</button>
+            <div id="birdie-content"></div>
+        </div>
+    </div>
+
     <div class="hole-detail-overlay" id="hole-detail-overlay" onclick="closeHoleDetailIfBackground(event)">
         <div class="hole-detail-modal" id="hole-detail-modal">
             <button class="scorecard-close" onclick="closeHoleDetail()">&times;</button>
@@ -211,11 +218,13 @@
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
     <script src="js/handicap.js"></script>
+    <script src="js/birdies.js"></script>
     <script src="js/render.js"></script>
     <script src="js/heatmap.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/scorecard-modal.js"></script>
     <script src="js/handicap-modal.js"></script>
+    <script src="js/birdie-modal.js"></script>
     <script src="js/main.js"></script>
 
 </body>

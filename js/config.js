@@ -13,6 +13,7 @@ function getSheetUrl(sheetName) {
 let scorecardData = {};
 let allRoundsData = [];
 let handicapData  = {};
+let birdieData    = {};
 
 const GOAL_18_OVER_PAR = 20;
 const GOAL_9_OVER_PAR  = 7;

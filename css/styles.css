@@ -1452,6 +1452,164 @@ footer p { opacity: 0.8; }
 .hcp-trend-flat   { color: var(--green-400); }
 
 /* ========================================
+   BIRDIE MODAL
+   ======================================== */
+.birdie-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(26, 46, 26, 0.6);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-md);
+}
+.birdie-overlay.active { display: flex; }
+
+.birdie-modal {
+    background: var(--cream);
+    border-radius: 12px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 40px rgba(26, 46, 26, 0.3);
+    position: relative;
+}
+
+.birdie-header {
+    background: var(--green-800);
+    color: var(--cream);
+    padding: var(--space-md);
+    border-radius: 12px 12px 0 0;
+}
+
+.birdie-header h3 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+}
+
+.birdie-header-sub {
+    font-size: 0.8rem;
+    color: var(--green-300);
+}
+
+.birdie-body { padding: var(--space-md); }
+
+.birdie-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--green-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: var(--space-md) 0 var(--space-xs);
+}
+
+/* "Birdie every hole" tracker: one card per course, one chip per hole */
+.birdie-course {
+    background: white;
+    border: 1px solid var(--green-100);
+    border-radius: 8px;
+    padding: var(--space-sm);
+}
+.birdie-course + .birdie-course { margin-top: var(--space-sm); }
+.birdie-course-complete { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+
+.birdie-course-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.birdie-course-name { font-weight: 600; color: var(--green-800); }
+.birdie-course-sub  { font-size: 0.75rem; color: var(--green-400); }
+
+.birdie-course-count { text-align: right; flex-shrink: 0; }
+
+.birdie-course-fraction {
+    font-size: 0.95rem;
+    color: var(--green-400);
+    line-height: 1.1;
+}
+.birdie-course-fraction strong {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--green-800);
+}
+
+.birdie-course-fraction-label {
+    font-size: 0.65rem;
+    color: var(--green-400);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.birdie-holes {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.birdie-hole {
+    position: relative;
+    text-align: center;
+    padding: 0.3rem 0 0.35rem;
+    border: 1px dashed var(--green-200);
+    border-radius: 6px;
+    color: var(--green-300);
+    line-height: 1.2;
+}
+/* background and text colour are set inline, scaled by the hole's birdie count */
+.birdie-hole-hit { border: 1px solid transparent; }
+.birdie-hole-num { display: block; font-size: 0.62rem; font-weight: 600; opacity: 0.75; }
+.birdie-hole-n   { display: block; font-size: 0.95rem; font-weight: 600; }
+
+/* Gold star in the corner marks the hole with the most birdies */
+.birdie-hole-top::after {
+    content: '★';
+    position: absolute;
+    top: 1px;
+    right: 3px;
+    font-size: 0.55rem;
+    color: var(--gold-light);
+}
+
+.birdie-course-note {
+    font-size: 0.75rem;
+    color: var(--green-500);
+    margin-top: var(--space-xs);
+}
+.birdie-course-complete .birdie-course-note { font-weight: 600; color: var(--green-700); }
+
+.birdie-away {
+    font-size: 0.78rem;
+    color: var(--green-500);
+    margin-top: var(--space-xs);
+}
+
+/* Birdie log: rows open that round's scorecard */
+.birdie-log-row { cursor: pointer; }
+.birdie-log-row:hover td { background: var(--green-50); }
+.birdie-log:not(.expanded) .birdie-log-extra { display: none; }
+.birdie-log-toggle { margin: var(--space-xs) 0 0; }
+
+.birdie-note {
+    font-size: 0.75rem;
+    color: var(--green-400);
+    font-style: italic;
+    margin-top: var(--space-md);
+}
+
+@media (max-width: 600px) {
+    .birdie-modal { max-height: 90vh; }
+    .birdie-body { padding: var(--space-sm); }
+    .birdie-holes { gap: 3px; }
+    .birdie-hole-n { font-size: 0.85rem; }
+}
+
+/* ========================================
    HOLE DETAIL — SCORE HISTORY CHART
    ======================================== */
 .hole-chart-section {
