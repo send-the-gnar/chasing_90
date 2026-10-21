@@ -17,6 +17,29 @@ function scoreShapeClass(diff) {
     return '';
 }
 
+// Score-to-par buckets shared by the Hole Scoring Breakdown and the round report card.
+const HOLE_SCORE_CATS = [
+    { key: 'eagle',  label: 'Eagle+',  color: '#c9a227', text: '#fff' },
+    { key: 'birdie', label: 'Birdie',  color: '#2d7a2d', text: '#fff' },
+    { key: 'par',    label: 'Par',     color: '#8fb88f', text: '#1a2e1a' },
+    { key: 'bogey',  label: 'Bogey',   color: '#e3c44d', text: '#1a2e1a' },
+    { key: 'double', label: 'Double',  color: '#cf6b3a', text: '#fff' },
+    { key: 'triple', label: 'Triple+', color: '#962f1f', text: '#fff' },
+];
+
+function holeScoreKey(diff) {
+    if (diff <= -2) return 'eagle';
+    if (diff === -1) return 'birdie';
+    if (diff === 0) return 'par';
+    if (diff === 1) return 'bogey';
+    if (diff === 2) return 'double';
+    return 'triple';
+}
+
+function emptyHoleScoreCounts() {
+    return Object.fromEntries(HOLE_SCORE_CATS.map(c => [c.key, 0]));
+}
+
 // "2026-09-19" parses as UTC midnight, which toLocaleDateString then renders as
 // the previous day anywhere west of Greenwich — every date on the site reads a
 // day early while we're in the US. Build the date in local time instead.

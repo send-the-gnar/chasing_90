@@ -31,29 +31,14 @@ function holeAveragesFor(round) {
 }
 
 function roundScoringCounts(holes) {
-    const counts = { eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0 };
-    holes.forEach(h => {
-        const d = h.score - h.par;
-        if      (d <= -2) counts.eagle++;
-        else if (d === -1) counts.birdie++;
-        else if (d ===  0) counts.par++;
-        else if (d ===  1) counts.bogey++;
-        else               counts.double++;
-    });
+    const counts = emptyHoleScoreCounts();
+    holes.forEach(h => counts[holeScoreKey(h.score - h.par)]++);
     return counts;
 }
 
-const SUMMARY_CATS = [
-    { key: 'eagle',  label: 'Eagle+',  color: '#c9a227', text: '#fff' },
-    { key: 'birdie', label: 'Birdie',  color: '#2d7a2d', text: '#fff' },
-    { key: 'par',    label: 'Par',     color: '#8fb88f', text: '#1a2e1a' },
-    { key: 'bogey',  label: 'Bogey',   color: '#e3c44d', text: '#1a2e1a' },
-    { key: 'double', label: 'Double+', color: '#cf6b3a', text: '#fff' },
-];
-
 function renderScoringSummary(holes) {
     const counts = roundScoringCounts(holes);
-    const present = SUMMARY_CATS.filter(c => counts[c.key] > 0);
+    const present = HOLE_SCORE_CATS.filter(c => counts[c.key] > 0);
     const segs = present.map(c =>
         `<div class="summary-seg" style="width:${(counts[c.key] / holes.length * 100).toFixed(1)}%; background:${c.color}; color:${c.text};" title="${c.label}: ${counts[c.key]}">${counts[c.key]}</div>`
     ).join('');

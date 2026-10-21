@@ -204,7 +204,7 @@ function renderParkHistogram() {
 }
 
 // "Recent" = each player's latest RECENT_HOLES holes. 180 is roughly a month of current play;
-// under ~90 holes the bogey/double+ shares swing by several points on sampling noise alone.
+// under ~90 holes the bogey/double/triple+ shares swing by several points on sampling noise alone.
 const RECENT_HOLES = 180;
 
 // The two Mieming courses (par 29 vs 73) play very differently, so a recent window is only
@@ -219,7 +219,7 @@ const SCORING_COURSES = {
 // finish the day the cut lands on (rounds on the same date have no recorded order), so `since`
 // is exact. match: round filter, e.g. a course.
 function getScoringDistribution(playerName, { maxHoles = null, match = () => true } = {}) {
-    const counts = { eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0 };
+    const counts = emptyHoleScoreCounts();
     let total = 0;
     let since = null;
 
@@ -233,22 +233,23 @@ function getScoringDistribution(playerName, { maxHoles = null, match = () => tru
     for (const r of rounds) {
         if (maxHoles && total >= maxHoles && r.date !== since) break;
         scorecardData[r.roundId].forEach(h => {
-            const diff = h.score - h.par;
             total++;
-            if      (diff <= -2) counts.eagle++;
-            else if (diff === -1) counts.birdie++;
-            else if (diff ===  0) counts.par++;
-            else if (diff ===  1) counts.bogey++;
-            else                  counts.double++;
+            counts[holeScoreKey(h.score - h.par)]++;
         });
         since = r.date;
     }
     return { counts, total, since };
 }
 
-function makeScoringChart(canvasId, dist, color, yMax) {
-    const categories = ['Eagle+', 'Birdie', 'Par', 'Bogey', 'Double+'];
-    const catKeys    = ['eagle', 'birdie', 'par', 'bogey', 'double'];
+// Eagle+ stays hidden until either player has one in the current view, so the two charts
+// always show the same columns.
+function visibleScoringCats(...dists) {
+    return HOLE_SCORE_CATS.filter(c => c.key !== 'eagle' || dists.some(d => d.counts.eagle > 0));
+}
+
+function makeScoringChart(canvasId, dist, color, yMax, cats) {
+    const categories = cats.map(c => c.label);
+    const catKeys    = cats.map(c => c.key);
     const pctOf = key => dist.total > 0 ? parseFloat((dist.counts[key] / dist.total * 100).toFixed(1)) : 0;
 
     return new Chart(document.getElementById(canvasId), {
@@ -324,8 +325,8 @@ function renderScoringStats() {
     }
     chartsWrap.style.display = '';
 
-    const categories = ['Eagle+', 'Birdie', 'Par', 'Bogey', 'Double+'];
-    const catKeys    = ['eagle', 'birdie', 'par', 'bogey', 'double'];
+    const cats = visibleScoringCats(daniel, amelie);
+    const catKeys = cats.map(c => c.key);
     const allPcts = catKeys.flatMap(k => [
         daniel.total > 0 ? daniel.counts[k] / daniel.total * 100 : 0,
         amelie.total > 0 ? amelie.counts[k] / amelie.total * 100 : 0,
@@ -333,18 +334,18 @@ function renderScoringStats() {
     const yMax = Math.min(100, Math.ceil(Math.max(...allPcts) / 10) * 10 + 10);
 
     scoringDistChartDaniel = makeScoringChart('scoring-dist-chart-daniel', daniel,
-        { bg: DANIEL_COLOR.bar, border: DANIEL_COLOR.solid }, yMax);
+        { bg: DANIEL_COLOR.bar, border: DANIEL_COLOR.solid }, yMax, cats);
     scoringDistChartAmelie = makeScoringChart('scoring-dist-chart-amelie', amelie,
-        { bg: AMELIE_COLOR.bar, border: AMELIE_COLOR.solid }, yMax);
+        { bg: AMELIE_COLOR.bar, border: AMELIE_COLOR.solid }, yMax, cats);
 
     const pct = (n, t) => t > 0 ? (n / t * 100).toFixed(1) + '%' : '—';
     const dT = daniel.total, aT = amelie.total;
     // The recent window starts on a different date for each player, so say where it starts.
     const holesLabel = d => `${d.total} holes` + (recent && d.since ? ` · since ${formatDate(d.since)}` : '');
 
-    let rows = catKeys.map((k, i) => `
+    const rows = cats.map(({ key: k, label }) => `
         <tr>
-            <td>${categories[i]}</td>
+            <td>${label}</td>
             <td>${daniel.counts[k]}</td><td class="pct-col">${pct(daniel.counts[k], dT)}</td>
             <td>${amelie.counts[k]}</td><td class="pct-col">${pct(amelie.counts[k], aT)}</td>
         </tr>`).join('');
