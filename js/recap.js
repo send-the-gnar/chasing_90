@@ -340,9 +340,7 @@ function renderRecap(milestones, posts, noteRow) {
             .map(x => bestDayCard(x.p, course, milestones)))
         .join('');
 
-    const h2h = Object.keys(COURSE_VIEWS).map(c => headToHeadCard(c, recapSeason)).join('');
-    document.getElementById('recap-h2h-grid').innerHTML = h2h;
-    showSection('recap-h2h', Boolean(h2h));
+    showSection('recap-h2h', renderHeadToHead('recap-h2h-grid', recapSeason));
 
     renderBirdieChase();
     showSection('recap-holes-section', renderHoles());

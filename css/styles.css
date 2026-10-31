@@ -604,6 +604,13 @@ nav a:hover { color: var(--gold-light); }
 
 .h2h-toggle:hover { color: var(--green-800); text-decoration: underline; }
 
+.h2h-rows-note {
+    margin-top: var(--space-xs);
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--green-400);
+}
+
 .h2h-rows { margin-top: var(--space-xs); font-size: 0.85rem; }
 .h2h-rows td, .h2h-rows th { padding: 0.35rem 0.4rem; }
 .h2h-winner { font-weight: 700; }

@@ -58,8 +58,14 @@
 
             <section id="recap-h2h">
                 <h2 class="section-title">Head to Head</h2>
+                <div class="scoring-controls">
+                    <div class="course-tabs">
+                        <button class="course-tab active" data-h2h-format="stroke" onclick="setHeadToHeadFormat('stroke')">Stroke play</button>
+                        <button class="course-tab" data-h2h-format="match" onclick="setHeadToHeadFormat('match')">Match play</button>
+                    </div>
+                </div>
                 <div class="stats-grid" id="recap-h2h-grid"></div>
-                <p class="recap-footnote">Rounds played on the same day, by gross score, with no strokes given.</p>
+                <p class="recap-footnote">Rounds played on the same day, straight up with no strokes given. Match play compares each hole and ignores the total score.</p>
             </section>
 
             <section id="recap-birdies">
