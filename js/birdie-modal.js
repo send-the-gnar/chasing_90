@@ -1,5 +1,6 @@
 // Birdie modal, opened from the Birdies tile in the hero banner. Every number comes from
-// calculateBirdies (birdies.js) — the same call that feeds the tile — so the two always agree.
+// calculateBirdies (birdies.js), and it stays career-long: the tile counts its season from
+// the same log, so the two always agree.
 
 const BIRDIE_LOG_INITIAL = 8;   // log rows shown before "Show all"
 
@@ -68,6 +69,7 @@ function openBirdies(playerName) {
     cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - 30);
     const last30 = b.log.filter(e => parseLocalDate(e.date) >= cutoff).length;
+    const seasonCount = b.log.filter(e => seasonOf(e.date) === latestSeason).length;
 
     const most     = b.mostInRound;
     const mostLink = most
@@ -90,8 +92,13 @@ function openBirdies(playerName) {
         </div>
         <div class="birdie-body">
             <div class="hcp-main-value">${b.total}</div>
-            <div class="hcp-main-label">${b.total === 1 ? 'Birdie' : 'Birdies'}${b.eagles ? ` (incl. ${pluralize(b.eagles, 'eagle')})` : ''}</div>
+            <div class="hcp-main-label">${seasonCount < b.total ? 'Career ' : ''}${b.total === 1 ? 'Birdie' : 'Birdies'}${b.eagles ? ` (incl. ${pluralize(b.eagles, 'eagle')})` : ''}</div>
             <div class="hcp-comparison-box">
+                ${seasonCount < b.total ? `
+                <div class="hcp-comparison-row">
+                    <span class="hcp-comparison-label">${latestSeason} season</span>
+                    <span class="hcp-comparison-value">${seasonCount}</span>
+                </div>` : ''}
                 <div class="hcp-comparison-row">
                     <span class="hcp-comparison-label">Last 30 days</span>
                     <span class="hcp-comparison-value">${last30}</span>

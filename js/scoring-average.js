@@ -140,8 +140,7 @@ function monthlyGir(playerKey, courseKey) {
         .forEach(r => {
             const rate = parseRate(r.gir);
             if (rate === null) return;
-            const d   = new Date(r.date);
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const key = r.date.slice(0, 7);
             const m   = byMonth[key] || (byMonth[key] = { greens: 0, holes: 0 });
             m.greens += rate * r.holes;
             m.holes  += r.holes;

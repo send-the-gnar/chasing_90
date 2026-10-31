@@ -31,9 +31,9 @@ function movingAverage(values, window) {
     });
 }
 
+// Read off the ISO string: new Date() would put the 1st of a month in the month before, west of Greenwich.
 function monthKey(dateStr) {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return dateStr.slice(0, 7);
 }
 
 function monthLabel(key) {
@@ -270,7 +270,7 @@ function renderPaceChart() {
             const crossDay = (course.target - reg.intercept) / reg.slope;
             p.crossDay = crossDay;
             const date = new Date(crossDay * MS_PER_DAY);
-            const dateLabel = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const dateLabel = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
             const beyond = crossDay > maxHorizon ? ' (beyond the chart window)' : '';
             summaries.push(`<strong style="color:${p.color.solid}">${p.name}</strong>: on pace to ${course.goalPhrase} around <strong>${dateLabel}</strong>${beyond} — a straight-line estimate of where the ${p.w}-round average is heading.`);
             chartEnd = Math.max(chartEnd, Math.min(crossDay + 20, maxHorizon));
@@ -343,8 +343,8 @@ function renderPaceChart() {
                         // Short ranges need day-level labels; long projections read better as month + year
                         callback: v => new Date(v * MS_PER_DAY).toLocaleDateString('en-US',
                             chartEnd - firstDay < 240
-                                ? { month: 'short', day: 'numeric' }
-                                : { month: 'short', year: '2-digit' }),
+                                ? { month: 'short', day: 'numeric', timeZone: 'UTC' }
+                                : { month: 'short', year: '2-digit', timeZone: 'UTC' }),
                     },
                     grid: { display: false },
                 },
@@ -366,7 +366,7 @@ function renderPaceChart() {
                 tooltip: {
                     callbacks: {
                         title: items => new Date(items[0].parsed.x * MS_PER_DAY)
-                            .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                            .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }),
                         label: item => {
                             const l = item.dataset.label;
                             if (l.endsWith('rounds')) return ` ${l}: ${item.parsed.y} (${formatToPar(item.parsed.y, course.par)})`;

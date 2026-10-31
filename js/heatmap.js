@@ -338,10 +338,7 @@ function renderHoleDetailChart(rounds, par, holeNum) {
 
     const ROLLING_WINDOW = 5;
 
-    const labels = rounds.map(r => {
-        const d = new Date(r.date);
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-    });
+    const labels = rounds.map(r => formatDate(r.date));
 
     const barColors = rounds.map(r => {
         if (r.score <= par - 1) return '#3B82F6';

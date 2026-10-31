@@ -48,8 +48,11 @@ function parseLocalDate(dateStr) {
     return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(dateStr);
 }
 
+// Dates in the newest season stay short; anything older needs its year to be unambiguous.
 function formatDate(dateStr) {
-    return parseLocalDate(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const options = { month: 'short', day: 'numeric' };
+    if (latestSeason && seasonOf(dateStr) !== latestSeason) options.year = 'numeric';
+    return parseLocalDate(dateStr).toLocaleDateString('en-US', options);
 }
 
 function formatDateLong(dateStr) {
@@ -198,89 +201,132 @@ function renderGoals(data) {
 
 // ---- Hero stats ----
 
-function renderHeroStats(roundsData) {
-    const container = document.getElementById('hero-stats');
-    const players = [
-        { name: 'Daniel', nine: roundsData.danielPractice, eighteen: roundsData.daniel, all: roundsData.danielAll },
-        { name: 'Amelie', nine: roundsData.ameliePractice, eighteen: roundsData.amelie, all: roundsData.amelieAll },
-    ];
+// The hero shows one season at a time ('2026') or 'all'. It opens on the newest season with a
+// logged round, so last season's final numbers stay up all winter instead of a row of zeros.
+let heroPlayers = [];
+let heroSeason  = 'all';
 
-    const html = players.map(p => {
-        const totalHoles = p.all.reduce((sum, r) => sum + r.holes, 0);
-        const roundsPlayed = Math.floor(totalHoles / 18);
+function inHeroSeason(dateStr) {
+    return heroSeason === 'all' || seasonOf(dateStr) === heroSeason;
+}
 
-        const hcp = calculateHandicap(p.all);
-        handicapData[p.name] = hcp;
-        let whiDisplay = '—';
-        let whiLabel = 'Est. Handicap';
-        let whiClickable = false;
-        if (hcp.whi !== null) {
-            whiDisplay = hcp.whi.toFixed(1);
-            whiClickable = true;
-        } else if (hcp.numDiffs > 0) {
-            const needed = 3 - hcp.numDiffs;
-            whiLabel = `Need ${needed} more`;
-            whiClickable = true;
-        }
+function heroSeasonLabel() {
+    if (heroSeason === 'all') return 'All time';
+    return `${heroSeason} ${heroSeason < String(new Date().getFullYear()) ? 'final' : 'season'}`;
+}
 
-        const nineCompetitive = p.nine.filter(r => r.roundType !== 'scramble');
-        let best9OverPar = '—';
-        if (nineCompetitive.length > 0) {
-            const best = nineCompetitive.reduce((min, r) => {
-                const diff = r.score - r.par;
-                return diff < min ? diff : min;
-            }, Infinity);
-            best9OverPar = (best >= 0 ? '+' : '') + best;
-        }
+function heroStat(value, label, sub, onclick) {
+    return `
+        <div class="hero-stat${onclick ? ' hero-stat-clickable' : ''}"${onclick ? ` onclick="${onclick}"` : ''}>
+            <div class="hero-stat-value">${value}</div>
+            <div class="hero-stat-label">${label}</div>
+            ${sub ? `<div class="hero-stat-sub">${sub}</div>` : ''}
+        </div>`;
+}
 
-        const eighteenCompetitive = p.eighteen.filter(r => r.roundType !== 'scramble');
-        let best18OverPar = '—';
-        if (eighteenCompetitive.length > 0) {
-            const best = eighteenCompetitive.reduce((min, r) => {
-                const diff = r.score - r.par;
-                return diff < min ? diff : min;
-            }, Infinity);
-            best18OverPar = (best >= 0 ? '+' : '') + best;
-        }
+// The index is a rolling last 20 differentials, so it never resets. A season only changes
+// which stretch of it the tile reads: the value at the end of the season, plus the change
+// from where the previous season left off.
+function heroIndexStat(p) {
+    const hcp = handicapData[p.name];
+    const onclick = hcp.numDiffs > 0 ? `openHandicap('${p.name}')` : '';
+    if (hcp.whi === null) {
+        return heroStat('—', hcp.numDiffs > 0 ? `Need ${3 - hcp.numDiffs} more` : 'Est. Handicap', '', onclick);
+    }
 
-        const birdies = calculateBirdies(p.all);
-        birdieData[p.name] = birdies;
+    const points = hcp.progression.filter(pt => inHeroSeason(pt.date));
+    const before = heroSeason === 'all' ? [] : hcp.progression.filter(pt => seasonOf(pt.date) < heroSeason);
+    const carried = before.length ? before[before.length - 1].whi : null;
+    if (points.length === 0) {
+        return heroStat((carried ?? hcp.whi).toFixed(1), 'Est. Handicap', 'carried over', onclick);
+    }
 
-        return `
-            <div class="hero-player">
-                <span class="hero-player-name">${p.name}</span>
-                <div class="hero-player-stats">
-                    <div class="hero-stat">
-                        <div class="hero-stat-value">${totalHoles}</div>
-                        <div class="hero-stat-label">Holes Played</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-value">${roundsPlayed}</div>
-                        <div class="hero-stat-label">Rounds Played</div>
-                    </div>
-                    <div class="hero-stat${whiClickable ? ' hero-stat-clickable' : ''}"${whiClickable ? ` onclick="openHandicap('${p.name}')"` : ''}>
-                        <div class="hero-stat-value">${whiDisplay}</div>
-                        <div class="hero-stat-label">${whiLabel}</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-value">${best18OverPar}</div>
-                        <div class="hero-stat-label">Best 18-Hole</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-value">${best9OverPar}</div>
-                        <div class="hero-stat-label">Best 9-Hole</div>
-                    </div>
-                    <div class="hero-stat hero-stat-clickable" onclick="openBirdies('${p.name}')">
-                        <div class="hero-stat-value">${birdies.total}</div>
-                        <div class="hero-stat-label">Birdies</div>
-                    </div>
-                </div>
+    const whi = points[points.length - 1].whi;
+    const low = Math.min(...points.map(pt => pt.whi)).toFixed(1);
+    let sub = `low ${low} · started ${points[0].whi.toFixed(1)}`;
+    if (carried !== null) {
+        const change = Math.round((whi - carried) * 10) / 10;
+        sub = change === 0
+            ? `no change · low ${low}`
+            : `${change > 0 ? '+' : ''}${change.toFixed(1)} this season · low ${low}`;
+    }
+    return heroStat(whi.toFixed(1), 'Est. Handicap', sub, onclick);
+}
+
+// Per course, because par 29 and par 73 don't blend: complete, competitive rounds only (courseRounds).
+function heroCourseStat(p, courseKey, label) {
+    const career = courseRounds(p.key, courseKey);
+    const rounds = career.filter(r => inHeroSeason(r.date));
+    if (rounds.length === 0) return heroStat('—', label, 'no rounds yet');
+
+    const avg  = rounds.reduce((s, r) => s + r.score, 0) / rounds.length;
+    const best = Math.min(...rounds.map(r => r.score));
+    let sub = `best ${best}`;
+    if (rounds.length < career.length) {
+        const pb = Math.min(...career.map(r => r.score));
+        sub += best === pb ? ' · PB' : ` · PB ${pb}`;
+    }
+    return heroStat(avg.toFixed(1), label, sub);
+}
+
+function heroCountStat(seasonCount, careerCount, label, onclick) {
+    const fmt = n => n.toLocaleString('en-US');
+    return heroStat(fmt(seasonCount), label, seasonCount < careerCount ? `career ${fmt(careerCount)}` : '', onclick);
+}
+
+function heroPlayerHtml(p) {
+    const rounds = p.all.filter(r => inHeroSeason(r.date));
+    const holes  = list => list.reduce((sum, r) => sum + r.holes, 0);
+    const days   = list => new Set(list.map(r => r.date)).size;
+    const log    = birdieData[p.name].log;
+
+    return `
+        <div class="hero-player">
+            <span class="hero-player-name">${p.name}</span>
+            <div class="hero-player-stats">
+                ${heroIndexStat(p)}
+                ${heroCourseStat(p, 'park', 'Park Avg')}
+                ${heroCourseStat(p, 'champion', 'Champion Avg')}
+                ${heroCountStat(holes(rounds), holes(p.all), 'Holes Played')}
+                ${heroCountStat(days(rounds), days(p.all), 'Days Out')}
+                ${heroCountStat(log.filter(e => inHeroSeason(e.date)).length, log.length, 'Birdies', `openBirdies('${p.name}')`)}
             </div>
-        `;
-    }).join('');
+        </div>`;
+}
 
-    container.innerHTML = `<div class="hero-stats-inner">${html}</div>`;
-    container.style.display = '';
+function drawHeroStats() {
+    const seasons = [...new Set(allRoundsData.map(r => seasonOf(r.date)))].sort().reverse();
+    // With a single season "all time" would just repeat it, so the switch waits for a second one.
+    const tabs = seasons.length < 2 ? '' : [...seasons, 'all'].map(s => `
+        <button class="hero-season-tab${s === heroSeason ? ' active' : ''}" onclick="setHeroSeason('${s}')">${s === 'all' ? 'All time' : s}</button>`).join('');
+
+    document.getElementById('hero-stats').innerHTML = `
+        <div class="hero-season">
+            <span class="hero-season-label">${heroSeasonLabel()}</span>
+            ${tabs ? `<div class="hero-season-tabs">${tabs}</div>` : ''}
+        </div>
+        <div class="hero-stats-inner">${heroPlayers.map(heroPlayerHtml).join('')}</div>`;
+}
+
+function setHeroSeason(season) {
+    heroSeason = season;
+    drawHeroStats();
+}
+
+function renderHeroStats(roundsData) {
+    heroPlayers = [
+        { name: 'Daniel', key: 'daniel', all: roundsData.danielAll },
+        { name: 'Amelie', key: 'amelie', all: roundsData.amelieAll },
+    ];
+    // Both stay career-long: the index is rolling and the birdie-every-hole chase never resets.
+    heroPlayers.forEach(p => {
+        handicapData[p.name] = calculateHandicap(p.all);
+        birdieData[p.name]   = calculateBirdies(p.all);
+    });
+
+    heroSeason = latestSeason || 'all';
+    drawHeroStats();
+    document.getElementById('hero-stats').style.display = '';
 }
 
 // ---- Stats cards ----

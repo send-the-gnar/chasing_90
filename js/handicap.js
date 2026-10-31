@@ -9,6 +9,7 @@
 const COURSE_DATA = {
     'daniel_park':        { cr18: 57.0,  slope: 94,  par18: 58 },
     'amelie_park':        { cr18: 58.8,  slope: 97,  par18: 58 },
+    'amelie_park_red':    { cr18: 57.4,  slope: 93,  par18: 58 },  // ladies' red, 2550 m, per 1golf.eu — check against the club card
     'daniel_champ_gams':  { cr18: 74.4,  slope: 133, par18: 73 },
     'daniel_champ_fuchs': { cr18: 72.48, slope: 132, par18: 73 },
     'daniel_champ_igel':  { cr18: 70.1,  slope: 129, par18: 73 },
@@ -77,7 +78,10 @@ function getCourseKey(player, course, teeColor) {
     const isMieming = c.includes('mieming') || c.includes('park course') || c.includes('champion');
     if (isMieming) {
         const isPark = c.includes('park');
-        if (isPark) return p === 'daniel' ? 'daniel_park' : 'amelie_park';
+        if (isPark) {
+            if (p === 'daniel') return 'daniel_park';
+            return t.includes('red') ? 'amelie_park_red' : 'amelie_park';
+        }
 
         if (p === 'amelie') return 'amelie_champ_igel';
         if (t.includes('blue') || t.includes('fuchs')) return 'daniel_champ_fuchs';

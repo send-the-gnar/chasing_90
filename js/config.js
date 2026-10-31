@@ -14,6 +14,7 @@ let scorecardData = {};
 let allRoundsData = [];
 let handicapData  = {};
 let birdieData    = {};
+let latestSeason  = null;   // newest season with a logged round, e.g. '2026'
 
 const GOAL_18_OVER_PAR = 20;
 const GOAL_9_OVER_PAR  = 7;

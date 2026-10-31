@@ -63,13 +63,33 @@ function parseCSVRow(row) {
     return result;
 }
 
+// A season is the calendar year of the round, read straight off the ISO date string:
+// new Date('2027-01-01') is still December 31 anywhere west of Greenwich.
+function seasonOf(dateStr) {
+    const m = /^(\d{4})-/.exec(String(dateStr).trim());
+    return m ? m[1] : '';
+}
+
+// The sheet has about 20 spellings of the same tee boxes ("Yellow (GAMS)", "Gams (Yellow)",
+// "Rot (Igel)"). Mieming's "Back tees" are the yellow tees: their 2818 m is 2 x yellow's 1409 m.
+function canonicalTee(raw, course) {
+    const t = raw.toLowerCase();
+    const c = course.toLowerCase();
+    if (c.includes('mieming') || c.includes('park course') || c.includes('champion')) {
+        if (t.includes('blue') || t.includes('fuchs')) return 'Blue (Fuchs)';
+        if (t.includes('yellow') || t.includes('gams') || t.includes('back')) return 'Yellow (Gams)';
+        if (t.includes('red') || t.includes('rot') || t.includes('igel')) return 'Red (Igel)';
+    }
+    return raw.replace(/\s+tees?$/i, '');
+}
+
 function rowToRound(row) {
     return {
         roundId:            row.round_id || '',
         player:             row.player || '',
         date:               row.date || '',
         course:             row.course || '',
-        teeColor:           row.tee_color || '',
+        teeColor:           canonicalTee(row.tee_color || '', row.course || ''),
         teeLength:          row.tee_length || '',
         par:                parseInt(row.par) || 72,
         score:              parseInt(row.score) || 0,
@@ -86,6 +106,7 @@ function processRoundsData(rawData) {
     const rounds = rawData.map(rowToRound).filter(r => r.score > 0);
     rounds.sort((a, b) => new Date(b.date) - new Date(a.date));
     allRoundsData = rounds;
+    latestSeason = rounds.map(r => seasonOf(r.date)).sort().pop() || null;
 
     return {
         daniel:        rounds.filter(r => r.player.toLowerCase() === 'daniel' && r.holes === 18),

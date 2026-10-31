@@ -184,6 +184,54 @@ nav a:hover { color: var(--gold-light); }
     letter-spacing: 0.05em;
 }
 
+.hero-stat-sub {
+    font-size: 0.65rem;
+    color: var(--green-200);
+    line-height: 1.25;
+    margin-top: 1px;
+}
+
+.hero-season {
+    max-width: 900px;
+    margin: 0 auto var(--space-sm);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs) var(--space-sm);
+}
+
+.hero-season-label {
+    font-size: 0.7rem;
+    color: var(--green-200);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.hero-season-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.hero-season-tab {
+    background: transparent;
+    border: 1px solid var(--green-500);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font: inherit;
+    font-size: 0.7rem;
+    color: var(--green-200);
+    cursor: pointer;
+}
+
+.hero-season-tab:hover { color: var(--cream); }
+
+.hero-season-tab.active {
+    background: var(--cream);
+    border-color: var(--cream);
+    color: var(--green-800);
+}
+
 @media (max-width: 600px) {
     .hero-stats-inner {
         grid-template-columns: 1fr;
