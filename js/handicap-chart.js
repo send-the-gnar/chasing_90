@@ -18,7 +18,8 @@ function dailyIndexPoints(progression) {
     }));
 }
 
-function renderHandicapCompare() {
+// Pass a season to draw only that stretch of the index (the recap page).
+function renderHandicapCompare(season) {
     const wrap = document.getElementById('handicap-compare-wrap');
     if (!wrap) return;
     if (handicapCompareChart) { handicapCompareChart.destroy(); handicapCompareChart = null; }
@@ -26,7 +27,11 @@ function renderHandicapCompare() {
     // Each line starts at that player's first calculated index (their third differential), so a
     // player who hasn't got one yet is simply left out.
     const series = PLAYERS
-        .map(p => ({ ...p, points: dailyIndexPoints(handicapData[p.name]?.progression ?? []) }))
+        .map(p => ({
+            ...p,
+            points: dailyIndexPoints((handicapData[p.name]?.progression ?? [])
+                .filter(pt => !season || seasonOf(pt.date) === season)),
+        }))
         .filter(s => s.points.length >= 2);
 
     if (series.length === 0) {

@@ -70,6 +70,11 @@ function seasonOf(dateStr) {
     return m ? m[1] : '';
 }
 
+// Every season with a logged round, newest first.
+function allSeasons() {
+    return [...new Set(allRoundsData.map(r => seasonOf(r.date)))].sort().reverse();
+}
+
 // The sheet has about 20 spellings of the same tee boxes ("Yellow (GAMS)", "Gams (Yellow)",
 // "Rot (Igel)"). Mieming's "Back tees" are the yellow tees: their 2818 m is 2 x yellow's 1409 m.
 function canonicalTee(raw, course) {

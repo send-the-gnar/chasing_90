@@ -46,12 +46,6 @@ function formatCommentDate(timestamp) {
     });
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 function renderComments(postId) {
     const comments = commentsData[postId] || [];
 
@@ -182,6 +176,8 @@ async function loadTournaments() {
             scorecardData = processScorecardData(parseCSV(await scorecardsResponse.text()));
         }
         renderTournaments();
+        document.getElementById('journal-recaps').innerHTML = allSeasons().map(season =>
+            `<a class="journal-recap-link" href="recap.html?season=${season}">${season} season recap →</a>`).join('');
     } catch (error) {
         console.error('Error loading tournaments:', error);
         document.getElementById('tournament-list').innerHTML = '<p class="loading">Error loading tournaments. Check console for details.</p>';

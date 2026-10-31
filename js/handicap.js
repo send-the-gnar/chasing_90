@@ -9,7 +9,7 @@
 const COURSE_DATA = {
     'daniel_park':        { cr18: 57.0,  slope: 94,  par18: 58 },
     'amelie_park':        { cr18: 58.8,  slope: 97,  par18: 58 },
-    'amelie_park_red':    { cr18: 57.4,  slope: 93,  par18: 58 },  // ladies' red, 2550 m, per 1golf.eu — check against the club card
+    'amelie_park_red':    { cr18: 57.4,  slope: 93,  par18: 58 },  // ladies' red, 2550 m — confirmed
     'daniel_champ_gams':  { cr18: 74.4,  slope: 133, par18: 73 },
     'daniel_champ_fuchs': { cr18: 72.48, slope: 132, par18: 73 },
     'daniel_champ_igel':  { cr18: 70.1,  slope: 129, par18: 73 },

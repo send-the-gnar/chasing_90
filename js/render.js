@@ -1,5 +1,11 @@
 // ---- Formatting helpers ----
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Rewrite Cloudinary URLs to auto-convert format (fixes HEIC phone photos that
 // browsers can't render) and optimize delivery size. Safe to call on any string.
 function cloudinaryAuto(input) {
@@ -229,9 +235,13 @@ function inHeroSeason(dateStr) {
     return heroSeason === 'all' || seasonOf(dateStr) === heroSeason;
 }
 
+// A finished season links to its recap page.
 function heroSeasonLabel() {
     if (heroSeason === 'all') return 'All time';
-    return `${heroSeason} ${heroSeason < String(new Date().getFullYear()) ? 'final' : 'season'}`;
+    if (heroSeason < String(new Date().getFullYear())) {
+        return `<a href="recap.html?season=${heroSeason}">${heroSeason} final · season recap →</a>`;
+    }
+    return `${heroSeason} season`;
 }
 
 function heroStat(value, label, sub, onclick) {
@@ -314,7 +324,7 @@ function heroPlayerHtml(p) {
 }
 
 function drawHeroStats() {
-    const seasons = [...new Set(allRoundsData.map(r => seasonOf(r.date)))].sort().reverse();
+    const seasons = allSeasons();
     // With a single season "all time" would just repeat it, so the switch waits for a second one.
     const tabs = seasons.length < 2 ? '' : [...seasons, 'all'].map(s => `
         <button class="hero-season-tab${s === heroSeason ? ' active' : ''}" onclick="setHeroSeason('${s}')">${s === 'all' ? 'All time' : s}</button>`).join('');
@@ -517,12 +527,14 @@ function renderTournamentRound(round) {
     `;
 }
 
-function renderTournaments() {
+// Pass a season to show only that year's events (the recap page).
+function renderTournaments(season) {
     const section = document.getElementById('tournaments');
     const container = document.getElementById('tournament-list');
     if (!container) return;
 
-    const rounds = allRoundsData.filter(r => r.roundType === 'tournament');
+    const rounds = allRoundsData.filter(r =>
+        r.roundType === 'tournament' && (!season || seasonOf(r.date) === season));
     if (rounds.length === 0) {
         if (section) section.style.display = 'none';
         return;

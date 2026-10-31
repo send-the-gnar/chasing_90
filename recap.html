@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Chasing 90 — Season Recap</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1 class="site-title"><a href="index.html">Chasing 90</a></h1>
+        <p class="site-subtitle">A golf journal</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="trends.html">Trends</a>
+        <a href="strokes.html">Strokes</a>
+        <a href="practice.html">Practice</a>
+        <a href="journal.html" class="active">Journal</a>
+    </nav>
+
+    <div class="recap-opening" id="recap-opening"></div>
+
+    <main>
+        <p class="loading" id="recap-loading">Loading the season...</p>
+
+        <div id="recap-main" hidden>
+            <section id="recap-notes">
+                <h2 class="section-title">In Our Own Words</h2>
+                <div class="stats-grid" id="recap-notes-grid"></div>
+            </section>
+
+            <section id="recap-index">
+                <h2 class="section-title">Two Different Years</h2>
+                <div id="recap-index-story"></div>
+                <div class="analytics-card">
+                    <h3 class="analytics-subtitle">Handicap Index</h3>
+                    <p class="analytics-note">Our estimated index at the end of each day · lower is better · tap a point to see that round</p>
+                    <div class="trajectory-wrap" id="handicap-compare-wrap"></div>
+                </div>
+            </section>
+
+            <section id="recap-best">
+                <h2 class="section-title">The Best Days</h2>
+                <div class="stats-grid" id="recap-best-grid"></div>
+            </section>
+
+            <section id="recap-h2h">
+                <h2 class="section-title">Head to Head</h2>
+                <div class="stats-grid" id="recap-h2h-grid"></div>
+                <p class="recap-footnote">Rounds played on the same day, by gross score, with no strokes given.</p>
+            </section>
+
+            <section id="recap-birdies">
+                <h2 class="section-title">The Birdie Chase</h2>
+                <div class="recap-birdies-grid" id="recap-birdies-grid"></div>
+            </section>
+
+            <section id="recap-holes-section">
+                <h2 class="section-title">Favorites and Nemeses</h2>
+                <div class="recap-table-wrap" id="recap-holes"></div>
+                <p class="recap-footnote">Average score to par over the season, on holes played at least 3 times. Scrambles and casual rounds are left out.</p>
+            </section>
+
+            <section id="recap-road-section">
+                <h2 class="section-title">On the Road</h2>
+                <div class="recap-table-wrap" id="recap-road"></div>
+            </section>
+
+            <section id="tournaments" style="display:none;">
+                <h2 class="section-title">Tournaments</h2>
+                <div class="tournament-list" id="tournament-list"></div>
+            </section>
+
+            <section id="recap-photos-section">
+                <h2 class="section-title">From the Journal</h2>
+                <div class="recap-photos" id="recap-photos"></div>
+            </section>
+
+            <section id="recap-numbers">
+                <h2 class="section-title" id="recap-beat-title">Numbers to Beat</h2>
+                <p class="recap-hook" id="recap-hook"></p>
+                <div class="recap-table-wrap" id="recap-beat"></div>
+            </section>
+        </div>
+    </main>
+
+    <div class="scorecard-overlay" id="scorecard-overlay" onclick="closeScorecardIfBackground(event)">
+        <div class="scorecard-modal" id="scorecard-modal">
+            <button class="scorecard-close" onclick="closeScorecard()">&times;</button>
+            <div id="scorecard-content"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Chasing 90 — Daniel &amp; Amelie's golf journal</p>
+    </footer>
+
+    <!-- JS load order matters: each file may call functions defined in earlier files -->
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/handicap.js"></script>
+    <script src="js/birdies.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/heatmap.js"></script>
+    <script src="js/courses.js"></script>
+    <script src="js/scorecard-modal.js"></script>
+    <script src="js/handicap-chart.js"></script>
+    <script src="js/birdie-modal.js"></script>
+    <script src="js/head-to-head.js"></script>
+    <script src="js/recap.js"></script>
+
+</body>
+</html>
