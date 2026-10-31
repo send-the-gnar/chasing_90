@@ -14,6 +14,7 @@ function dailyIndexPoints(progression) {
         x: parseLocalDate(p.date).getTime(),
         y: p.whi,
         date: p.date,
+        roundId: p.roundId,
     }));
 }
 
@@ -45,6 +46,8 @@ function renderHandicapCompare() {
             datasets: series.map(s => ({
                 label: s.name,
                 data: s.points,
+                roundIds: s.points.map(p => p.roundId),
+                pointHitRadius: 6,
                 borderColor: s.color.solid,
                 backgroundColor: s.color.solid,
                 borderWidth: 2.5,
@@ -59,6 +62,7 @@ function renderHandicapCompare() {
             maintainAspectRatio: false,
             layout: { padding: { left: 4, right: 8 } },
             interaction: { mode: 'nearest', axis: 'x', intersect: false },
+            ...roundChartClicks(),
             scales: {
                 x: {
                     type: 'linear',

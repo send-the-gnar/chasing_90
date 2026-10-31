@@ -103,6 +103,7 @@ function renderRoundCard(round) {
                 <span class="round-course">${round.course}</span>
                 ${round.roundType === 'tournament' ? '<span class="round-type-badge round-type-tournament">🏆 Tournament</span>' : ''}
                 ${round.roundType === 'scramble' ? '<span class="round-type-badge">Scramble</span>' : ''}
+                ${round.excludeFromHandicap && round.roundType !== 'scramble' ? '<span class="round-type-badge">Casual</span>' : ''}
                 <span class="round-tees">${teeDisplay}</span>
             </div>
             <div class="round-score-row">
@@ -118,31 +119,49 @@ function renderRoundCard(round) {
     `;
 }
 
-function renderPlayerRounds(containerId, rounds) {
-    const container = document.getElementById(containerId);
-    if (!rounds || rounds.length === 0) {
-        container.innerHTML = '<p class="loading">No rounds yet</p>';
-        return;
-    }
-    container.innerHTML = rounds.slice(0, 5).map(r => renderRoundCard(r)).join('');
+// One list per player with a shared course filter: nines, 18s and partial rounds all live
+// here. Arrow functions because heatmap.js loads after this file.
+const ROUND_LIST_INITIAL = 5;
+const ROUND_LIST_FILTERS = {
+    all:      () => true,
+    park:     r => isParkCourse(r),
+    champion: r => isChampionCourse(r),
+    away:     r => !isParkCourse(r) && !isChampionCourse(r),
+};
+let roundListCourse = 'all';
+
+function renderRoundLists() {
+    PLAYERS.forEach(p => {
+        const rounds = allRoundsData.filter(r =>
+            r.player.toLowerCase() === p.key && ROUND_LIST_FILTERS[roundListCourse](r));
+        const history = document.getElementById(`${p.key}-history`);
+
+        document.getElementById(`${p.key}-rounds`).innerHTML = rounds.length
+            ? rounds.slice(0, ROUND_LIST_INITIAL).map(renderRoundCard).join('')
+            : '<p class="loading">No rounds yet</p>';
+        document.getElementById(`${p.key}-all-rounds`).innerHTML =
+            rounds.slice(ROUND_LIST_INITIAL).map(renderRoundCard).join('');
+
+        history.classList.remove('expanded');
+        const link = history.previousElementSibling;
+        link.dataset.total = rounds.length;
+        link.textContent = `View all ${rounds.length} rounds ↓`;
+        link.style.display = rounds.length > ROUND_LIST_INITIAL ? '' : 'none';
+    });
 }
 
-function renderAllRounds(containerId, rounds) {
-    const container = document.getElementById(containerId);
-    if (!rounds || rounds.length === 0) { container.innerHTML = ''; return; }
-    container.innerHTML = rounds.map(r => renderRoundCard(r)).join('');
+function setRoundsCourse(course) {
+    roundListCourse = course;
+    document.querySelectorAll('[data-rounds-course]').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.roundsCourse === course));
+    renderRoundLists();
 }
 
 function toggleHistory(player) {
     const historyEl = document.getElementById(player + '-history');
     const linkEl = historyEl.previousElementSibling;
-    if (historyEl.classList.contains('expanded')) {
-        historyEl.classList.remove('expanded');
-        linkEl.textContent = 'View all rounds ↓';
-    } else {
-        historyEl.classList.add('expanded');
-        linkEl.textContent = 'Hide older rounds ↑';
-    }
+    const open = historyEl.classList.toggle('expanded');
+    linkEl.textContent = open ? 'Hide older rounds ↑' : `View all ${linkEl.dataset.total} rounds ↓`;
 }
 
 // ---- Goals ----

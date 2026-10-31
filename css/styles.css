@@ -246,6 +246,225 @@ nav a:hover { color: var(--gold-light); }
 }
 
 /* ========================================
+   JOURNAL PAGE
+   ======================================== */
+.site-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ========================================
+   BLOG POSTS
+   ======================================== */
+.blog-post {
+    background: white;
+    border-radius: 12px;
+    padding: var(--space-md) var(--space-lg);
+    margin-bottom: var(--space-md);
+    box-shadow: 0 2px 12px rgba(26, 46, 26, 0.08);
+    border: 1px solid var(--green-100);
+    border-left: 4px solid var(--green-500);
+}
+
+.post-date {
+    font-size: 0.8rem;
+    color: var(--green-400);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-xs);
+}
+
+.post-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--green-800);
+    margin-bottom: var(--space-sm);
+}
+
+.post-content { color: var(--green-700); line-height: 1.7; }
+.post-content p { margin-bottom: var(--space-sm); }
+.post-content p:last-child { margin-bottom: 0; }
+
+.post-content img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: var(--space-sm) 0;
+    box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
+}
+
+/* Cover image — centered and height-capped so it never crops.
+   Works for portrait (vertical phone) and landscape photos alike. */
+.post-cover {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 520px;
+    margin: 0 auto var(--space-md);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(26, 46, 26, 0.1);
+}
+
+@media (max-width: 600px) {
+    .post-cover { max-height: 70vh; }
+}
+
+/* ========================================
+   COMMENTS
+   ======================================== */
+.comments-section {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px dashed var(--green-200);
+}
+
+.comments-heading {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--green-700);
+    margin-bottom: var(--space-sm);
+}
+
+.comment {
+    background: var(--green-50);
+    border-radius: 8px;
+    padding: var(--space-sm);
+    margin-bottom: var(--space-xs);
+    border: 1px solid var(--green-100);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.comment-name {
+    font-weight: 600;
+    color: var(--green-800);
+    font-size: 0.9rem;
+}
+
+.comment-date {
+    font-size: 0.75rem;
+    color: var(--green-400);
+}
+
+.comment-text {
+    color: var(--green-700);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.no-comments {
+    color: var(--green-400);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+.leave-comment-btn {
+    display: inline-block;
+    margin-top: var(--space-sm);
+    background: var(--green-600);
+    color: var(--cream);
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.leave-comment-btn:hover {
+    background: var(--green-700);
+}
+
+@media (max-width: 600px) {
+    .blog-post { padding: var(--space-md); }
+}
+
+/* ========================================
+   LATEST ROUND
+   ======================================== */
+.latest-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+}
+
+.latest-card h3 { margin-bottom: 0; }
+
+.latest-date {
+    font-size: 0.8rem;
+    color: var(--green-400);
+}
+
+.latest-summary { margin-top: var(--space-sm); }
+
+.latest-records {
+    list-style: none;
+    margin-top: var(--space-sm);
+    padding: 0.5rem 0.75rem;
+    background: #faf3dd;
+    border-left: 3px solid var(--gold);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #3d2e00;
+}
+
+.latest-changes { margin-top: var(--space-sm); }
+
+.latest-change {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 0.35rem 0;
+    border-top: 1px solid var(--green-100);
+    font-size: 0.85rem;
+}
+
+.latest-change-label {
+    flex: 1;
+    color: var(--green-600);
+}
+
+.latest-change-values {
+    color: var(--green-500);
+    white-space: nowrap;
+}
+
+.latest-change-values strong { color: var(--green-800); }
+
+.latest-change-delta {
+    min-width: 4.5rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    text-align: center;
+    color: var(--green-400);
+}
+
+.hcp-round-link {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: var(--green-300);
+    text-underline-offset: 2px;
+}
+
+.hcp-round-link:hover { color: var(--green-800); }
+
+.latest-note {
+    margin-top: var(--space-sm);
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--green-400);
+}
+
+/* ========================================
    MAIN CONTENT CONTAINER
    ======================================== */
 main {
@@ -515,24 +734,6 @@ section { margin-bottom: var(--space-xl); }
     border: 1px solid var(--green-300);
 }
 
-/* ========================================
-   PRACTICE ROUNDS SECTION
-   ======================================== */
-.practice-section { opacity: 0.85; }
-
-.practice-note {
-    font-size: 0.85rem;
-    color: var(--green-500);
-    margin-bottom: var(--space-md);
-    font-style: italic;
-}
-
-.practice-list .round-card {
-    background: white;
-    border-left: 3px solid var(--green-300);
-}
-.practice-list .round-card:hover { background: var(--green-50); }
-
 /* ---- Tournament rounds in the main lists ---- */
 .round-type-badge.round-type-tournament {
     background: var(--gold-light);
@@ -540,13 +741,11 @@ section { margin-bottom: var(--space-xl); }
     border-color: var(--gold);
 }
 
-.round-card-tournament,
-.practice-list .round-card-tournament {
+.round-card-tournament {
     border-left: 3px solid var(--gold);
     background: linear-gradient(90deg, #faf3dd 0%, var(--green-50) 55%);
 }
-.round-card-tournament:hover,
-.practice-list .round-card-tournament:hover {
+.round-card-tournament:hover {
     background: linear-gradient(90deg, #f5ead0 0%, var(--green-100) 55%);
     border-left-color: var(--gold);
 }
@@ -649,13 +848,6 @@ section { margin-bottom: var(--space-xl); }
     border-top: 1px dashed var(--green-200);
 }
 .full-history.expanded { display: block; }
-
-.full-history-title {
-    font-size: 0.85rem;
-    color: var(--green-500);
-    margin-bottom: var(--space-xs);
-    font-weight: 500;
-}
 
 /* ========================================
    SCORECARD MODAL (hole-by-hole detail)

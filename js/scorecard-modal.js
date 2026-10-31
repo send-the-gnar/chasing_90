@@ -141,6 +141,30 @@ function buildRoundHeadline(round, holes) {
     return facts.slice(0, 3).join(' · ');
 }
 
+// ---- Opening a round from a chart ----
+
+// Points that stand for a round list their ids in the dataset's `roundIds`. It takes a direct
+// hit on a point, so a tap elsewhere on the chart still just shows the tooltip.
+function chartRoundIdAt(chart, event) {
+    const hit = chart.getElementsAtEventForMode(event, 'point', { intersect: true }, false)
+        .find(el => chart.data.datasets[el.datasetIndex].roundIds);
+    return hit ? chart.data.datasets[hit.datasetIndex].roundIds[hit.index] : null;
+}
+
+// Chart options to spread in. The open is deferred because it may destroy the chart that's
+// still handling this click (the handicap modal's chart closes along with the modal).
+function roundChartClicks(open = openScorecard) {
+    return {
+        onClick: (event, _, chart) => {
+            const roundId = chartRoundIdAt(chart, event);
+            if (roundId) setTimeout(() => open(roundId));
+        },
+        onHover: (event, _, chart) => {
+            chart.canvas.style.cursor = chartRoundIdAt(chart, event) ? 'pointer' : '';
+        },
+    };
+}
+
 // ---- Modal ----
 
 function openScorecard(roundId) {

@@ -212,7 +212,10 @@ function calculateHandicap(allRounds) {
     for (let i = 0; i < diffs.length; i++) {
         const slice = diffs.slice(Math.max(0, i - 19), i + 1).map(d => d.diff);
         const whi = whsFromDiffs(slice);
-        if (whi !== null) progression.push({ date: diffs[i].date, whi });
+        if (whi !== null) {
+            const rounds = diffs[i].rounds;
+            progression.push({ date: diffs[i].date, whi, roundId: rounds[rounds.length - 1].roundId });
+        }
     }
 
     const whi = whsFromDiffs(diffValues);

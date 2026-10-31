@@ -25,6 +25,16 @@ function hcpScoreCell(r) {
     return `${r.score} (${formatToPar(r.score, r.par)})`;
 }
 
+// The scorecard modal sits at the same z-index as this one, so hand over rather than stack.
+function openHandicapRound(roundId) {
+    closeHandicap();
+    openScorecard(roundId);
+}
+
+function hcpRoundLink(r) {
+    return `<span class="hcp-round-link" title="View scorecard" onclick="openHandicapRound('${r.roundId}')">${formatDate(r.date)}</span>`;
+}
+
 function hcpRenderDiffRow(d, idx) {
     const usedCls  = d.used ? ' class="diff-used"' : '';
     const usedMark = d.used ? ' ✓' : '';
@@ -34,7 +44,7 @@ function hcpRenderDiffRow(d, idx) {
         return `
             <tr>
                 <td${usedCls}>${idx + 1}${usedMark}</td>
-                <td>${formatDate(r1.date)}<br><span class="diff-pair">${formatDate(r2.date)}</span></td>
+                <td>${hcpRoundLink(r1)}<br><span class="diff-pair">${hcpRoundLink(r2)}</span></td>
                 <td>${sc(r1)} (9h)<br><span class="diff-pair">${sc(r2)} (9h)</span></td>
                 <td>${hcpScoreCell(r1)}<br><span class="diff-pair">${hcpScoreCell(r2)}</span></td>
                 <td${usedCls}>${d.diff.toFixed(1)}<br><span class="diff-pair">${r1.diff.toFixed(1)} + ${r2.diff.toFixed(1)}</span></td>
@@ -45,7 +55,7 @@ function hcpRenderDiffRow(d, idx) {
     return `
         <tr>
             <td${usedCls}>${idx + 1}${usedMark}</td>
-            <td>${formatDate(r.date)}</td>
+            <td>${hcpRoundLink(r)}</td>
             <td>${sc} (18h)</td>
             <td>${hcpScoreCell(r)}</td>
             <td${usedCls}>${d.diff.toFixed(1)}</td>
@@ -86,7 +96,7 @@ function buildHandicapDiffHtml(diffs, playerName, showUnpaired, hcp) {
     if (showUnpaired && hcp.unpaired.length > 0) {
         const u  = hcp.unpaired[0];
         const sc = u.course.replace(/GC Mieming\s*/i, '');
-        h += `<p style="margin-top:var(--space-sm);font-size:0.8rem;color:var(--green-400);font-style:italic;">Unpaired 9-hole: ${sc} ${formatDate(u.date)} — ${u.score} (${formatToPar(u.score, u.par)}) · diff ${u.diff.toFixed(1)} — waiting for next 9h round</p>`;
+        h += `<p style="margin-top:var(--space-sm);font-size:0.8rem;color:var(--green-400);font-style:italic;">Unpaired 9-hole: ${sc} ${hcpRoundLink(u)} — ${u.score} (${formatToPar(u.score, u.par)}) · diff ${u.diff.toFixed(1)} — waiting for next 9h round</p>`;
     }
     h += '</div>';
     return h;
@@ -263,6 +273,8 @@ function renderHandicapChart(playerName, progression, courseParams) {
             datasets: [{
                 label: dataLabel,
                 data,
+                roundIds: progression.map(p => p.roundId),
+                pointHitRadius: 6,
                 borderColor: '#4a7c4a',
                 backgroundColor: 'rgba(74, 124, 74, 0.1)',
                 fill: true,
@@ -274,6 +286,7 @@ function renderHandicapChart(playerName, progression, courseParams) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            ...roundChartClicks(openHandicapRound),
             scales: {
                 y: {
                     title: { display: true, text: yLabel, font: { size: 11 } },

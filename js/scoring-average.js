@@ -47,12 +47,14 @@ function renderScoringAverage(courseKey) {
         datasets.push({
             label: `${s.name} rounds`,
             data: s.raw,
+            roundIds: s.rounds.map(r => r.roundId),
             borderColor: 'transparent',
             pointBackgroundColor: s.color.faint,
             pointBorderColor: 'transparent',
             pointStyle: s.dot,
             pointRadius: 3,
             pointHoverRadius: 5,
+            pointHitRadius: 6,
             showLine: false,
         });
         datasets.push({
@@ -83,6 +85,7 @@ function renderScoringAverage(courseKey) {
             responsive: true,
             maintainAspectRatio: false,
             interaction: { mode: 'nearest', intersect: false },
+            ...roundChartClicks(),
             scales: {
                 x: {
                     type: 'linear',

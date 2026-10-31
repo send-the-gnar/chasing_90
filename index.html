@@ -23,19 +23,22 @@
 
     <nav>
         <a href="#progress">Stats</a>
-        <a href="#tournaments">Tournaments</a>
-        <a href="#timeline">Timeline</a>
         <a href="#rounds">Rounds</a>
         <a href="trends.html">Trends</a>
         <a href="strokes.html">Strokes</a>
         <a href="practice.html">Practice</a>
-        <a href="blog.html">Blog</a>
+        <a href="journal.html">Journal</a>
         <button class="unit-toggle" id="unit-toggle" onclick="toggleUnits()">Meters</button>
     </nav>
 
     <div class="hero-stats" id="hero-stats" style="display:none;"></div>
 
     <main>
+
+        <section id="latest" style="display:none;">
+            <h2 class="section-title">Latest Round</h2>
+            <div class="stats-grid" id="latest-round"></div>
+        </section>
 
         <section id="goals" style="display:none;">
             <h2 class="section-title">Goals</h2>
@@ -137,73 +140,35 @@
             </div>
         </section>
 
-        <section id="tournaments" style="display:none;">
-            <h2 class="section-title">Tournaments</h2>
-            <p class="tournament-intro">Official competitive rounds</p>
-            <div class="tournament-list" id="tournament-list">
-                <p class="loading">Loading tournaments...</p>
-            </div>
-        </section>
-
-        <section id="timeline">
-            <h2 class="section-title">Timeline</h2>
-            <div class="timeline" id="timeline-entries">
-                <p class="loading">Loading timeline...</p>
-            </div>
-        </section>
-
         <section id="rounds">
-            <h2 class="section-title">Recent 18 Hole Rounds</h2>
+            <h2 class="section-title">Rounds</h2>
+            <div class="scoring-controls">
+                <div class="course-tabs">
+                    <button class="course-tab active" data-rounds-course="all" onclick="setRoundsCourse('all')">All</button>
+                    <button class="course-tab" data-rounds-course="park" onclick="setRoundsCourse('park')">Park</button>
+                    <button class="course-tab" data-rounds-course="champion" onclick="setRoundsCourse('champion')">Champion</button>
+                    <button class="course-tab" data-rounds-course="away" onclick="setRoundsCourse('away')">Away</button>
+                </div>
+            </div>
             <div class="stats-grid">
                 <div class="stats-card">
-                    <h3>Daniel — Last 5 Rounds</h3>
+                    <h3>Daniel</h3>
                     <div class="rounds-list" id="daniel-rounds">
                         <p class="loading">Loading rounds...</p>
                     </div>
-                    <a href="#" class="view-all-link" onclick="toggleHistory('daniel'); return false;">View all rounds ↓</a>
+                    <a href="#" class="view-all-link" onclick="toggleHistory('daniel'); return false;"></a>
                     <div class="full-history" id="daniel-history">
-                        <p class="full-history-title">Full History</p>
                         <div class="rounds-list" id="daniel-all-rounds"></div>
                     </div>
                 </div>
                 <div class="stats-card">
-                    <h3>Amelie — Last 5 Rounds</h3>
+                    <h3>Amelie</h3>
                     <div class="rounds-list" id="amelie-rounds">
                         <p class="loading">Loading rounds...</p>
                     </div>
-                    <a href="#" class="view-all-link" onclick="toggleHistory('amelie'); return false;">View all rounds ↓</a>
+                    <a href="#" class="view-all-link" onclick="toggleHistory('amelie'); return false;"></a>
                     <div class="full-history" id="amelie-history">
-                        <p class="full-history-title">Full History</p>
                         <div class="rounds-list" id="amelie-all-rounds"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="practice" class="practice-section">
-            <h2 class="section-title">9 Hole Rounds</h2>
-            <p class="practice-note">9-hole rounds — not counted toward Chasing 90</p>
-            <div class="stats-grid">
-                <div class="stats-card">
-                    <h3>Daniel — Last 5 9-Hole Rounds</h3>
-                    <div class="rounds-list practice-list" id="daniel-practice-rounds">
-                        <p class="loading">Loading practice rounds...</p>
-                    </div>
-                    <a href="#" class="view-all-link" onclick="toggleHistory('daniel-practice'); return false;">View all practice rounds ↓</a>
-                    <div class="full-history" id="daniel-practice-history">
-                        <p class="full-history-title">Full Practice History</p>
-                        <div class="rounds-list practice-list" id="daniel-all-practice-rounds"></div>
-                    </div>
-                </div>
-                <div class="stats-card">
-                    <h3>Amelie — Last 5 9-Hole Rounds</h3>
-                    <div class="rounds-list practice-list" id="amelie-practice-rounds">
-                        <p class="loading">Loading practice rounds...</p>
-                    </div>
-                    <a href="#" class="view-all-link" onclick="toggleHistory('amelie-practice'); return false;">View all practice rounds ↓</a>
-                    <div class="full-history" id="amelie-practice-history">
-                        <p class="full-history-title">Full Practice History</p>
-                        <div class="rounds-list practice-list" id="amelie-all-practice-rounds"></div>
                     </div>
                 </div>
             </div>
@@ -257,6 +222,7 @@
     <script src="js/handicap-modal.js"></script>
     <script src="js/handicap-chart.js"></script>
     <script src="js/birdie-modal.js"></script>
+    <script src="js/latest-round.js"></script>
     <script src="js/main.js"></script>
 
 </body>

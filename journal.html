@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Chasing 90 — Journal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- marked.js - lightweight markdown parser for rendering blog post content -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1 class="site-title"><a href="index.html">Chasing 90</a></h1>
+        <p class="site-subtitle">A golf journal</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="trends.html">Trends</a>
+        <a href="strokes.html">Strokes</a>
+        <a href="practice.html">Practice</a>
+        <a href="journal.html" class="active">Journal</a>
+    </nav>
+
+    <main>
+        <div class="course-switch">
+            <div class="course-tabs">
+                <button class="course-tab" data-journal-tab="blog" onclick="setJournalTab('blog')">Blog</button>
+                <button class="course-tab" data-journal-tab="timeline" onclick="setJournalTab('timeline')">Timeline</button>
+                <button class="course-tab" data-journal-tab="tournaments" onclick="setJournalTab('tournaments')">Tournaments</button>
+            </div>
+        </div>
+
+        <div data-journal-panel="blog">
+            <section id="blog">
+                <h2 class="section-title">Blog</h2>
+                <div id="blog-posts">
+                    <p class="loading">Loading blog posts...</p>
+                </div>
+            </section>
+        </div>
+
+        <div data-journal-panel="timeline" hidden>
+            <section id="timeline">
+                <h2 class="section-title">Timeline</h2>
+                <div class="timeline" id="timeline-entries">
+                    <p class="loading">Loading timeline...</p>
+                </div>
+            </section>
+        </div>
+
+        <div data-journal-panel="tournaments" hidden>
+            <section id="tournaments">
+                <h2 class="section-title">Tournaments</h2>
+                <p class="tournament-intro">Official competitive rounds</p>
+                <div class="tournament-list" id="tournament-list">
+                    <p class="loading">Loading tournaments...</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="scorecard-overlay" id="scorecard-overlay" onclick="closeScorecardIfBackground(event)">
+        <div class="scorecard-modal" id="scorecard-modal">
+            <button class="scorecard-close" onclick="closeScorecard()">&times;</button>
+            <div id="scorecard-content"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Chasing 90 — Daniel &amp; Amelie's golf journal</p>
+    </footer>
+
+    <!-- JS load order matters: journal.js uses globals and helpers from the files before it -->
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/heatmap.js"></script>
+    <script src="js/scorecard-modal.js"></script>
+    <script src="js/journal.js"></script>
+
+</body>
+</html>

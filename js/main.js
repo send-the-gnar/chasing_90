@@ -1,10 +1,9 @@
 async function loadData() {
     try {
-        const [roundsResponse, statsResponse, scorecardsResponse, milestonesResponse] = await Promise.all([
+        const [roundsResponse, statsResponse, scorecardsResponse] = await Promise.all([
             fetch(getSheetUrl(ROUNDS_SHEET)),
             fetch(getSheetUrl(STATS_SHEET)),
             fetch(getSheetUrl(SCORECARDS_SHEET)).catch(() => null),
-            fetch(getSheetUrl(MILESTONES_SHEET)).catch(() => null),
         ]);
 
         const roundsCsv  = await roundsResponse.text();
@@ -20,8 +19,8 @@ async function loadData() {
         const roundsData = processRoundsData(rawRoundsData);
 
         renderHeroStats(roundsData);
+        renderLatestRound();
         renderGoals(roundsData);
-        renderTournaments();
         renderRoadTo90(roundsData);
         // Per-hole heatmaps count every hole actually played, so partial rounds
         // (e.g. 12 of 18) are included — no full-round length requirement.
@@ -33,22 +32,7 @@ async function loadData() {
         renderScoringStats();
         renderHandicapCompare();
         renderStats(statsData);
-        renderPlayerRounds('daniel-rounds',          roundsData.daniel);
-        renderPlayerRounds('amelie-rounds',          roundsData.amelie);
-        renderAllRounds('daniel-all-rounds',         roundsData.daniel);
-        renderAllRounds('amelie-all-rounds',         roundsData.amelie);
-        renderPlayerRounds('daniel-practice-rounds', roundsData.danielPractice);
-        renderPlayerRounds('amelie-practice-rounds', roundsData.ameliePractice);
-        renderAllRounds('daniel-all-practice-rounds', roundsData.danielPractice);
-        renderAllRounds('amelie-all-practice-rounds', roundsData.ameliePractice);
-
-        if (milestonesResponse && milestonesResponse.ok) {
-            const milestonesCsv = await milestonesResponse.text();
-            renderTimeline(parseCSV(milestonesCsv));
-        } else {
-            document.getElementById('timeline-entries').innerHTML =
-                '<p class="loading">Add a "Milestones" sheet to your spreadsheet to start your timeline.</p>';
-        }
+        renderRoundLists();
 
     } catch (error) {
         console.error('Error loading data:', error);
