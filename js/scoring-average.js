@@ -52,8 +52,8 @@ function renderScoringAverage(courseKey) {
             pointBackgroundColor: s.color.faint,
             pointBorderColor: 'transparent',
             pointStyle: s.dot,
-            pointRadius: 3,
-            pointHoverRadius: 5,
+            pointRadius: 3 * s.dotScale,
+            pointHoverRadius: 5 * s.dotScale,
             pointHitRadius: 6,
             showLine: false,
         });

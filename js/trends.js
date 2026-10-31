@@ -74,8 +74,8 @@ function renderRollingChart(canvasWrapId, player) {
                     pointBackgroundColor: color.faint,
                     pointBorderColor: 'transparent',
                     pointStyle: player.dot,
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
+                    pointRadius: 3 * player.dotScale,
+                    pointHoverRadius: 5 * player.dotScale,
                     showLine: false,
                 },
                 {
@@ -285,8 +285,8 @@ function renderPaceChart() {
             borderColor: 'transparent',
             pointBackgroundColor: p.color.faint,
             pointStyle: p.dot,
-            pointRadius: 3.5,
-            pointHoverRadius: 6,
+            pointRadius: 3.5 * p.dotScale,
+            pointHoverRadius: 6 * p.dotScale,
             showLine: false,
         });
         datasets.push({

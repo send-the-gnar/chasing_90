@@ -29,9 +29,10 @@ const COURSE_VIEWS = {
 };
 
 const PLAYERS = [
-    // Distinct dot shapes on top of color so the players stay tellable apart when dots overlap
-    { key: 'daniel', name: 'Daniel', dot: 'circle',   color: { solid: '#4a6fa5', fill: 'rgba(74,111,165,0.08)', faint: 'rgba(74,111,165,0.6)' } },
-    { key: 'amelie', name: 'Amelie', dot: 'triangle', color: { solid: '#4a7c4a', fill: 'rgba(74,124,74,0.08)',  faint: 'rgba(74,124,74,0.6)'  } },
+    // Distinct dot shapes on top of color so the players stay tellable apart when dots overlap.
+    // At the same radius a triangle covers well under half a circle's area, so dotScale evens them up.
+    { key: 'daniel', name: 'Daniel', dot: 'circle',   dotScale: 1,   color: { solid: '#4a6fa5', fill: 'rgba(74,111,165,0.08)', faint: 'rgba(74,111,165,0.6)' } },
+    { key: 'amelie', name: 'Amelie', dot: 'triangle', dotScale: 1.5, color: { solid: '#4a7c4a', fill: 'rgba(74,124,74,0.08)',  faint: 'rgba(74,124,74,0.6)'  } },
 ];
 
 // Complete, competitive rounds for a player on a course, oldest first.

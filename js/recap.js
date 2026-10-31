@@ -29,6 +29,10 @@ function totalHoles(rounds) {
     return rounds.reduce((s, r) => s + r.holes, 0);
 }
 
+function totalStrokes(rounds) {
+    return rounds.reduce((s, r) => s + r.score, 0);
+}
+
 function daysOut(rounds) {
     return new Set(rounds.map(r => r.date)).size;
 }
@@ -53,6 +57,7 @@ function renderOpening(noteRow) {
                 <span class="recap-opening-name">${p.name}</span>
                 <span class="recap-opening-stat"><strong>${formatCount(totalHoles(mine))}</strong> holes</span>
                 <span class="recap-opening-stat"><strong>${daysOut(mine)}</strong> days out</span>
+                <span class="recap-opening-stat"><strong>${formatCount(totalStrokes(mine))}</strong> strokes</span>
             </div>`;
     }).join('');
 
