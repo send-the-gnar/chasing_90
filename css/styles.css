@@ -588,6 +588,32 @@ nav a:hover { color: var(--gold-light); }
     color: var(--green-600);
 }
 
+.h2h-card { align-self: start; }
+
+.h2h-toggle {
+    margin-top: var(--space-xs);
+    border: none;
+    background: none;
+    padding: 0.25rem 0;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--green-600);
+    cursor: pointer;
+}
+
+.h2h-toggle:hover { color: var(--green-800); text-decoration: underline; }
+
+.h2h-rows { margin-top: var(--space-xs); font-size: 0.85rem; }
+.h2h-rows td, .h2h-rows th { padding: 0.35rem 0.4rem; }
+.h2h-winner { font-weight: 700; }
+
+.h2h-result {
+    font-size: 0.78rem;
+    color: var(--green-500);
+    white-space: nowrap;
+}
+
 .recap-footnote {
     margin-top: var(--space-sm);
     font-size: 0.78rem;
