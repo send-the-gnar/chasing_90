@@ -53,10 +53,9 @@ function headToHead(courseKey, season) {
 
 // ---- Match play ----
 
-// One round as a match, or null without a full scorecard on both sides. Every hole counts toward
-// holes won, even after the match is decided. A lead can't be lost once it's bigger than the holes
-// left, so the holes-won count always agrees with the match result.
-function matchResult(pair) {
+// The match hole by hole, or null without a full scorecard on both sides. `lead` is the running
+// status after each hole, positive when the first player in PLAYERS is ahead.
+function matchHoles(pair) {
     const mine = scorecardData[pair.first.roundId];
     const theirs = scorecardData[pair.second.roundId];
     if (!mine || !theirs) return null;
@@ -65,22 +64,34 @@ function matchResult(pair) {
     const holes = mine.filter(h => h.score > 0 && opponent[h.hole] > 0);
     if (holes.length !== pair.first.holes) return null;
 
-    let firstWon = 0, secondWon = 0, closedOut = null;
-    holes.forEach((h, i) => {
-        if (h.score < opponent[h.hole]) firstWon++;
-        else if (opponent[h.hole] < h.score) secondWon++;
-        const lead = Math.abs(firstWon - secondWon);
+    let lead = 0, decided = false;
+    return holes.map((h, i) => {
+        const second = opponent[h.hole];
+        const afterDecided = decided;
+        if (h.score < second) lead++;
+        else if (second < h.score) lead--;
         const left = holes.length - i - 1;
-        if (!closedOut && left > 0 && lead > left) closedOut = `${lead}&${left}`;
+        const closesOut = !decided && left > 0 && Math.abs(lead) > left;
+        if (closesOut) decided = true;
+        return { hole: h.hole, par: h.par, first: h.score, second, lead, left, closesOut, afterDecided };
     });
+}
 
-    const lead = Math.abs(firstWon - secondWon);
+// Every hole counts toward holes won, even after the match is decided. A lead can't be lost once
+// it's bigger than the holes left, so the holes-won count always agrees with the match result.
+function matchResult(pair) {
+    const holes = matchHoles(pair);
+    if (!holes) return null;
+
+    const firstWon  = holes.filter(h => h.first < h.second).length;
+    const secondWon = holes.filter(h => h.second < h.first).length;
+    const closing   = holes.find(h => h.closesOut);
     return {
         firstWon,
         secondWon,
         halved: holes.length - firstWon - secondWon,
         margin: firstWon - secondWon,
-        score: closedOut || `${lead} up`,
+        score: closing ? `${Math.abs(closing.lead)}&${closing.left}` : `${Math.abs(firstWon - secondWon)} up`,
     };
 }
 
@@ -117,10 +128,10 @@ function matchNoteText(m) {
     return `${holes} The stroke play winner lost the match ${m.flips === 1 ? 'once' : `${m.flips} times`}.`;
 }
 
-function headToHeadCell(round, value, player, won) {
+function headToHeadCell(onclick, value, player, won) {
     return `
         <td><button class="recap-round-link${won ? ' h2h-winner' : ''}"${won ? ` style="color:${player.color.solid}"` : ''}
-                onclick="openScorecard('${round.roundId}')">${value}</button></td>`;
+                onclick="${onclick}">${value}</button></td>`;
 }
 
 function headToHeadTable(rows) {
@@ -138,8 +149,8 @@ function strokeRow(p) {
     return `
         <tr>
             <td>${formatDate(p.date)}</td>
-            ${headToHeadCell(p.first, p.first.score, p1, p.margin > 0)}
-            ${headToHeadCell(p.second, p.second.score, p2, p.margin < 0)}
+            ${headToHeadCell(`openScorecard('${p.first.roundId}')`, p.first.score, p1, p.margin > 0)}
+            ${headToHeadCell(`openScorecard('${p.second.roundId}')`, p.second.score, p2, p.margin < 0)}
             <td class="h2h-result">${result}</td>
         </tr>`;
 }
@@ -147,13 +158,94 @@ function strokeRow(p) {
 function matchRow({ pair, result }) {
     const [p1, p2] = PLAYERS;
     const outcome = result.margin === 0 ? 'Halved' : `${(result.margin > 0 ? p1 : p2).name} ${result.score}`;
+    const open = `openMatchCard('${pair.first.roundId}', '${pair.second.roundId}')`;
     return `
         <tr>
             <td>${formatDate(pair.date)}</td>
-            ${headToHeadCell(pair.first, result.firstWon, p1, result.margin > 0)}
-            ${headToHeadCell(pair.second, result.secondWon, p2, result.margin < 0)}
+            ${headToHeadCell(open, result.firstWon, p1, result.margin > 0)}
+            ${headToHeadCell(open, result.secondWon, p2, result.margin < 0)}
             <td class="h2h-result">${outcome}</td>
         </tr>`;
+}
+
+// ---- Match scorecard ----
+
+function matchStatus(lead) {
+    if (lead === 0) return '<span class="match-status-even">AS</span>';
+    const leader = PLAYERS[lead > 0 ? 0 : 1];
+    return `<span style="color:${leader.color.solid}">${leader.name[0]}${Math.abs(lead)}</span>`;
+}
+
+function matchNineTable(holes, totalLabel) {
+    if (holes.length === 0) return '';
+    const [p1, p2] = PLAYERS;
+    const cell = (html, h, extra = '') =>
+        `<td class="${h.afterDecided ? 'match-after' : ''}"${extra}>${html}</td>`;
+    const scoreRow = (player, key, otherKey) => `
+        <tr>
+            <td class="stat-label" style="color:${player.color.solid}">${player.name}</td>
+            ${holes.map(h => cell(
+                `<span class="score-shape ${scoreShapeClass(h[key] - h.par)}">${h[key]}</span>`,
+                h,
+                h[key] < h[otherKey] ? ` style="background:${player.color.tint}"` : '')).join('')}
+            <td class="total-col">${holes.reduce((s, h) => s + h[key], 0)}</td>
+        </tr>`;
+
+    return `
+        <table class="scorecard-table match-table">
+            <tr><th>Hole</th>${holes.map(h => `<th>${h.hole}</th>`).join('')}<th class="total-col">${totalLabel}</th></tr>
+            <tr><td class="stat-label">Par</td>${holes.map(h => cell(h.par, h)).join('')}<td class="total-col">${holes.reduce((s, h) => s + h.par, 0)}</td></tr>
+            ${scoreRow(p1, 'first', 'second')}
+            ${scoreRow(p2, 'second', 'first')}
+            <tr class="match-status-row"><td class="stat-label">Match</td>${holes.map(h => cell(matchStatus(h.lead), h)).join('')}<td class="total-col"></td></tr>
+        </table>`;
+}
+
+// Replaces the content of the scorecard popup, so that page needs the scorecard overlay.
+function openMatchCard(firstId, secondId) {
+    const first  = allRoundsData.find(r => r.roundId === firstId);
+    const second = allRoundsData.find(r => r.roundId === secondId);
+    if (!first || !second) return;
+
+    const pair   = { first, second };
+    const holes  = matchHoles(pair);
+    const result = matchResult(pair);
+    if (!holes || !result) return;
+
+    const [p1, p2] = PLAYERS;
+    const winner  = result.margin === 0 ? null : (result.margin > 0 ? p1 : p2);
+    const closing = holes.find(h => h.closesOut);
+    const front   = holes.filter(h => h.hole <= 9);
+    const back    = holes.filter(h => h.hole > 9);
+    const decided = closing
+        ? `Decided on hole ${closing.hole}. Later holes are dimmed but still count toward holes won.`
+        : '';
+
+    document.getElementById('scorecard-content').innerHTML = `
+        <div class="scorecard-header">
+            <div class="scorecard-header-info">
+                <h3>${first.course}</h3>
+                <p>${formatDateLong(first.date)} · ${p1.name} ${first.teeColor} · ${p2.name} ${second.teeColor}</p>
+            </div>
+            <div class="scorecard-total match-total">
+                <span class="big-score">${winner ? result.score : 'Halved'}</span>
+                ${winner ? `<span class="to-par">${winner.name}</span>` : ''}
+            </div>
+        </div>
+        <div class="scorecard-report">
+            <div class="scorecard-headline">Holes won: ${p1.name} ${result.firstWon} · ${p2.name} ${result.secondWon} · ${result.halved} halved</div>
+        </div>
+        <div class="scorecard-table-wrapper match-table-wrapper">
+            ${matchNineTable(front, back.length ? 'Out' : 'Total')}
+            ${back.length ? `<div style="height: 0.75rem;"></div>${matchNineTable(back, 'In')}` : ''}
+            <p class="vs-avg-note">Shaded = won the hole · ${p1.name[0]}2 = ${p1.name} 2 up · AS = all square${decided ? ` · ${decided}` : ''}</p>
+            <p class="match-card-links">
+                <button class="recap-round-link" onclick="openScorecard('${firstId}')">${p1.name}'s scorecard</button>
+                <button class="recap-round-link" onclick="openScorecard('${secondId}')">${p2.name}'s scorecard</button>
+            </p>
+        </div>`;
+    document.getElementById('scorecard-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 // ---- Cards ----
